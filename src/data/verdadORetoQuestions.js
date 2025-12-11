@@ -1,5 +1,3 @@
-// Preguntas y retos para el juego "Verdad o Reto"
-
 export const verdades = [
     "¿Cuál es tu mayor secreto que nunca le has contado a nadie?",
     "¿Alguna vez has mentido para salir de una cita?",

@@ -1,4 +1,3 @@
-// Preguntas para el juego "Yo Nunca"
 export const yoNuncaQuestions = [
     "he mentido sobre mi edad",
     "he cantado en la ducha",

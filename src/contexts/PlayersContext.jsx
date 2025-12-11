@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const PLAYERS_KEY = '@patronaleague_players';
+const PLAYERS_KEY = 'patronaleague_players';
 
 const PlayersContext = createContext();
 
@@ -12,9 +11,9 @@ export const PlayersProvider = ({ children }) => {
         loadPlayers();
     }, []);
 
-    const loadPlayers = async () => {
+    const loadPlayers = () => {
         try {
-            const saved = await AsyncStorage.getItem(PLAYERS_KEY);
+            const saved = localStorage.getItem(PLAYERS_KEY);
             if (saved) {
                 setPlayers(JSON.parse(saved));
             }
@@ -23,9 +22,9 @@ export const PlayersProvider = ({ children }) => {
         }
     };
 
-    const savePlayers = async (newPlayers) => {
+    const savePlayers = (newPlayers) => {
         try {
-            await AsyncStorage.setItem(PLAYERS_KEY, JSON.stringify(newPlayers));
+            localStorage.setItem(PLAYERS_KEY, JSON.stringify(newPlayers));
             setPlayers(newPlayers);
         } catch (error) {
             console.error('Error saving players:', error);

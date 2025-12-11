@@ -1,0 +1,17 @@
+{
+    "name": "PatronaLeague",
+    "short_name": "Patrona",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#667eea",
+    "description": "La mejor app de juegos de beber",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/assets/icon.png",
+            "sizes": "1024x1024",
+            "type": "image/png"
+        }
+    ]
+}
