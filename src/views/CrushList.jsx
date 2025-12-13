@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { useDates } from '../contexts/DatesContext';
-import { IoArrowBack, IoAdd, IoClose, IoPerson, IoLogOut } from 'react-icons/io5';
+import { useCrush } from '../contexts/CrushContext';
+import { IoArrowBack, IoAdd, IoClose, IoPerson, IoLogOut, IoLogoInstagram } from 'react-icons/io5';
+import { getInstagramVerification } from '../services/instagramService';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -65,13 +66,36 @@ const UserInfo = styled.div`
   color: ${({ theme }) => theme.colors.text.secondary};
 `;
 
+const MatchedByInfo = styled.div`
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.1));
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+  color: ${({ theme }) => theme.colors.text.primary};
+  
+  span {
+    display: block;
+    font-size: 14px;
+    color: ${({ theme }) => theme.colors.text.secondary};
+    margin-bottom: 5px;
+  }
+  
+  strong {
+    font-size: 24px;
+    color: #FFD700;
+    font-weight: bold;
+  }
+`;
+
 const ListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 15px;
 `;
 
-const DateCard = styled.div`
+const CrushCard = styled.div`
   background: ${({ theme }) => theme.colors.surface};
   border-radius: 16px;
   padding: 20px;
@@ -81,7 +105,7 @@ const DateCard = styled.div`
   justify-content: space-between;
 `;
 
-const DateName = styled.span`
+const CrushName = styled.span`
   font-size: 18px;
   font-weight: 600;
   color: #fff;
@@ -159,28 +183,109 @@ const ModalButton = styled.button`
   border: none;
   font-weight: bold;
   cursor: pointer;
-  background: ${props => props.cancel ? '#444' : props.theme.colors.secondary};
-  color: ${props => props.cancel ? '#fff' : '#000'};
+  background: ${props => props.$cancel ? '#444' : props.theme.colors.secondary};
+  color: ${props => props.$cancel ? '#fff' : '#000'};
 `;
 
-export default function DatesList() {
+export default function CrushList() {
     const navigate = useNavigate();
-    const { user, logout, addDate, removeDate } = useDates();
+    const { user, crushes, logout, addCrush, removeCrush } = useCrush();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newDateName, setNewDateName] = useState('');
+    const [newCrushName, setNewCrushName] = useState('');
+    const [isVerified, setIsVerified] = useState(false);
+    const [instagramUsername, setInstagramUsername] = useState('');
+    const [isCheckingVerification, setIsCheckingVerification] = useState(true);
+    const [matchedByCount, setMatchedByCount] = useState(0);
+
+    useEffect(() => {
+        let isMounted = true;
+        
+        const checkVerification = async () => {
+            if (!user?.id) {
+                setIsCheckingVerification(false);
+                return;
+            }
+            
+            try {
+                const result = await getInstagramVerification(user.id);
+                if (isMounted) {
+                    setIsVerified(result?.data?.is_verified || false);
+                    setInstagramUsername(result?.data?.instagram_username || user?.email?.split('@')[0] || 'Usuario');
+                }
+            } catch (error) {
+                if (isMounted) {
+                    console.error('Error checking verification:', error);
+                    setIsVerified(false);
+                    setInstagramUsername(user?.email?.split('@')[0] || 'Usuario');
+                }
+            } finally {
+                if (isMounted) {
+                    setIsCheckingVerification(false);
+                }
+            }
+        };
+
+        checkVerification();
+        
+        return () => {
+            isMounted = false;
+        };
+    }, [user?.id]);
+
+    useEffect(() => {
+        let isMounted = true;
+        
+        const countMatchedBy = async () => {
+            if (!instagramUsername || !user?.id) return;
+            
+            try {
+                const { supabase } = await import('../config/supabase');
+                const { count, error } = await supabase
+                    .from('users_crushes')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('match_name', instagramUsername);
+                
+                if (error) throw error;
+                if (isMounted) {
+                    setMatchedByCount(count || 0);
+                }
+            } catch (error) {
+                if (isMounted) {
+                    console.error('Error counting matched by:', error);
+                    setMatchedByCount(0);
+                }
+            }
+        };
+
+        countMatchedBy();
+        
+        return () => {
+            isMounted = false;
+        };
+    }, [instagramUsername, user?.id]);
 
     const handleBack = () => {
         navigate('/');
     };
 
     const handleAddClick = () => {
-        setNewDateName('');
+        if (!isVerified) {
+            navigate('/instagram-verification');
+            return;
+        }
+        
+        if (crushes.length >= 5) {
+            alert('Has alcanzado el límite de 5 crushes.');
+            return;
+        }
+        
+        setNewCrushName('');
         setIsModalOpen(true);
     };
 
     const handleConfirmAdd = () => {
-        if (newDateName.trim()) {
-            addDate(newDateName);
+        if (newCrushName.trim()) {
+            addCrush(newCrushName);
             setIsModalOpen(false);
         }
     };
@@ -188,12 +293,12 @@ export default function DatesList() {
     const handleLogout = () => {
         if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
             logout();
-            navigate('/citas');
+            navigate('/crush');
         }
     }
 
     // Generate 5 slots
-    const slots = Array(5).fill(null).map((_, i) => user?.dates[i] || null);
+    const slots = Array(5).fill(null).map((_, i) => crushes?.[i] || null);
 
     return (
         <Container>
@@ -201,34 +306,39 @@ export default function DatesList() {
                 <IconButton onClick={handleBack}>
                     <IoArrowBack size={24} />
                 </IconButton>
-                <HeaderTitle>Mis Citas</HeaderTitle>
+                <HeaderTitle>Mis Crushes</HeaderTitle>
                 <IconButton onClick={handleLogout}>
                     <IoLogOut size={24} />
                 </IconButton>
             </Header>
             <Content>
                 <UserInfo>
-                    <span>@{user?.username}</span>
+                    <span>@{instagramUsername}</span>
                     <IoPerson />
                 </UserInfo>
 
+                <MatchedByInfo>
+                    <span>Personas que te tienen en su lista</span>
+                    <strong>{matchedByCount}</strong>
+                </MatchedByInfo>
+
                 <ListContainer>
-                    {slots.map((date, index) => (
+                    {slots.map((crush, index) => (
                         <React.Fragment key={index}>
-                            {date ? (
-                                <DateCard>
-                                    <DateName>@{date}</DateName>
+                            {crush ? (
+                                <CrushCard>
+                                    <CrushName>@{crush}</CrushName>
                                     <IconButton
                                         style={{ width: 30, height: 30, background: 'rgba(255,50,50,0.2)', border: 'none' }}
-                                        onClick={() => removeDate(index)}
+                                        onClick={() => removeCrush(index)}
                                     >
                                         <IoClose color="#ff5555" />
                                     </IconButton>
-                                </DateCard>
+                                </CrushCard>
                             ) : (
                                 <EmptySlot onClick={handleAddClick}>
                                     <IoAdd size={24} />
-                                    <span style={{ marginLeft: 8 }}>Añadir Cita</span>
+                                    <span style={{ marginLeft: 8 }}>Añadir Crush</span>
                                 </EmptySlot>
                             )}
                         </React.Fragment>
@@ -239,15 +349,15 @@ export default function DatesList() {
             {isModalOpen && (
                 <InputOverlay onClick={() => setIsModalOpen(false)}>
                     <InputCard onClick={e => e.stopPropagation()}>
-                        <ModalTitle>Nueva Cita</ModalTitle>
+                        <ModalTitle>Nuevo Crush</ModalTitle>
                         <Input
                             placeholder="Usuario (sin espacios)"
-                            value={newDateName}
-                            onChange={e => setNewDateName(e.target.value.replace(/\s/g, ''))}
+                            value={newCrushName}
+                            onChange={e => setNewCrushName(e.target.value.replace(/\s/g, ''))}
                             autoFocus
                         />
                         <ButtonGroup>
-                            <ModalButton cancel onClick={() => setIsModalOpen(false)}>Cancelar</ModalButton>
+                            <ModalButton $cancel onClick={() => setIsModalOpen(false)}>Cancelar</ModalButton>
                             <ModalButton onClick={handleConfirmAdd}>Añadir</ModalButton>
                         </ButtonGroup>
                     </InputCard>

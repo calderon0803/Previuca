@@ -17,7 +17,7 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  animation: ${props => props.fading ? fadeOut : 'none'} 0.5s ease-out forwards;
+  animation: ${props => props.$fading ? fadeOut : 'none'} 0.5s ease-out forwards;
 `;
 
 const Logo = styled.img`
@@ -39,7 +39,7 @@ const SplashScreen = ({ onFinish }) => {
     }, [onFinish]);
 
     return (
-        <Container fading={fading}>
+        <Container $fading={fading}>
             <Logo src="/logo.png" alt="Previuca" />
         </Container>
     );

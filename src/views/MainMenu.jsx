@@ -6,11 +6,11 @@ import { IoHeart, IoGameController, IoSettings, IoChevronForward } from 'react-i
 const menuOptions = [
   {
     id: 1,
-    name: 'Citas',
-    description: 'Encuentra tu match perfecto',
-    icon: '🌹',
+    name: 'Crush',
+    description: 'Encuentra tu crush perfecto',
+    icon: '💕',
     iconName: 'heart',
-    route: '/citas',
+    route: '/crush',
   },
   {
     id: 2,

@@ -22,14 +22,30 @@ const Placeholder = ({ title }) => (
 
 import SplashScreen from './components/SplashScreen';
 
-import { DatesProvider, useDates } from './contexts/DatesContext';
-import DatesLogin from './views/DatesLogin';
-import DatesList from './views/DatesList';
+import { CrushProvider, useCrush } from './contexts/CrushContext';
+import CrushLogin from './views/CrushLogin';
+import CrushList from './views/CrushList';
+import InstagramVerification from './views/InstagramVerification';
 
-// Protected Route specific for Dates
-const DatesRoute = ({ children }) => {
-    const { user } = useDates();
-    return user ? children : <Navigate to="/citas" replace />;
+// Protected Route specific for Crush
+const CrushRoute = ({ children }) => {
+    const { user, loading } = useCrush();
+    
+    if (loading) {
+        return (
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                minHeight: '100vh',
+                color: '#fff'
+            }}>
+                Cargando...
+            </div>
+        );
+    }
+    
+    return user ? children : <Navigate to="/match" replace />;
 };
 
 function App() {
@@ -39,20 +55,28 @@ function App() {
         <ThemeProvider theme={theme}>
             <GlobalStyles />
             {loading && <SplashScreen onFinish={() => setLoading(false)} />}
-            <DatesProvider>
+            <CrushProvider>
                 <PlayersProvider>
                     <BrowserRouter>
                         <Routes>
                             <Route path="/" element={<MainMenu />} />
 
-                            {/* Dates Feature Routes */}
-                            <Route path="/citas" element={<DatesLogin />} />
+                            {/* Crush Feature Routes */}
+                            <Route path="/crush" element={<CrushLogin />} />
                             <Route
-                                path="/my-dates"
+                                path="/my-crushes"
                                 element={
-                                    <DatesRoute>
-                                        <DatesList />
-                                    </DatesRoute>
+                                    <CrushRoute>
+                                        <CrushList />
+                                    </CrushRoute>
+                                }
+                            />
+                            <Route
+                                path="/instagram-verification"
+                                element={
+                                    <CrushRoute>
+                                        <InstagramVerification />
+                                    </CrushRoute>
                                 }
                             />
 
@@ -71,7 +95,7 @@ function App() {
                         </Routes>
                     </BrowserRouter>
                 </PlayersProvider>
-            </DatesProvider>
+            </CrushProvider>
         </ThemeProvider>
     );
 }
