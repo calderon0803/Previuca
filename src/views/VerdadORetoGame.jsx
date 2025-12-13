@@ -62,7 +62,8 @@ const PlayerIndicator = styled.div`
   border-radius: 16px;
   margin-bottom: 20px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 `;
 
 const PlayerLabel = styled.p`
@@ -74,7 +75,7 @@ const PlayerLabel = styled.p`
 const PlayerName = styled.p`
   font-size: 24px;
   font-weight: bold;
-  color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.text.primary};
   margin: 0;
 `;
 

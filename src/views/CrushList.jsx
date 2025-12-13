@@ -187,6 +187,29 @@ const ModalButton = styled.button`
   color: ${props => props.$cancel ? '#fff' : '#000'};
 `;
 
+const VerifyButton = styled.button`
+  width: 100%;
+  padding: 16px;
+  border-radius: 10px;
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.secondary};
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.secondary};
+    color: #000;
+  }
+`;
+
 export default function CrushList() {
     const navigate = useNavigate();
     const { user, crushes, logout, addCrush, removeCrush } = useCrush();
@@ -307,20 +330,28 @@ export default function CrushList() {
                     <IoArrowBack size={24} />
                 </IconButton>
                 <HeaderTitle>Mis Crushes</HeaderTitle>
-                <IconButton onClick={handleLogout}>
-                    <IoLogOut size={24} />
-                </IconButton>
+                <div style={{ width: 40 }} />
             </Header>
             <Content>
-                <UserInfo>
-                    <span>@{instagramUsername}</span>
-                    <IoPerson />
-                </UserInfo>
+                {!isVerified && (
+                    <VerifyButton onClick={() => navigate('/instagram-verification')}>
+                        Verificar Instagram
+                    </VerifyButton>
+                )}
+                
+                {isVerified && (
+                    <>
+                        <UserInfo>
+                            <span>@{instagramUsername}</span>
+                            <IoPerson />
+                        </UserInfo>
 
-                <MatchedByInfo>
-                    <span>Personas que te tienen en su lista</span>
-                    <strong>{matchedByCount}</strong>
-                </MatchedByInfo>
+                        <MatchedByInfo>
+                            <span>Personas que te tienen en su lista</span>
+                            <strong>{matchedByCount}</strong>
+                        </MatchedByInfo>
+                    </>
+                )}
 
                 <ListContainer>
                     {slots.map((crush, index) => (

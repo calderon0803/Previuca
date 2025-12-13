@@ -149,6 +149,7 @@ export default function GameModesList() {
         if (game.id === 1) route = '/game/yonunca';
         else if (game.id === 2) route = '/game/verdadereto';
         else if (game.id === 3) route = '/game/reydecopas';
+        else if (game.id === 4) route = '/game/picopalo';
 
         if (route) navigate(route);
         else alert('Próximamente');

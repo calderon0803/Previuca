@@ -11,6 +11,7 @@ import GameModesList from './views/GameModesList';
 import YoNuncaGame from './views/YoNuncaGame';
 import VerdadORetoGame from './views/VerdadORetoGame';
 import ReyDeCopasGame from './views/ReyDeCopasGame';
+import PicoPaloGame from './views/PicoPaloGame';
 
 // Placeholder for missing views if any
 const Placeholder = ({ title }) => (
@@ -26,6 +27,7 @@ import { CrushProvider, useCrush } from './contexts/CrushContext';
 import CrushLogin from './views/CrushLogin';
 import CrushList from './views/CrushList';
 import InstagramVerification from './views/InstagramVerification';
+import Settings from './views/Settings';
 
 // Protected Route specific for Crush
 const CrushRoute = ({ children }) => {
@@ -81,12 +83,13 @@ function App() {
                             />
 
                             <Route path="/games" element={<GameModesList />} />
-                            <Route path="/ajustes" element={<Placeholder title="Ajustes" />} />
+                            <Route path="/ajustes" element={<Settings />} />
 
                             {/* Game Routes */}
                             <Route path="/game/yonunca" element={<YoNuncaGame />} />
                             <Route path="/game/verdadereto" element={<VerdadORetoGame />} />
                             <Route path="/game/reydecopas" element={<ReyDeCopasGame />} />
+                            <Route path="/game/picopalo" element={<PicoPaloGame />} />
                             <Route path="/games/yo-nunca" element={<YoNuncaGame />} />
                             <Route path="/games/verdad-o-reto" element={<VerdadORetoGame />} />
                             <Route path="/games/rey-de-copas" element={<ReyDeCopasGame />} />
