@@ -12,7 +12,7 @@ const RETOS_KEY = 'verdadoreto_retos';
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #f093fb, #f5576c);
+  background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
 `;
@@ -29,17 +29,17 @@ const IconButton = styled.button`
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.2);
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid ${({ theme }) => theme.colors.border};
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   transition: background 0.2s;
   
   &:hover {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -57,30 +57,31 @@ const Content = styled(motion.div)`
 `;
 
 const PlayerIndicator = styled.div`
-  background: rgba(255, 255, 255, 0.2);
+  background: ${({ theme }) => theme.colors.surface};
   padding: 12px 24px;
   border-radius: 16px;
   margin-bottom: 20px;
   text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 `;
 
 const PlayerLabel = styled.p`
   font-size: 14px;
-  color: rgba(255,255,255,0.9);
+  color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0 0 4px 0;
 `;
 
 const PlayerName = styled.p`
   font-size: 24px;
   font-weight: bold;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.primary};
   margin: 0;
 `;
 
 const Title = styled.h2`
   font-size: 32px;
   font-weight: bold;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   margin: 0 0 40px 0;
   text-align: center;
 `;
@@ -94,7 +95,7 @@ const ButtonsContainer = styled.div`
 `;
 
 const ChoiceButton = styled(motion.button)`
-  border: none;
+  border: 2px solid ${({ theme }) => theme.colors.border};
   border-radius: 20px;
   padding: 40px;
   flex: 1;
@@ -104,11 +105,15 @@ const ChoiceButton = styled(motion.button)`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-  background: ${props => props.background};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: rgba(255, 255, 255, 0.1);
+  color: ${({ theme }) => theme.colors.text.primary};
+  transition: transform 0.2s, box-shadow 0.2s;
   
   &:hover {
     transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
   }
 `;
 
@@ -121,7 +126,7 @@ const ChoiceIcon = styled.span`
 const ChoiceText = styled.span`
   font-size: 28px;
   font-weight: bold;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
 `;
 
 const TypeIndicator = styled.div`
@@ -131,12 +136,12 @@ const TypeIndicator = styled.div`
 const TypeText = styled.h3`
   font-size: 24px;
   font-weight: bold;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary}; // White
   margin: 0;
 `;
 
 const QuestionCard = styled.div`
-  background: #fff;
+  background: ${({ theme }) => theme.colors.surface};
   border-radius: 24px;
   padding: 32px;
   width: 100%;
@@ -145,14 +150,15 @@ const QuestionCard = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 2px solid ${({ theme }) => theme.colors.border};
   margin-bottom: 32px;
   box-sizing: border-box;
 `;
 
 const MessageText = styled.p`
   font-size: 24px;
-  color: #333;
+  color: ${({ theme }) => theme.colors.text.primary};
   text-align: center;
   line-height: 1.4;
   margin: 0;
@@ -161,167 +167,167 @@ const MessageText = styled.p`
 const NextButton = styled(motion.button)`
   width: 100%;
   border-radius: 16px;
-  border: none;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: rgba(255, 255, 255, 0.1);
   padding: 18px;
   color: #fff;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
   
   &:hover {
-    filter: brightness(1.05);
+    background: rgba(255, 255, 255, 0.2);
   }
 `;
 
 export default function VerdadORetoGame() {
-    const navigate = useNavigate();
-    const { players } = usePlayers();
+  const navigate = useNavigate();
+  const { players } = usePlayers();
 
-    const [mode, setMode] = useState('selection'); // 'selection' or 'showing'
-    const [currentType, setCurrentType] = useState(null); // 'verdad' or 'reto'
-    const [currentText, setCurrentText] = useState('');
-    const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-    const [verdades, setVerdades] = useState(defaultVerdades);
-    const [retos, setRetos] = useState(defaultRetos);
-    const [showEditor, setShowEditor] = useState(false);
+  const [mode, setMode] = useState('selection'); // 'selection' or 'showing'
+  const [currentType, setCurrentType] = useState(null); // 'verdad' or 'reto'
+  const [currentText, setCurrentText] = useState('');
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [verdades, setVerdades] = useState(defaultVerdades);
+  const [retos, setRetos] = useState(defaultRetos);
+  const [showEditor, setShowEditor] = useState(false);
 
-    useEffect(() => {
-        loadData();
-    }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
-    const loadData = () => {
-        try {
-            const savedVerdades = localStorage.getItem(VERDADES_KEY);
-            const savedRetos = localStorage.getItem(RETOS_KEY);
-            if (savedVerdades) setVerdades(JSON.parse(savedVerdades));
-            if (savedRetos) setRetos(JSON.parse(savedRetos));
-        } catch (error) {
-            console.error('Error loading data:', error);
-        }
-    };
+  const loadData = () => {
+    try {
+      const savedVerdades = localStorage.getItem(VERDADES_KEY);
+      const savedRetos = localStorage.getItem(RETOS_KEY);
+      if (savedVerdades) setVerdades(JSON.parse(savedVerdades));
+      if (savedRetos) setRetos(JSON.parse(savedRetos));
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  };
 
-    const saveData = (newVerdades, newRetos) => {
-        try {
-            localStorage.setItem(VERDADES_KEY, JSON.stringify(newVerdades));
-            localStorage.setItem(RETOS_KEY, JSON.stringify(newRetos));
-            setVerdades(newVerdades);
-            setRetos(newRetos);
-            setShowEditor(false);
-        } catch (error) {
-            console.error('Error saving data:', error);
-        }
-    };
+  const saveData = (newVerdades, newRetos) => {
+    try {
+      localStorage.setItem(VERDADES_KEY, JSON.stringify(newVerdades));
+      localStorage.setItem(RETOS_KEY, JSON.stringify(newRetos));
+      setVerdades(newVerdades);
+      setRetos(newRetos);
+      setShowEditor(false);
+    } catch (error) {
+      console.error('Error saving data:', error);
+    }
+  };
 
-    const handleSelection = (type) => {
-        const list = type === 'verdad' ? verdades : retos;
-        const randomIndex = Math.floor(Math.random() * list.length);
-        const text = list[randomIndex];
+  const handleSelection = (type) => {
+    const list = type === 'verdad' ? verdades : retos;
+    const randomIndex = Math.floor(Math.random() * list.length);
+    const text = list[randomIndex];
 
-        setCurrentType(type);
-        setCurrentText(text);
-        setMode('showing');
-    };
+    setCurrentType(type);
+    setCurrentText(text);
+    setMode('showing');
+  };
 
-    const handleNext = () => {
-        if (players.length > 0) {
-            setCurrentPlayerIndex((currentPlayerIndex + 1) % players.length);
-        }
-        setMode('selection');
-        setCurrentType(null);
-        setCurrentText('');
-    };
+  const handleNext = () => {
+    if (players.length > 0) {
+      setCurrentPlayerIndex((currentPlayerIndex + 1) % players.length);
+    }
+    setMode('selection');
+    setCurrentType(null);
+    setCurrentText('');
+  };
 
-    const currentPlayer = players.length > 0 ? players[currentPlayerIndex] : null;
+  const currentPlayer = players.length > 0 ? players[currentPlayerIndex] : null;
 
-    return (
-        <Container>
-            <Header>
-                <IconButton onClick={() => navigate(-1)}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <IconButton onClick={() => setShowEditor(true)}>
-                    <IoSettingsOutline size={24} />
-                </IconButton>
-            </Header>
+  return (
+    <Container>
+      <Header>
+        <IconButton onClick={() => navigate(-1)}>
+          <IoArrowBack size={24} />
+        </IconButton>
+        <IconButton onClick={() => setShowEditor(true)}>
+          <IoSettingsOutline size={24} />
+        </IconButton>
+      </Header>
 
-            <VerdadORetoEditor
-                visible={showEditor}
-                verdades={verdades}
-                retos={retos}
-                onSave={saveData}
-                onCancel={() => setShowEditor(false)}
-            />
+      <VerdadORetoEditor
+        visible={showEditor}
+        verdades={verdades}
+        retos={retos}
+        onSave={saveData}
+        onCancel={() => setShowEditor(false)}
+      />
 
-            <AnimatePresence mode="wait">
-                {mode === 'selection' ? (
-                    <Content
-                        key="selection"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                    >
-                        {currentPlayer && (
-                            <PlayerIndicator>
-                                <PlayerLabel>Turno de:</PlayerLabel>
-                                <PlayerName>{currentPlayer.name}</PlayerName>
-                            </PlayerIndicator>
-                        )}
-                        <Title>Elige tu destino</Title>
+      <AnimatePresence mode="wait">
+        {mode === 'selection' ? (
+          <Content
+            key="selection"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {currentPlayer && (
+              <PlayerIndicator>
+                <PlayerLabel>Turno de:</PlayerLabel>
+                <PlayerName>{currentPlayer.name}</PlayerName>
+              </PlayerIndicator>
+            )}
+            <Title>Elige tu destino</Title>
 
-                        <ButtonsContainer>
-                            <ChoiceButton
-                                onClick={() => handleSelection('verdad')}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                background="linear-gradient(135deg, #4facfe, #00f2fe)"
-                            >
-                                <ChoiceIcon>💭</ChoiceIcon>
-                                <ChoiceText>VERDAD</ChoiceText>
-                            </ChoiceButton>
+            <ButtonsContainer>
+              <ChoiceButton
+                onClick={() => handleSelection('verdad')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                background="linear-gradient(135deg, #4facfe, #00f2fe)"
+              >
+                <ChoiceIcon>💭</ChoiceIcon>
+                <ChoiceText>VERDAD</ChoiceText>
+              </ChoiceButton>
 
-                            <ChoiceButton
-                                onClick={() => handleSelection('reto')}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                background="linear-gradient(135deg, #fa709a, #fee140)"
-                            >
-                                <ChoiceIcon>🎯</ChoiceIcon>
-                                <ChoiceText>RETO</ChoiceText>
-                            </ChoiceButton>
-                        </ButtonsContainer>
-                    </Content>
-                ) : (
-                    <Content
-                        key="showing"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                    >
-                        <TypeIndicator>
-                            <TypeText>
-                                {currentType === 'verdad' ? '💭 VERDAD' : '🎯 RETO'}
-                            </TypeText>
-                        </TypeIndicator>
+              <ChoiceButton
+                onClick={() => handleSelection('reto')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                background="linear-gradient(135deg, #fa709a, #fee140)"
+              >
+                <ChoiceIcon>🎯</ChoiceIcon>
+                <ChoiceText>RETO</ChoiceText>
+              </ChoiceButton>
+            </ButtonsContainer>
+          </Content>
+        ) : (
+          <Content
+            key="showing"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            <TypeIndicator>
+              <TypeText>
+                {currentType === 'verdad' ? '💭 VERDAD' : '🎯 RETO'}
+              </TypeText>
+            </TypeIndicator>
 
-                        <QuestionCard>
-                            <MessageText>{currentText}</MessageText>
-                        </QuestionCard>
+            <QuestionCard>
+              <MessageText>{currentText}</MessageText>
+            </QuestionCard>
 
-                        <NextButton
-                            onClick={handleNext}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            Siguiente <IoArrowForward />
-                        </NextButton>
-                    </Content>
-                )}
-            </AnimatePresence>
-        </Container>
-    );
+            <NextButton
+              onClick={handleNext}
+              whileTap={{ scale: 0.98 }}
+            >
+              Siguiente <IoArrowForward />
+            </NextButton>
+          </Content>
+        )}
+      </AnimatePresence>
+    </Container>
+  );
 }

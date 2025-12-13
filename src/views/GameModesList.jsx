@@ -12,62 +12,54 @@ const gameModes = [
         name: 'Yo Nunca',
         description: 'Confiesa lo que nunca has hecho',
         icon: '🤫',
-        color: ['#667eea', '#764ba2'],
     },
     {
         id: 2,
         name: 'Verdad o Reto',
         description: 'Clásico de preguntas y desafíos',
         icon: '🎭',
-        color: ['#f093fb', '#f5576c'],
     },
     {
         id: 3,
         name: 'Rey de Copas',
         description: 'Juego de cartas legendario',
         icon: '👑',
-        color: ['#4facfe', '#00f2fe'],
     },
     {
         id: 4,
         name: 'Pico Palo',
         description: 'Adivina la carta correcta',
         icon: '🃏',
-        color: ['#43e97b', '#38f9d7'],
     },
     {
         id: 5,
         name: 'Medusa',
         description: 'No cruces la mirada',
         icon: '👀',
-        color: ['#fa709a', '#fee140'],
     },
     {
         id: 6,
         name: 'Ruleta de Shots',
         description: 'Gira y prueba tu suerte',
         icon: '🎰',
-        color: ['#30cfd0', '#330867'],
     },
     {
         id: 7,
         name: 'Preguntas Picantes',
         description: 'Responde sin filtros',
         icon: '🔥',
-        color: ['#ff6b6b', '#ee5a6f'],
     },
     {
         id: 8,
         name: 'Dados de Beber',
         description: 'Tira los dados y bebe',
         icon: '🎲',
-        color: ['#a8edea', '#fed6e3'],
     },
 ];
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
 `;
@@ -77,12 +69,17 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background-color: ${({ theme }) => theme.colors.background}; // Match App BG
+  border-bottom: 2px solid ${({ theme }) => theme.colors.border};
+  position: sticky;
+  top: 0;
+  z-index: 10;
 `;
 
 const HeaderTitle = styled.h1`
   font-size: 20px;
   font-weight: bold;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   margin: 0;
 `;
 
@@ -90,25 +87,26 @@ const IconButton = styled.button`
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.2);
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid ${({ theme }) => theme.colors.border};
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   position: relative;
+  transition: background 0.2s;
   
   &:hover {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.2);
   }
 `;
 
 const Badge = styled.div`
   position: absolute;
-  top: -4px;
-  right: -4px;
-  background: #ff6b6b;
+  top: -8px;
+  right: -8px;
+  background: ${({ theme }) => theme.colors.secondary};
   border-radius: 10px;
   min-width: 20px;
   height: 20px;
@@ -119,14 +117,14 @@ const Badge = styled.div`
 `;
 
 const BadgeText = styled.span`
-  color: #fff;
+  color: #000;
   font-size: 12px;
   font-weight: bold;
 `;
 
 const ScrollContent = styled.div`
   flex: 1;
-  padding: 0 24px 24px 24px;
+  padding: 24px;
   overflow-y: auto;
   max-width: 600px;
   margin: 0 auto;
@@ -188,4 +186,5 @@ export default function GameModesList() {
         </Container>
     );
 }
+
 

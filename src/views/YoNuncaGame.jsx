@@ -10,7 +10,7 @@ const QUESTIONS_KEY = 'yonunca_questions';
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
 `;
@@ -27,17 +27,17 @@ const IconButton = styled.button`
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.2);
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid ${({ theme }) => theme.colors.border};
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   transition: background 0.2s;
   
   &:hover {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -48,7 +48,7 @@ const CounterContainer = styled.div`
 `;
 
 const Counter = styled.span`
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   font-size: 18px;
   font-weight: bold;
 `;
@@ -67,7 +67,7 @@ const Content = styled.div`
 `;
 
 const QuestionCard = styled(motion.div)`
-  background: #fff;
+  background: ${({ theme }) => theme.colors.surface};
   border-radius: 24px;
   padding: 32px;
   width: 100%;
@@ -76,7 +76,8 @@ const QuestionCard = styled(motion.div)`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 2px solid ${({ theme }) => theme.colors.border};
   margin-bottom: 32px;
   box-sizing: border-box;
 `;
@@ -84,14 +85,14 @@ const QuestionCard = styled(motion.div)`
 const YoNuncaTitle = styled.h2`
   font-size: 28px;
   font-weight: bold;
-  color: #667eea;
+  color: ${({ theme }) => theme.colors.text.primary}; // White text
   margin: 0 0 16px 0;
   text-align: center;
 `;
 
 const QuestionText = styled.p`
   font-size: 24px;
-  color: #333;
+  color: ${({ theme }) => theme.colors.text.primary};
   text-align: center;
   line-height: 1.4;
   margin: 0;
@@ -99,7 +100,7 @@ const QuestionText = styled.p`
 
 const Instruction = styled.p`
   font-size: 18px;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.secondary};
   text-align: center;
   opacity: 0.9;
   margin: 0;
@@ -108,8 +109,8 @@ const Instruction = styled.p`
 const NextButton = styled(motion.button)`
   margin: 0 24px 40px 24px;
   border-radius: 16px;
-  border: none;
-  background: linear-gradient(135deg, #f093fb, #f5576c);
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: rgba(255, 255, 255, 0.1);
   padding: 18px;
   width: calc(100% - 48px);
   max-width: 550px;
@@ -118,10 +119,10 @@ const NextButton = styled(motion.button)`
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   
   &:hover {
-    filter: brightness(1.05);
+    background: rgba(255, 255, 255, 0.2);
   }
 `;
 

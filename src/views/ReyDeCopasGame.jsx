@@ -8,7 +8,7 @@ import { cardRules, generateDeck, shuffleDeck } from '../data/reyDeCopasRules';
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
 `;
@@ -25,17 +25,17 @@ const IconButton = styled.button`
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.2);
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid ${({ theme }) => theme.colors.border};
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   transition: background 0.2s;
   
   &:hover {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -53,23 +53,25 @@ const Content = styled.div`
 `;
 
 const PlayerIndicator = styled.div`
-  background: rgba(255, 255, 255, 0.2);
+  background: ${({ theme }) => theme.colors.surface};
   padding: 12px 24px;
   border-radius: 16px;
   margin-bottom: 20px;
   text-align: center;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 `;
 
 const PlayerLabel = styled.p`
   font-size: 14px;
-  color: rgba(255,255,255,0.9);
+  color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0 0 4px 0;
 `;
 
 const PlayerName = styled.p`
   font-size: 24px;
   font-weight: bold;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   margin: 0;
 `;
 
@@ -80,15 +82,16 @@ const Counter = styled.div`
 
 const CounterText = styled.p`
   font-size: 18px;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   font-weight: 600;
   margin: 0;
 `;
 
 const KingsText = styled.p`
   font-size: 16px;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.secondary}; // Use Gold for Kings
   margin: 4px 0 0 0;
+  font-weight: bold;
 `;
 
 const CardContainer = styled(motion.div)`
@@ -123,25 +126,27 @@ const CardSuit = styled.span`
 `;
 
 const RuleContainer = styled.div`
-  background: rgba(255, 255, 255, 0.95);
+  background: ${({ theme }) => theme.colors.surface};
   border-radius: 16px;
   padding: 20px;
   width: 100%;
   margin-bottom: 24px;
   box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 2px solid ${({ theme }) => theme.colors.border};
 `;
 
 const RuleName = styled.h3`
   font-size: 24px;
   font-weight: bold;
-  color: #333;
+  color: ${({ theme }) => theme.colors.text.primary};
   margin: 0 0 8px 0;
   text-align: center;
 `;
 
 const RuleDescription = styled.p`
   font-size: 16px;
-  color: #666;
+  color: ${({ theme }) => theme.colors.text.secondary};
   text-align: center;
   line-height: 1.5;
   margin: 0;
@@ -150,17 +155,17 @@ const RuleDescription = styled.p`
 const NextButton = styled.button`
   width: 100%;
   border-radius: 16px;
-  border: none;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: rgba(255, 255, 255, 0.1);
   padding: 18px;
   color: #fff;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   
   &:hover {
-    filter: brightness(1.05);
+    background: rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -174,7 +179,7 @@ const DrawContainer = styled.div`
 const SelectText = styled.h2`
   font-size: 20px;
   font-weight: bold;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   margin: 0 0 24px 0;
 `;
 
@@ -187,20 +192,21 @@ const CardsRow = styled.div`
 `;
 
 const CardBack = styled(motion.button)`
-  background: #fff;
+  background: ${({ theme }) => theme.colors.surface};
   border-radius: 16px;
   width: 80px;
   height: 110px;
   display: flex;
   justify-content: center;
   align-items: center;
-  border: none;
+  border: 2px solid ${({ theme }) => theme.colors.border};
   cursor: pointer;
   font-size: 40px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   
   &:hover {
     transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
   }
 `;
 
@@ -213,20 +219,20 @@ const GameOver = styled.div`
 const GameOverTitle = styled.h2`
   font-size: 32px;
   font-weight: bold;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.primary};
   margin: 0 0 12px 0;
 `;
 
 const GameOverText = styled.p`
   font-size: 18px;
-  color: #fff;
+  color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0 0 32px 0;
 `;
 
 const RestartButton = styled.button`
   border-radius: 16px;
   border: none;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: ${({ theme }) => theme.colors.primary};
   padding: 18px 32px;
   display: flex;
   align-items: center;
@@ -235,145 +241,145 @@ const RestartButton = styled.button`
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px ${({ theme }) => `${theme.colors.primary}40`};
   
   &:hover {
-    filter: brightness(1.05);
+    filter: brightness(1.1);
   }
 `;
 
 export default function ReyDeCopasGame() {
-    const navigate = useNavigate();
-    const { players } = usePlayers();
+  const navigate = useNavigate();
+  const { players } = usePlayers();
 
-    const [deck, setDeck] = useState([]);
-    const [currentCard, setCurrentCard] = useState(null);
-    const [cardsDrawn, setCardsDrawn] = useState(0);
-    const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-    const [kingsDrawn, setKingsDrawn] = useState(0);
+  const [deck, setDeck] = useState([]);
+  const [currentCard, setCurrentCard] = useState(null);
+  const [cardsDrawn, setCardsDrawn] = useState(0);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [kingsDrawn, setKingsDrawn] = useState(0);
 
-    useEffect(() => {
-        const newDeck = shuffleDeck(generateDeck());
-        setDeck(newDeck);
-    }, []);
+  useEffect(() => {
+    const newDeck = shuffleDeck(generateDeck());
+    setDeck(newDeck);
+  }, []);
 
-    const drawCard = (cardIndex) => {
-        if (deck.length === 0) return;
+  const drawCard = (cardIndex) => {
+    if (deck.length === 0) return;
 
-        const card = deck[cardIndex];
-        const remainingDeck = deck.filter((_, index) => index !== cardIndex);
+    const card = deck[cardIndex];
+    const remainingDeck = deck.filter((_, index) => index !== cardIndex);
 
-        setCurrentCard(card);
-        setDeck(remainingDeck);
-        setCardsDrawn(prev => prev + 1);
+    setCurrentCard(card);
+    setDeck(remainingDeck);
+    setCardsDrawn(prev => prev + 1);
 
-        if (card.value === 'K') {
-            setKingsDrawn(prev => prev + 1);
-        }
+    if (card.value === 'K') {
+      setKingsDrawn(prev => prev + 1);
+    }
 
-        if (players.length > 0) {
-            setCurrentPlayerIndex(prev => (prev + 1) % players.length);
-        }
-    };
+    if (players.length > 0) {
+      setCurrentPlayerIndex(prev => (prev + 1) % players.length);
+    }
+  };
 
-    const resetGame = () => {
-        const newDeck = shuffleDeck(generateDeck());
-        setDeck(newDeck);
-        setCurrentCard(null);
-        setCardsDrawn(0);
-        setCurrentPlayerIndex(0);
-        setKingsDrawn(0);
-    };
+  const resetGame = () => {
+    const newDeck = shuffleDeck(generateDeck());
+    setDeck(newDeck);
+    setCurrentCard(null);
+    setCardsDrawn(0);
+    setCurrentPlayerIndex(0);
+    setKingsDrawn(0);
+  };
 
-    const currentPlayer = players.length > 0 ? players[currentPlayerIndex] : null;
-    const rule = currentCard ? cardRules[currentCard.value] : null;
+  const currentPlayer = players.length > 0 ? players[currentPlayerIndex] : null;
+  const rule = currentCard ? cardRules[currentCard.value] : null;
 
-    return (
-        <Container>
-            <Header>
-                <IconButton onClick={() => navigate(-1)}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <IconButton onClick={resetGame}>
+  return (
+    <Container>
+      <Header>
+        <IconButton onClick={() => navigate(-1)}>
+          <IoArrowBack size={24} />
+        </IconButton>
+        <IconButton onClick={resetGame}>
+          <IoRefresh size={24} />
+        </IconButton>
+      </Header>
+
+      <Content>
+        {currentPlayer && !currentCard && (
+          <PlayerIndicator>
+            <PlayerLabel>Turno de:</PlayerLabel>
+            <PlayerName>{currentPlayer.name}</PlayerName>
+          </PlayerIndicator>
+        )}
+
+        <Counter>
+          <CounterText>
+            {deck.length} cartas restantes
+          </CounterText>
+          {kingsDrawn > 0 && (
+            <KingsText>
+              👑 Reyes: {kingsDrawn}/4
+            </KingsText>
+          )}
+        </Counter>
+
+        <AnimatePresence mode="wait">
+          {currentCard ? (
+            <CardContainer
+              key="card"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.2 }}
+            >
+              <Card>
+                <CardValue>{currentCard.value}</CardValue>
+                <CardSuit>{currentCard.suit}</CardSuit>
+              </Card>
+
+              {rule && (
+                <RuleContainer>
+                  <RuleName>{rule.rule}</RuleName>
+                  <RuleDescription>{rule.description}</RuleDescription>
+                </RuleContainer>
+              )}
+
+              <NextButton onClick={() => setCurrentCard(null)}>
+                Continuar
+              </NextButton>
+            </CardContainer>
+          ) : (
+            <DrawContainer key="draw">
+              {deck.length > 0 ? (
+                <>
+                  <SelectText>Elige una carta</SelectText>
+                  <CardsRow>
+                    {deck.slice(0, Math.min(6, deck.length)).map((_, index) => (
+                      <CardBack
+                        key={index}
+                        onClick={() => drawCard(index)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        🃏
+                      </CardBack>
+                    ))}
+                  </CardsRow>
+                </>
+              ) : (
+                <GameOver>
+                  <GameOverTitle>¡Juego Terminado!</GameOverTitle>
+                  <GameOverText>Se robaron todas las cartas</GameOverText>
+                  <RestartButton onClick={resetGame}>
                     <IoRefresh size={24} />
-                </IconButton>
-            </Header>
-
-            <Content>
-                {currentPlayer && !currentCard && (
-                    <PlayerIndicator>
-                        <PlayerLabel>Turno de:</PlayerLabel>
-                        <PlayerName>{currentPlayer.name}</PlayerName>
-                    </PlayerIndicator>
-                )}
-
-                <Counter>
-                    <CounterText>
-                        {deck.length} cartas restantes
-                    </CounterText>
-                    {kingsDrawn > 0 && (
-                        <KingsText>
-                            👑 Reyes: {kingsDrawn}/4
-                        </KingsText>
-                    )}
-                </Counter>
-
-                <AnimatePresence mode="wait">
-                    {currentCard ? (
-                        <CardContainer
-                            key="card"
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 1.2 }}
-                        >
-                            <Card>
-                                <CardValue>{currentCard.value}</CardValue>
-                                <CardSuit>{currentCard.suit}</CardSuit>
-                            </Card>
-
-                            {rule && (
-                                <RuleContainer>
-                                    <RuleName>{rule.rule}</RuleName>
-                                    <RuleDescription>{rule.description}</RuleDescription>
-                                </RuleContainer>
-                            )}
-
-                            <NextButton onClick={() => setCurrentCard(null)}>
-                                Continuar
-                            </NextButton>
-                        </CardContainer>
-                    ) : (
-                        <DrawContainer key="draw">
-                            {deck.length > 0 ? (
-                                <>
-                                    <SelectText>Elige una carta</SelectText>
-                                    <CardsRow>
-                                        {deck.slice(0, Math.min(6, deck.length)).map((_, index) => (
-                                            <CardBack
-                                                key={index}
-                                                onClick={() => drawCard(index)}
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                            >
-                                                🃏
-                                            </CardBack>
-                                        ))}
-                                    </CardsRow>
-                                </>
-                            ) : (
-                                <GameOver>
-                                    <GameOverTitle>¡Juego Terminado!</GameOverTitle>
-                                    <GameOverText>Se robaron todas las cartas</GameOverText>
-                                    <RestartButton onClick={resetGame}>
-                                        <IoRefresh size={24} />
-                                        Jugar de Nuevo
-                                    </RestartButton>
-                                </GameOver>
-                            )}
-                        </DrawContainer>
-                    )}
-                </AnimatePresence>
-            </Content>
-        </Container>
-    );
+                    Jugar de Nuevo
+                  </RestartButton>
+                </GameOver>
+              )}
+            </DrawContainer>
+          )}
+        </AnimatePresence>
+      </Content>
+    </Container>
+  );
 }
