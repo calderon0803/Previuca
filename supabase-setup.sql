@@ -72,6 +72,12 @@ CREATE POLICY "Users can view their own verification"
     FOR SELECT
     USING (auth.uid() = user_id);
 
+-- RLS Policy: Anyone can read Instagram usernames (for match detection)
+CREATE POLICY "Anyone can read Instagram usernames"
+    ON instagram_verification
+    FOR SELECT
+    USING (true);
+
 -- RLS Policy: Users can insert their own verification
 CREATE POLICY "Users can insert their own verification"
     ON instagram_verification

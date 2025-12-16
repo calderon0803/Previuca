@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useCrush } from '../contexts/CrushContext';
 import { IoArrowBack, IoAdd, IoClose, IoPerson, IoLogOut, IoLogoInstagram } from 'react-icons/io5';
-import { getInstagramVerification } from '../services/instagramService';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -96,19 +95,32 @@ const ListContainer = styled.div`
 `;
 
 const CrushCard = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
+  background: ${({ theme, $isMatch }) => 
+    $isMatch 
+      ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2))' 
+      : theme.colors.surface};
   border-radius: 16px;
   padding: 20px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: ${({ theme, $isMatch }) => 
+    $isMatch 
+      ? '2px solid rgba(255, 215, 0, 0.6)' 
+      : `1px solid ${theme.colors.border}`};
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-shadow: ${({ $isMatch }) => 
+    $isMatch ? '0 4px 12px rgba(255, 215, 0, 0.3)' : 'none'};
 `;
 
 const CrushName = styled.span`
   font-size: 18px;
   font-weight: 600;
-  color: #fff;
+  color: ${({ $isMatch }) => $isMatch ? '#FFD700' : '#fff'};
+`;
+
+const MatchBadge = styled.span`
+  font-size: 20px;
+  margin-right: 8px;
 `;
 
 const EmptySlot = styled.div`
@@ -212,80 +224,20 @@ const VerifyButton = styled.button`
 
 export default function CrushList() {
     const navigate = useNavigate();
-    const { user, crushes, logout, addCrush, removeCrush } = useCrush();
+    const { 
+        user, 
+        crushes,
+        matches,
+        logout, 
+        addCrush, 
+        removeCrush, 
+        loading,
+        isVerified,
+        instagramUsername,
+        matchedByCount
+    } = useCrush();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCrushName, setNewCrushName] = useState('');
-    const [isVerified, setIsVerified] = useState(false);
-    const [instagramUsername, setInstagramUsername] = useState('');
-    const [isCheckingVerification, setIsCheckingVerification] = useState(true);
-    const [matchedByCount, setMatchedByCount] = useState(0);
-
-    useEffect(() => {
-        let isMounted = true;
-        
-        const checkVerification = async () => {
-            if (!user?.id) {
-                setIsCheckingVerification(false);
-                return;
-            }
-            
-            try {
-                const result = await getInstagramVerification(user.id);
-                if (isMounted) {
-                    setIsVerified(result?.data?.is_verified || false);
-                    setInstagramUsername(result?.data?.instagram_username || user?.email?.split('@')[0] || 'Usuario');
-                }
-            } catch (error) {
-                if (isMounted) {
-                    console.error('Error checking verification:', error);
-                    setIsVerified(false);
-                    setInstagramUsername(user?.email?.split('@')[0] || 'Usuario');
-                }
-            } finally {
-                if (isMounted) {
-                    setIsCheckingVerification(false);
-                }
-            }
-        };
-
-        checkVerification();
-        
-        return () => {
-            isMounted = false;
-        };
-    }, [user?.id]);
-
-    useEffect(() => {
-        let isMounted = true;
-        
-        const countMatchedBy = async () => {
-            if (!instagramUsername || !user?.id) return;
-            
-            try {
-                const { supabase } = await import('../config/supabase');
-                const { count, error } = await supabase
-                    .from('users_crushes')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('match_name', instagramUsername);
-                
-                if (error) throw error;
-                if (isMounted) {
-                    setMatchedByCount(count || 0);
-                }
-            } catch (error) {
-                if (isMounted) {
-                    console.error('Error counting matched by:', error);
-                    setMatchedByCount(0);
-                }
-            }
-        };
-
-        countMatchedBy();
-        
-        return () => {
-            isMounted = false;
-        };
-    }, [instagramUsername, user?.id]);
 
     const handleBack = () => {
         navigate('/');
@@ -354,11 +306,16 @@ export default function CrushList() {
                 )}
 
                 <ListContainer>
-                    {slots.map((crush, index) => (
+                    {slots.map((crush, index) => {
+                        const isMatch = crush && matches.includes(crush);
+                        return (
                         <React.Fragment key={index}>
                             {crush ? (
-                                <CrushCard>
-                                    <CrushName>@{crush}</CrushName>
+                                <CrushCard $isMatch={isMatch}>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        {isMatch && <MatchBadge>❤️</MatchBadge>}
+                                        <CrushName $isMatch={isMatch}>@{crush}</CrushName>
+                                    </div>
                                     <IconButton
                                         style={{ width: 30, height: 30, background: 'rgba(255,50,50,0.2)', border: 'none' }}
                                         onClick={() => removeCrush(index)}
@@ -373,7 +330,8 @@ export default function CrushList() {
                                 </EmptySlot>
                             )}
                         </React.Fragment>
-                    ))}
+                    );
+                    })}
                 </ListContainer>
             </Content>
 

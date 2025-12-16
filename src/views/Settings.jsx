@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoArrowBack, IoPersonCircle, IoTrash, IoLogOut } from 'react-icons/io5';
@@ -120,30 +120,73 @@ const DangerTitle = styled.h3`
 
 const Settings = () => {
     const navigate = useNavigate();
-    const { user, logout } = useCrush();
-    const [instagramData, setInstagramData] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        loadInstagramData();
-    }, [user?.id]);
-
-    const loadInstagramData = async () => {
-        if (!user?.id) return;
-        
-        try {
-            const result = await getInstagramVerification(user.id);
-            setInstagramData(result?.data || null);
-        } catch (error) {
-            console.error('Error loading instagram data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { 
+        user, 
+        logout, 
+        isVerified, 
+        instagramUsername,
+        verificationCode,
+        refreshInstagramVerification,
+        loading: contextLoading 
+    } = useCrush();
+    
+    // Construir objeto de datos de Instagram desde el contexto
+    const instagramData = user && instagramUsername ? {
+        instagram_username: instagramUsername,
+        is_verified: isVerified,
+        verification_code: verificationCode
+    } : null;
 
     const handleBack = () => {
         navigate('/');
     };
+    
+    // Si está cargando, mostrar pantalla de carga
+    if (contextLoading) {
+        return (
+            <Container>
+                <Header>
+                    <IconButton onClick={handleBack}>
+                        <IoArrowBack size={24} />
+                    </IconButton>
+                    <HeaderTitle>Ajustes</HeaderTitle>
+                    <div style={{ width: 40 }} />
+                </Header>
+                <Content>
+                    <div style={{ textAlign: 'center', color: '#888', padding: '40px 20px' }}>
+                        Cargando...
+                    </div>
+                </Content>
+            </Container>
+        );
+    }
+    
+    // Si no hay usuario, mostrar mensaje para iniciar sesión
+    if (!user) {
+        return (
+            <Container>
+                <Header>
+                    <IconButton onClick={handleBack}>
+                        <IoArrowBack size={24} />
+                    </IconButton>
+                    <HeaderTitle>Ajustes</HeaderTitle>
+                    <div style={{ width: 40 }} />
+                </Header>
+                <Content>
+                    <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                        <IoPersonCircle size={80} color="#555" style={{ marginBottom: '20px' }} />
+                        <h2 style={{ color: '#fff', marginBottom: '10px' }}>No has iniciado sesión</h2>
+                        <p style={{ color: '#aaa', marginBottom: '30px' }}>
+                            Inicia sesión para acceder a la configuración de tu cuenta
+                        </p>
+                        <Button onClick={() => navigate('/crush')}>
+                            Iniciar Sesión
+                        </Button>
+                    </div>
+                </Content>
+            </Container>
+        );
+    }
 
     const handleChangePassword = async () => {
         const email = user?.email;
@@ -174,7 +217,7 @@ const Settings = () => {
             const result = await deleteInstagramVerification(user.id);
             if (result.success) {
                 alert('Instagram desvinculado correctamente');
-                loadInstagramData();
+                await refreshInstagramVerification();
             } else {
                 alert('Error al desvincular Instagram');
             }
@@ -247,7 +290,7 @@ const Settings = () => {
                 <Section>
                     <SectionTitle>Instagram</SectionTitle>
                     
-                    {loading ? (
+                    {contextLoading ? (
                         <SettingItem>
                             <SettingValue>Cargando...</SettingValue>
                         </SettingItem>

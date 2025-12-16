@@ -10,7 +10,12 @@ export const CrushProvider = ({ children }) => {
     const [user, setUser] = useState(null); // Ahora será el usuario de Supabase
     const [loading, setLoading] = useState(true);
     const [crushes, setCrushes] = useState([]); // Lista de crushes del usuario
-    const hasLoadedCrushes = useRef(false); // Track si ya cargamos los crushes
+    const [matches, setMatches] = useState([]); // Crushes con match mutuo
+    const [isVerified, setIsVerified] = useState(false);
+    const [instagramUsername, setInstagramUsername] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
+    const [matchedByCount, setMatchedByCount] = useState(0);
+    const hasLoadedData = useRef(false); // Track si ya cargamos todos los datos
 
     useEffect(() => {
         // Verificar sesión actual
@@ -24,15 +29,28 @@ export const CrushProvider = ({ children }) => {
                 
                 if (session?.user) {
                     setUser(session.user);
-                    // Solo cargar crushes si nunca los hemos cargado
-                    if (!hasLoadedCrushes.current) {
-                        loadCrushesFromDB(session.user.id);
-                        hasLoadedCrushes.current = true;
+                    // Solo cargar datos si el usuario cambió (login/registro nuevo)
+                    if (!hasLoadedData.current) {
+                        (async () => {
+                            const [crushesData, username] = await Promise.all([
+                                loadCrushesFromDB(session.user.id),
+                                loadInstagramVerification(session.user),
+                            ]);
+                            
+                            if (username && crushesData) {
+                                await loadMatchedByCount(username, crushesData);
+                            }
+                        })();
+                        hasLoadedData.current = true;
                     }
                 } else {
                     setUser(null);
                     setCrushes([]);
-                    hasLoadedCrushes.current = false;
+                    setMatches([]);
+                    setIsVerified(false);
+                    setInstagramUsername('');
+                    setMatchedByCount(0);
+                    hasLoadedData.current = false;
                 }
                 setLoading(false);
             });
@@ -52,7 +70,20 @@ export const CrushProvider = ({ children }) => {
             const { data: { session }, error } = await supabase.auth.getSession();
             if (session?.user) {
                 setUser(session.user);
-                await loadCrushesFromDB(session.user.id);
+                // Solo cargar si no se ha cargado antes
+                if (!hasLoadedData.current) {
+                    const [crushesData, username] = await Promise.all([
+                        loadCrushesFromDB(session.user.id),
+                        loadInstagramVerification(session.user),
+                    ]);
+                    
+                    // Después de cargar crushes e Instagram, verificar matches
+                    if (username && crushesData) {
+                        await loadMatchedByCount(username, crushesData);
+                    }
+                    
+                    hasLoadedData.current = true;
+                }
             }
         } catch (error) {
             console.error('Error checking user:', error);
@@ -70,10 +101,99 @@ export const CrushProvider = ({ children }) => {
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
-            setCrushes(data?.map(d => d.match_name) || []);
+            const crushList = data?.map(d => d.match_name) || [];
+            setCrushes(crushList);
+            return crushList;
         } catch (error) {
             console.error('Error loading crushes:', error);
             setCrushes([]);
+            return [];
+        }
+    };
+
+    const loadInstagramVerification = async (userObj) => {
+        try {
+            const { data, error } = await supabase
+                .from('instagram_verification')
+                .select('*')
+                .eq('user_id', userObj.id)
+                .single();
+
+            if (error && error.code !== 'PGRST116') throw error;
+            
+            const verified = data?.is_verified || false;
+            const username = data?.instagram_username || userObj?.email?.split('@')[0] || 'Usuario';
+            const code = data?.verification_code || '';
+            
+            setIsVerified(verified);
+            setInstagramUsername(username);
+            setVerificationCode(code);
+            
+            return username;
+        } catch (error) {
+            console.error('Error loading instagram verification:', error);
+            const fallbackUsername = userObj?.email?.split('@')[0] || 'Usuario';
+            setIsVerified(false);
+            setInstagramUsername(fallbackUsername);
+            setVerificationCode('');
+            return fallbackUsername;
+        }
+    };
+
+    const refreshInstagramVerification = async () => {
+        if (user?.id) {
+            await loadInstagramVerification(user);
+        }
+    };
+
+    const loadMatchedByCount = async (username, myCrushes) => {
+        try {
+            const { data, error } = await supabase
+                .from('users_crushes')
+                .select('user_id')
+                .eq('match_name', username);
+
+            if (error) throw error;
+            
+            const count = data?.length || 0;
+            setMatchedByCount(count);
+            
+            // Si hay gente que me tiene Y yo tengo crushes, verificar matches mutuos
+            if (count > 0 && myCrushes && myCrushes.length > 0) {
+                const userIds = data.map(d => d.user_id);
+                console.log('UserIds que me tienen:', userIds);
+                
+                if (userIds.length === 0) {
+                    setMatches([]);
+                    return;
+                }
+                
+                // Obtener los usernames de Instagram de quienes me tienen
+                const { data: igData, error: igError } = await supabase
+                    .from('instagram_verification')
+                    .select('instagram_username')
+                    .in('user_id', userIds);
+                
+                console.log('Instagram data:', igData);
+                console.log('Instagram error:', igError);
+                
+                if (igError) throw igError;
+                
+                const theirUsernames = igData?.map(u => u.instagram_username) || [];
+                
+                // Encontrar matches mutuos: crushes míos que también me tienen
+                const mutualMatches = myCrushes.filter(crush => 
+                    theirUsernames.includes(crush)
+                );
+                
+                setMatches(mutualMatches);
+            } else {
+                setMatches([]);
+            }
+        } catch (error) {
+            console.error('Error loading matched by count:', error);
+            setMatchedByCount(0);
+            setMatches([]);
         }
     };
 
@@ -205,13 +325,19 @@ export const CrushProvider = ({ children }) => {
             value={{
                 user,
                 crushes,
+                matches,
                 loading,
+                isVerified,
+                instagramUsername,
+                verificationCode,
+                matchedByCount,
                 login,
                 register,
                 logout,
                 addCrush,
                 removeCrush,
-                updateCrush
+                updateCrush,
+                refreshInstagramVerification
             }}
         >
             {children}

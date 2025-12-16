@@ -201,43 +201,25 @@ const StatusMessage = styled.p`
 
 export default function InstagramVerification() {
     const navigate = useNavigate();
-    const { user } = useCrush();
-    const [username, setUsername] = useState('');
-    const [verification, setVerification] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { 
+        user, 
+        isVerified, 
+        instagramUsername, 
+        verificationCode,
+        loading: contextLoading,
+        refreshInstagramVerification 
+    } = useCrush();
+    const [username, setUsername] = useState(instagramUsername || '');
     const [submitting, setSubmitting] = useState(false);
     const [status, setStatus] = useState('');
-
-    useEffect(() => {
-        let isMounted = true;
-        
-        const loadVerification = async () => {
-            if (!user?.id) {
-                if (isMounted) setLoading(false);
-                return;
-            }
-            
-            if (isMounted) setLoading(true);
-            
-            try {
-                const result = await getInstagramVerification(user.id);
-                if (isMounted && result.success && result.data) {
-                    setVerification(result.data);
-                    setUsername(result.data.instagram_username);
-                }
-            } catch (error) {
-                console.error('Error loading verification:', error);
-            } finally {
-                if (isMounted) setLoading(false);
-            }
-        };
-        
-        loadVerification();
-        
-        return () => {
-            isMounted = false;
-        };
-    }, [user?.id]);
+    
+    // Objeto de verificación se construye a partir del contexto
+    const verification = user && (instagramUsername || verificationCode) ? {
+        user_id: user.id,
+        instagram_username: instagramUsername,
+        verification_code: verificationCode,
+        is_verified: isVerified
+    } : null;
 
     const handleSubmitUsername = async () => {
         if (!username.trim() || !user) return;
@@ -252,7 +234,7 @@ export default function InstagramVerification() {
             : await createInstagramVerification(user.id, cleanUsername);
 
         if (result.success) {
-            setVerification(result.data);
+            await refreshInstagramVerification();
             setStatus('¡Código generado! Cópialo en tu bio de Instagram.');
         } else {
             setStatus(`Error: ${result.error}`);
@@ -273,7 +255,7 @@ export default function InstagramVerification() {
         );
 
         if (result.success && result.verified) {
-            setVerification(result.data);
+            await refreshInstagramVerification();
             setStatus('¡Instagram verificado correctamente!');
         } else {
             setStatus(result.error || 'No se encontró el código en tu biografía. Inténtalo de nuevo.');
@@ -289,7 +271,7 @@ export default function InstagramVerification() {
         }
     };
 
-    if (loading) {
+    if (contextLoading) {
         return (
             <Container>
                 <Header>

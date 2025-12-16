@@ -144,10 +144,6 @@ export default function MainMenu() {
         <Header>
           <Logo src="/logo.png" alt="Previuca" />
         </Header>
-        <div>
-          <Title>Bienvenido</Title>
-          <Subtitle>¿Qué quieres hacer hoy?</Subtitle>
-        </div>
         <MenuContainer>
           {menuOptions.map((option) => (
             <Card
