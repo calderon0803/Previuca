@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { IoArrowBack, IoSettingsOutline } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'framer-motion';
 import { yoNuncaQuestions as defaultQuestions } from '../data/yoNuncaQuestions';
-import QuestionEditor from '../components/QuestionEditor';
+import OptionsEditor from '../components/OptionsEditor';
 
 const QUESTIONS_KEY = 'yonunca_questions';
 
@@ -21,14 +21,20 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: rgba(15, 1, 9, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
+  position: sticky;
+  top: 0;
+  z-index: 10;
 `;
 
 const IconButton = styled.button`
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -37,7 +43,7 @@ const IconButton = styled.button`
   transition: background 0.2s;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => theme.colors.primary};
   }
 `;
 
@@ -48,7 +54,7 @@ const CounterContainer = styled.div`
 `;
 
 const Counter = styled.span`
-  color: ${({ theme }) => theme.colors.text.primary};
+  color: ${({ theme }) => theme.colors.secondary};
   font-size: 18px;
   font-weight: bold;
 `;
@@ -76,8 +82,8 @@ const QuestionCard = styled(motion.div)`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   margin-bottom: 32px;
   box-sizing: border-box;
 `;
@@ -109,8 +115,8 @@ const Instruction = styled.p`
 const NextButton = styled(motion.button)`
   margin: 0 24px 40px 24px;
   border-radius: 16px;
-  border: 2px solid ${({ theme }) => theme.colors.border};
-  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
+  background: ${({ theme }) => theme.colors.primary};
   padding: 18px;
   width: calc(100% - 48px);
   max-width: 550px;
@@ -119,10 +125,12 @@ const NextButton = styled(motion.button)`
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  transition: all 0.2s;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => theme.colors.primary};
+    transform: translateY(-2px);
   }
 `;
 
@@ -187,11 +195,13 @@ export default function YoNuncaGame() {
                 </CounterContainer>
             </Header>
 
-            <QuestionEditor
+            <OptionsEditor
                 visible={showEditor}
-                questions={questions}
+                items={questions}
                 onSave={saveQuestions}
                 onCancel={() => setShowEditor(false)}
+                title="Editar Frases"
+                placeholder="Yo nunca..."
             />
 
             <Content>

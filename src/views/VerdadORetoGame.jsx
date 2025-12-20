@@ -23,14 +23,20 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: rgba(15, 1, 9, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
+  position: sticky;
+  top: 0;
+  z-index: 10;
 `;
 
 const IconButton = styled.button`
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -39,7 +45,7 @@ const IconButton = styled.button`
   transition: background 0.2s;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => theme.colors.primary};
   }
 `;
 
@@ -62,8 +68,8 @@ const PlayerIndicator = styled.div`
   border-radius: 16px;
   margin-bottom: 20px;
   text-align: center;
-  border: 2px solid ${({ theme }) => theme.colors.border};
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 `;
 
 const PlayerLabel = styled.p`
@@ -96,7 +102,7 @@ const ButtonsContainer = styled.div`
 `;
 
 const ChoiceButton = styled(motion.button)`
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   border-radius: 20px;
   padding: 40px;
   flex: 1;
@@ -106,15 +112,15 @@ const ChoiceButton = styled(motion.button)`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text.primary};
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
   
   &:hover {
     transform: translateY(-4px);
-    background: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    background: ${({ theme }) => `${theme.colors.primary}20`};
+    box-shadow: 0 12px 24px rgba(0,0,0,0.4);
   }
 `;
 
@@ -151,8 +157,8 @@ const QuestionCard = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   margin-bottom: 32px;
   box-sizing: border-box;
 `;
@@ -168,21 +174,23 @@ const MessageText = styled.p`
 const NextButton = styled(motion.button)`
   width: 100%;
   border-radius: 16px;
-  border: 2px solid ${({ theme }) => theme.colors.border};
-  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
+  background: ${({ theme }) => theme.colors.primary};
   padding: 18px;
   color: #fff;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
+  transition: all 0.2s;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => theme.colors.primary};
+    transform: translateY(-2px);
   }
 `;
 
@@ -324,7 +332,7 @@ export default function VerdadORetoGame() {
               onClick={handleNext}
               whileTap={{ scale: 0.98 }}
             >
-              Siguiente <IoArrowForward />
+              Siguiente
             </NextButton>
           </Content>
         )}

@@ -3,11 +3,11 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useCrush } from '../contexts/CrushContext';
 import { IoArrowBack, IoLogoInstagram, IoCheckmarkCircle, IoCloseCircle, IoCopy } from 'react-icons/io5';
-import { 
-    createInstagramVerification, 
-    getInstagramVerification, 
+import {
+    createInstagramVerification,
+    getInstagramVerification,
     verifyInstagramCode,
-    updateInstagramUsername 
+    updateInstagramUsername
 } from '../services/instagramService';
 
 const Container = styled.div`
@@ -22,15 +22,15 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   gap: 15px;
-  border-bottom: 2px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
 `;
 
 const IconButton = styled.button`
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -38,7 +38,7 @@ const IconButton = styled.button`
   color: ${({ theme }) => theme.colors.text.primary};
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => theme.colors.primary};
   }
 `;
 
@@ -62,8 +62,9 @@ const Card = styled.div`
   background: ${({ theme }) => theme.colors.surface};
   border-radius: 20px;
   padding: 30px;
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   margin-bottom: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 `;
 
 const Title = styled.h2`
@@ -97,12 +98,13 @@ const Input = styled.input`
   width: 100%;
   padding: 12px;
   border-radius: 12px;
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  border: 2px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.2);
   color: #fff;
   font-size: 16px;
   outline: none;
   box-sizing: border-box;
+  transition: border-color 0.2s;
 
   &:focus {
     border-color: ${({ theme }) => theme.colors.secondary};
@@ -145,6 +147,10 @@ const SecondaryButton = styled(Button)`
   background: transparent;
   border: 2px solid ${({ theme }) => theme.colors.secondary};
   color: ${({ theme }) => theme.colors.secondary};
+
+  &:hover {
+    background: ${({ theme }) => `${theme.colors.secondary}15`};
+  }
 `;
 
 const CodeBox = styled.div`
@@ -201,18 +207,18 @@ const StatusMessage = styled.p`
 
 export default function InstagramVerification() {
     const navigate = useNavigate();
-    const { 
-        user, 
-        isVerified, 
-        instagramUsername, 
+    const {
+        user,
+        isVerified,
+        instagramUsername,
         verificationCode,
         loading: contextLoading,
-        refreshInstagramVerification 
+        refreshInstagramVerification
     } = useCrush();
     const [username, setUsername] = useState(instagramUsername || '');
     const [submitting, setSubmitting] = useState(false);
     const [status, setStatus] = useState('');
-    
+
     // Objeto de verificación se construye a partir del contexto
     const verification = user && (instagramUsername || verificationCode) ? {
         user_id: user.id,
@@ -228,8 +234,8 @@ export default function InstagramVerification() {
         setStatus('Generando código...');
 
         const cleanUsername = username.replace('@', '').trim();
-        
-        const result = verification 
+
+        const result = verification
             ? await updateInstagramUsername(user.id, cleanUsername)
             : await createInstagramVerification(user.id, cleanUsername);
 
@@ -371,8 +377,8 @@ export default function InstagramVerification() {
                                 Verificar Instagram
                             </Button>
 
-                            <SecondaryButton 
-                                onClick={handleSubmitUsername} 
+                            <SecondaryButton
+                                onClick={handleSubmitUsername}
                                 disabled={submitting}
                                 style={{ marginTop: '10px' }}
                             >

@@ -24,8 +24,8 @@ const IconButton = styled.button`
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -33,7 +33,7 @@ const IconButton = styled.button`
   color: ${({ theme }) => theme.colors.text.primary};
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => theme.colors.primary};
   }
 `;
 
@@ -43,10 +43,11 @@ const LoginCard = styled.div`
   padding: 30px;
   width: 100%;
   max-width: 400px;
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 `;
 
 const Title = styled.h1`
@@ -84,12 +85,13 @@ const Input = styled.input`
   width: 100%;
   padding: 12px 12px 12px 40px;
   border-radius: 12px;
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  border: 2px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.2);
   color: #fff;
   font-size: 16px;
   outline: none;
   box-sizing: border-box;
+  transition: border-color 0.2s;
 
   &:focus {
     border-color: ${({ theme }) => theme.colors.secondary};
@@ -106,7 +108,7 @@ const Button = styled.button`
   font-size: 16px;
   border: none;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: transform 0.1s, filter 0.2s;
   margin-top: 10px;
   height: 50px;
   display: flex;
@@ -127,6 +129,10 @@ const SecondaryButton = styled(Button)`
   background: transparent;
   border: 2px solid ${({ theme }) => theme.colors.secondary};
   color: ${({ theme }) => theme.colors.secondary};
+  
+  &:hover {
+    background: ${({ theme }) => `${theme.colors.secondary}15`};
+  }
 `;
 
 const StatusMessage = styled.p`
@@ -158,8 +164,8 @@ export default function CrushLogin() {
     return (
       <Container>
         <div style={{ textAlign: 'center', color: '#fff' }}>
-          <div style={{ fontSize: '24px', marginBottom: '10px' }}>🔄</div>
-          <div>Verificando sesión...</div>
+          <div style={{ fontSize: '32px', marginBottom: '20px' }}>🍷</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold' }}>Verificando sesión...</div>
         </div>
       </Container>
     );
@@ -177,15 +183,15 @@ export default function CrushLogin() {
       console.log('Login result completo:', JSON.stringify(result, null, 2));
       console.log('result.success:', result?.success);
       console.log('Tipo de result:', typeof result);
-      
+
       if (result?.success) {
         setStatus('¡Bienvenido!');
         setTimeout(() => {
           navigate('/my-crushes');
         }, 500);
       } else {
-        const errorMsg = typeof result?.error === 'string' 
-          ? result.error 
+        const errorMsg = typeof result?.error === 'string'
+          ? result.error
           : result?.error?.message || 'Error al iniciar sesión';
         console.log('Error message:', errorMsg);
         setStatus(errorMsg);
@@ -216,7 +222,7 @@ export default function CrushLogin() {
 
     try {
       const result = await register(email, password);
-      
+
       if (result.success) {
         setStatus('¡Cuenta creada! Verifica tu email para continuar.');
         setIsVerifying(false);
@@ -251,7 +257,7 @@ export default function CrushLogin() {
       </Header>
       <LoginCard>
         <Title>{isRegisterMode ? 'Crear Cuenta' : 'Iniciar Sesión'}</Title>
-        
+
         {!isRegisterMode ? (
           // Formulario de Login
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} style={{ width: '100%' }}>
@@ -348,7 +354,7 @@ export default function CrushLogin() {
           </form>
         )}
 
-        <SecondaryButton 
+        <SecondaryButton
           type="button"
           onClick={toggleMode}
           disabled={isVerifying}

@@ -19,14 +19,20 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: rgba(15, 1, 9, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
+  position: sticky;
+  top: 0;
+  z-index: 10;
 `;
 
 const IconButton = styled.button`
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -35,7 +41,7 @@ const IconButton = styled.button`
   transition: background 0.2s;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => theme.colors.primary};
   }
 `;
 
@@ -58,8 +64,8 @@ const PlayerIndicator = styled.div`
   border-radius: 16px;
   margin-bottom: 20px;
   text-align: center;
-  border: 2px solid ${({ theme }) => theme.colors.border};
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 `;
 
 const PlayerLabel = styled.p`
@@ -132,8 +138,8 @@ const RuleContainer = styled.div`
   width: 100%;
   margin-bottom: 24px;
   box-sizing: border-box;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
 `;
 
 const RuleName = styled.h3`
@@ -155,17 +161,19 @@ const RuleDescription = styled.p`
 const NextButton = styled.button`
   width: 100%;
   border-radius: 16px;
-  border: 2px solid ${({ theme }) => theme.colors.border};
-  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
+  background: ${({ theme }) => theme.colors.primary};
   padding: 18px;
   color: #fff;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  transition: all 0.2s;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => theme.colors.primary};
+    transform: translateY(-2px);
   }
 `;
 
@@ -192,21 +200,16 @@ const CardsRow = styled.div`
 `;
 
 const CardBack = styled(motion.button)`
-  background: ${({ theme }) => theme.colors.surface};
-  border-radius: 16px;
-  width: 80px;
-  height: 110px;
+  background: ${({ theme }) => theme.colors.background};
+  border:none;
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 2px solid ${({ theme }) => theme.colors.border};
   cursor: pointer;
-  font-size: 40px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-size: 75px;
   
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
   }
 `;
 
@@ -231,7 +234,7 @@ const GameOverText = styled.p`
 
 const RestartButton = styled.button`
   border-radius: 16px;
-  border: none;
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   background: ${({ theme }) => theme.colors.primary};
   padding: 18px 32px;
   display: flex;
@@ -241,10 +244,12 @@ const RestartButton = styled.button`
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 12px ${({ theme }) => `${theme.colors.primary}40`};
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  transition: all 0.2s;
   
   &:hover {
-    filter: brightness(1.1);
+    filter: brightness(1.2);
+    transform: translateY(-2px);
   }
 `;
 
@@ -354,7 +359,7 @@ export default function ReyDeCopasGame() {
                 <>
                   <SelectText>Elige una carta</SelectText>
                   <CardsRow>
-                    {deck.slice(0, Math.min(6, deck.length)).map((_, index) => (
+                    {deck.slice(0, Math.min(5, deck.length)).map((_, index) => (
                       <CardBack
                         key={index}
                         onClick={() => drawCard(index)}

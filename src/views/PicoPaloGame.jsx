@@ -16,8 +16,12 @@ const Header = styled.div`
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    background: ${({ theme }) => theme.colors.background};
-    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+    background: rgba(15, 1, 9, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
+    position: sticky;
+    top: 0;
+    z-index: 10;
 `;
 
 const HeaderTitle = styled.h1`
@@ -27,19 +31,20 @@ const HeaderTitle = styled.h1`
 `;
 
 const IconButton = styled.button`
-    background: none;
-    border: none;
+    background: ${({ theme }) => theme.colors.surface};
+    border: 2px solid ${({ theme }) => theme.colors.secondary};
     color: #fff;
     cursor: pointer;
-    padding: 8px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: 12px;
     transition: background 0.2s;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: ${({ theme }) => theme.colors.primary};
     }
 `;
 
@@ -56,8 +61,8 @@ const Content = styled.div`
 const Card = styled.div`
     width: 180px;
     height: 260px;
-    background: ${props => props.$hidden ? '#2a2a2a' : '#fff'};
-    border-radius: 15px;
+    background: ${props => props.$hidden ? '#0F0109' : '#fff'};
+    border: 2px solid ${({ theme }) => theme.colors.secondary};
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -146,8 +151,8 @@ const PlayerIndicator = styled.div`
     border-radius: 16px;
     margin-bottom: 20px;
     text-align: center;
-    border: 2px solid ${({ theme }) => theme.colors.border};
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border: 2px solid ${({ theme }) => theme.colors.secondary};
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 `;
 
 const PlayerLabel = styled.p`
@@ -191,22 +196,24 @@ const NextPlayerButton = styled.button`
     width: 100%;
     max-width: 400px;
     border-radius: 16px;
-    border: 2px solid ${({ theme }) => theme.colors.border};
-    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid ${({ theme }) => theme.colors.secondary};
+  background: ${({ theme }) => theme.colors.primary};
     padding: 18px;
     color: #fff;
     font-size: 20px;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 8px;
     margin-top: 20px;
+    transition: all 0.2s;
     
     &:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: ${({ theme }) => theme.colors.primary};
+        transform: translateY(-2px);
     }
 
     &:disabled {
@@ -224,14 +231,14 @@ const suitNames = {
 };
 const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const valueNumbers = {
-    'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, 
+    'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
     '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13
 };
 
 const PicoPaloGame = () => {
     const navigate = useNavigate();
     const { players } = usePlayers();
-    
+
     // Crear baraja completa al inicio
     const createFullDeck = () => {
         const deck = [];
@@ -284,7 +291,7 @@ const PicoPaloGame = () => {
             setCurrentCard(drawnCard);
             return remainingDeck;
         });
-        
+
         setRevealed(false);
         setMessage('');
         setGameState('pico');
@@ -303,21 +310,21 @@ const PicoPaloGame = () => {
 
         const nextAnswered = playersWhoAnswered + 1;
         const totalPlayers = players.length || 1;
-        
+
         // Si todos los jugadores respondieron esta pregunta
         if (nextAnswered >= totalPlayers) {
             // Avanzar a la siguiente fase
             if (gameState === 'pico') {
                 setPreviousCards([currentCard]);
                 setGameState('palo');
-                
+
                 // Tomar nueva carta de la baraja
                 setDeck(prevDeck => {
                     const { drawnCard, remainingDeck } = drawCardFromDeck(prevDeck);
                     setCurrentCard(drawnCard);
                     return remainingDeck;
                 });
-                
+
                 setPlayersWhoAnswered(0);
                 setCurrentPlayerIndex(0);
                 setRevealed(false);
@@ -325,14 +332,14 @@ const PicoPaloGame = () => {
             } else if (gameState === 'palo') {
                 setPreviousCards([...previousCards, currentCard]);
                 setGameState('dentro-fuera');
-                
+
                 // Tomar nueva carta de la baraja
                 setDeck(prevDeck => {
                     const { drawnCard, remainingDeck } = drawCardFromDeck(prevDeck);
                     setCurrentCard(drawnCard);
                     return remainingDeck;
                 });
-                
+
                 setPlayersWhoAnswered(0);
                 setCurrentPlayerIndex(0);
                 setRevealed(false);
@@ -346,7 +353,7 @@ const PicoPaloGame = () => {
                 setUsedCardsInSequence([]);
                 setRevealed(false);
                 setMessage('');
-                
+
                 // Tomar primera carta para el primer jugador
                 setDeck(prevDeck => {
                     const { drawnCard, remainingDeck } = drawCardFromDeck(prevDeck);
@@ -360,7 +367,7 @@ const PicoPaloGame = () => {
             setCurrentPlayerIndex((currentPlayerIndex + 1) % totalPlayers);
             setRevealed(false);
             setMessage('');
-            
+
             // Sacar nueva carta para el siguiente jugador
             if (gameState !== 'mayor-menor') {
                 setDeck(prevDeck => {
@@ -382,7 +389,7 @@ const PicoPaloGame = () => {
             // Adivinar si es rojo (corazón/diamante) o negro (pica/trébol)
             const isRed = currentCard.suit === '♥️' || currentCard.suit === '♦️';
             correct = (choice === 'rojo' && isRed) || (choice === 'negro' && !isRed);
-            
+
             if (correct) {
                 setMessage('✅ ¡Correcto! Continúa el siguiente jugador');
             } else {
@@ -391,7 +398,7 @@ const PicoPaloGame = () => {
         } else if (gameState === 'palo') {
             // Adivinar el palo exacto
             correct = choice === suitNames[currentCard.suit];
-            
+
             if (correct) {
                 setMessage('✅ ¡Correcto! Continúa el siguiente jugador');
             } else {
@@ -402,13 +409,13 @@ const PicoPaloGame = () => {
             const cardNumber = valueNumbers[currentCard.value];
             const card1Number = valueNumbers[previousCards[0].value];
             const card2Number = valueNumbers[previousCards[1].value];
-            
+
             const minRange = Math.min(card1Number, card2Number);
             const maxRange = Math.max(card1Number, card2Number);
-            
+
             const isDentro = cardNumber > minRange && cardNumber < maxRange;
             correct = (choice === 'dentro' && isDentro) || (choice === 'fuera' && !isDentro);
-            
+
             if (correct) {
                 setMessage('🎉 ¡Correcto! Reparte 3 tragos');
             } else {
@@ -418,21 +425,21 @@ const PicoPaloGame = () => {
             // Ronda extra: adivinar si la siguiente carta es mayor o menor que las del jugador
             const currentPlayerCardsList = playerCards[currentPlayerIndex] || [];
             const referenceCard = currentPlayerCardsList[currentCardIndexInSequence];
-            
+
             if (!referenceCard) return;
-            
+
             const newCardNumber = valueNumbers[currentCard.value];
             const referenceNumber = valueNumbers[referenceCard.value];
-            
+
             const isMayor = newCardNumber > referenceNumber;
             const isMenor = newCardNumber < referenceNumber;
-            
+
             correct = (choice === 'mayor' && isMayor) || (choice === 'menor' && isMenor) || (newCardNumber === referenceNumber);
-            
+
             if (correct) {
                 // Añadir carta a las usadas en esta secuencia
                 setUsedCardsInSequence([...usedCardsInSequence, currentCard]);
-                
+
                 // Si completó todas sus cartas
                 if (currentCardIndexInSequence >= currentPlayerCardsList.length - 1) {
                     setMessage('🎉 ¡Completaste la secuencia! Reparte 5 tragos');
@@ -537,7 +544,7 @@ const PicoPaloGame = () => {
     const handleNextPlayerInMayorMenor = () => {
         const totalPlayers = players.length || 1;
         const nextPlayer = (currentPlayerIndex + 1) % totalPlayers;
-        
+
         // Si ya pasaron todos los jugadores, terminar el juego
         if (nextPlayer === 0) {
             setMessage('🎉 ¡Juego completado!');
@@ -547,7 +554,7 @@ const PicoPaloGame = () => {
             setUsedCardsInSequence([]);
             setRevealed(false);
             setMessage('');
-            
+
             // Tomar nueva carta para el siguiente jugador
             setDeck(prevDeck => {
                 const { drawnCard, remainingDeck } = drawCardFromDeck(prevDeck);
@@ -640,13 +647,13 @@ const PicoPaloGame = () => {
 
                 {canAdvancePlayer && players.length > 0 && (
                     <NextPlayerButton onClick={advanceToNextPlayer}>
-                        {playersWhoAnswered + 1 < totalPlayers ? 'Siguiente jugador' : 'Siguiente pregunta'} <IoArrowForward size={20} />
+                        {playersWhoAnswered + 1 < totalPlayers ? 'Siguiente jugador' : 'Siguiente pregunta'}
                     </NextPlayerButton>
                 )}
 
                 {completedMayorMenorSequence && (
                     <NextPlayerButton onClick={handleNextPlayerInMayorMenor}>
-                        Siguiente jugador <IoArrowForward size={20} />
+                        Siguiente jugador
                     </NextPlayerButton>
                 )}
 

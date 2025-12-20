@@ -29,7 +29,7 @@ const Home = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                PatronaLeague
+                Previuca
             </Title>
             <Subtitle
                 initial={{ opacity: 0 }}

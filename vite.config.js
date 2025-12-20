@@ -9,8 +9,8 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
             manifest: {
-                name: 'PatronaLeague',
-                short_name: 'Patrona',
+                name: 'Previuca',
+                short_name: 'Previuca',
                 description: 'La mejor app de juegos de beber',
                 theme_color: '#667eea',
                 background_color: '#ffffff',

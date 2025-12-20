@@ -17,8 +17,12 @@ const Header = styled.div`
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    background: ${({ theme }) => theme.colors.background};
-    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+    background: rgba(15, 1, 9, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
+    position: sticky;
+    top: 0;
+    z-index: 10;
 `;
 
 const HeaderTitle = styled.h1`
@@ -28,19 +32,20 @@ const HeaderTitle = styled.h1`
 `;
 
 const IconButton = styled.button`
-    background: none;
-    border: none;
+    background: ${({ theme }) => theme.colors.surface};
+    border: 2px solid ${({ theme }) => theme.colors.secondary};
     color: #fff;
     cursor: pointer;
-    padding: 8px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: 12px;
     transition: background 0.2s;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: ${({ theme }) => theme.colors.primary};
     }
 `;
 
@@ -53,21 +58,29 @@ const Section = styled.div`
 `;
 
 const SectionTitle = styled.h2`
-    color: #fff;
+    color: ${({ theme }) => theme.colors.secondary};
     font-size: 18px;
     margin-bottom: 15px;
     padding-left: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 `;
 
 const SettingItem = styled.div`
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid ${({ theme }) => theme.colors.border};
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 10px;
+    background: ${({ theme }) => theme.colors.surface};
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.2s;
+
+    &:hover {
+        border-color: ${({ theme }) => theme.colors.secondary};
+        background: ${({ theme }) => `${theme.colors.primary}10`};
+    }
 `;
 
 const SettingInfo = styled.div`
@@ -106,8 +119,9 @@ const Button = styled.button`
 `;
 
 const DangerZone = styled.div`
-    border: 2px solid #ff4444;
-    border-radius: 10px;
+    border: 2px solid #ff3b30;
+    background: rgba(255, 59, 48, 0.05);
+    border-radius: 16px;
     padding: 20px;
     margin-top: 20px;
 `;
@@ -120,16 +134,16 @@ const DangerTitle = styled.h3`
 
 const Settings = () => {
     const navigate = useNavigate();
-    const { 
-        user, 
-        logout, 
-        isVerified, 
+    const {
+        user,
+        logout,
+        isVerified,
         instagramUsername,
         verificationCode,
         refreshInstagramVerification,
-        loading: contextLoading 
+        loading: contextLoading
     } = useCrush();
-    
+
     // Construir objeto de datos de Instagram desde el contexto
     const instagramData = user && instagramUsername ? {
         instagram_username: instagramUsername,
@@ -140,7 +154,7 @@ const Settings = () => {
     const handleBack = () => {
         navigate('/');
     };
-    
+
     // Si está cargando, mostrar pantalla de carga
     if (contextLoading) {
         return (
@@ -160,7 +174,7 @@ const Settings = () => {
             </Container>
         );
     }
-    
+
     // Si no hay usuario, mostrar mensaje para iniciar sesión
     if (!user) {
         return (
@@ -270,7 +284,7 @@ const Settings = () => {
             <Content>
                 <Section>
                     <SectionTitle>Cuenta</SectionTitle>
-                    
+
                     <SettingItem>
                         <SettingInfo>
                             <SettingLabel>Email</SettingLabel>
@@ -289,7 +303,7 @@ const Settings = () => {
 
                 <Section>
                     <SectionTitle>Instagram</SectionTitle>
-                    
+
                     {contextLoading ? (
                         <SettingItem>
                             <SettingValue>Cargando...</SettingValue>
@@ -319,7 +333,7 @@ const Settings = () => {
 
                 <Section>
                     <SectionTitle>Sesión</SectionTitle>
-                    
+
                     <SettingItem style={{ cursor: 'pointer' }} onClick={logout}>
                         <SettingInfo>
                             <SettingLabel style={{ color: '#fff' }}>Cerrar sesión</SettingLabel>
@@ -328,7 +342,7 @@ const Settings = () => {
                     </SettingItem>
                 </Section>
 
-                <Section>                    
+                <Section>
                     <SettingItem>
                         <SettingInfo>
                             <SettingLabel>Eliminar cuenta</SettingLabel>

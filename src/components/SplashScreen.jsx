@@ -12,7 +12,7 @@ const Container = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #222B56; // Dark Blue from logo background (approximated based on visuals)
+  background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -27,22 +27,22 @@ const Logo = styled.img`
 `;
 
 const SplashScreen = ({ onFinish }) => {
-    const [fading, setFading] = useState(false);
+  const [fading, setFading] = useState(false);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setFading(true);
-            setTimeout(onFinish, 500); // Wait for animation
-        }, 1500);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFading(true);
+      setTimeout(onFinish, 500); // Wait for animation
+    }, 1500);
 
-        return () => clearTimeout(timer);
-    }, [onFinish]);
+    return () => clearTimeout(timer);
+  }, [onFinish]);
 
-    return (
-        <Container $fading={fading}>
-            <Logo src="/logo.png" alt="Previuca" />
-        </Container>
-    );
+  return (
+    <Container $fading={fading}>
+      <Logo src="/logo.png" alt="Previuca" />
+    </Container>
+  );
 };
 
 export default SplashScreen;

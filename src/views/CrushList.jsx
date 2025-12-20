@@ -16,7 +16,12 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 2px solid ${({ theme }) => theme.colors.border};
+  background-color: rgba(15, 1, 9, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
+  position: sticky;
+  top: 0;
+  z-index: 10;
 `;
 
 const HeaderTitle = styled.h1`
@@ -30,8 +35,8 @@ const IconButton = styled.button`
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -39,7 +44,7 @@ const IconButton = styled.button`
   color: ${({ theme }) => theme.colors.text.primary};
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: ${({ theme }) => theme.colors.primary};
   }
 `;
 
@@ -55,7 +60,7 @@ const Content = styled.div`
 `;
 
 const UserInfo = styled.div`
-  background: rgba(0, 0, 0, 0.2);
+  background: ${({ theme }) => theme.colors.surface};
   padding: 15px;
   border-radius: 12px;
   margin-bottom: 20px;
@@ -63,16 +68,18 @@ const UserInfo = styled.div`
   justify-content: space-between;
   align-items: center;
   color: ${({ theme }) => theme.colors.text.secondary};
+  border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const MatchedByInfo = styled.div`
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.1));
-  border: 2px solid rgba(255, 215, 0, 0.3);
+  background: linear-gradient(135deg, ${({ theme }) => `${theme.colors.secondary}20`}, ${({ theme }) => `${theme.colors.primary}20`});
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
   padding: 15px;
   border-radius: 12px;
   margin-bottom: 20px;
   text-align: center;
   color: ${({ theme }) => theme.colors.text.primary};
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   
   span {
     display: block;
@@ -83,8 +90,9 @@ const MatchedByInfo = styled.div`
   
   strong {
     font-size: 24px;
-    color: #FFD700;
+    color: ${({ theme }) => theme.colors.secondary};
     font-weight: bold;
+    text-shadow: 0 0 10px ${({ theme }) => `${theme.colors.secondary}50`};
   }
 `;
 
@@ -95,20 +103,20 @@ const ListContainer = styled.div`
 `;
 
 const CrushCard = styled.div`
-  background: ${({ theme, $isMatch }) => 
-    $isMatch 
-      ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2))' 
+  background: ${({ theme, $isMatch }) =>
+    $isMatch
+      ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2))'
       : theme.colors.surface};
   border-radius: 16px;
   padding: 20px;
-  border: ${({ theme, $isMatch }) => 
-    $isMatch 
-      ? '2px solid rgba(255, 215, 0, 0.6)' 
+  border: ${({ theme, $isMatch }) =>
+    $isMatch
+      ? '2px solid rgba(255, 215, 0, 0.6)'
       : `1px solid ${theme.colors.border}`};
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: ${({ $isMatch }) => 
+  box-shadow: ${({ $isMatch }) =>
     $isMatch ? '0 4px 12px rgba(255, 215, 0, 0.3)' : 'none'};
 `;
 
@@ -124,20 +132,21 @@ const MatchBadge = styled.span`
 `;
 
 const EmptySlot = styled.div`
-  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border: 2px dashed ${({ theme }) => theme.colors.primary};
   border-radius: 16px;
   padding: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.5);
-  transition: all 0.2s;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  transition: all 0.3s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: ${({ theme }) => theme.colors.secondary};
+    background: ${({ theme }) => `${theme.colors.primary}20`};
+    border-style: solid;
     color: ${({ theme }) => theme.colors.secondary};
+    transform: translateY(-2px);
   }
 `;
 
@@ -223,135 +232,135 @@ const VerifyButton = styled.button`
 `;
 
 export default function CrushList() {
-    const navigate = useNavigate();
-    const { 
-        user, 
-        crushes,
-        matches,
-        logout, 
-        addCrush, 
-        removeCrush, 
-        loading,
-        isVerified,
-        instagramUsername,
-        matchedByCount
-    } = useCrush();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newCrushName, setNewCrushName] = useState('');
+  const navigate = useNavigate();
+  const {
+    user,
+    crushes,
+    matches,
+    logout,
+    addCrush,
+    removeCrush,
+    loading,
+    isVerified,
+    instagramUsername,
+    matchedByCount
+  } = useCrush();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newCrushName, setNewCrushName] = useState('');
 
-    const handleBack = () => {
-        navigate('/');
-    };
+  const handleBack = () => {
+    navigate('/');
+  };
 
-    const handleAddClick = () => {
-        if (!isVerified) {
-            navigate('/instagram-verification');
-            return;
-        }
-        
-        if (crushes.length >= 5) {
-            alert('Has alcanzado el límite de 5 crushes.');
-            return;
-        }
-        
-        setNewCrushName('');
-        setIsModalOpen(true);
-    };
-
-    const handleConfirmAdd = () => {
-        if (newCrushName.trim()) {
-            addCrush(newCrushName);
-            setIsModalOpen(false);
-        }
-    };
-
-    const handleLogout = () => {
-        if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
-            logout();
-            navigate('/crush');
-        }
+  const handleAddClick = () => {
+    if (!isVerified) {
+      navigate('/instagram-verification');
+      return;
     }
 
-    // Generate 5 slots
-    const slots = Array(5).fill(null).map((_, i) => crushes?.[i] || null);
+    if (crushes.length >= 5) {
+      alert('Has alcanzado el límite de 5 crushes.');
+      return;
+    }
 
-    return (
-        <Container>
-            <Header>
-                <IconButton onClick={handleBack}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <HeaderTitle>Mis Crushes</HeaderTitle>
-                <div style={{ width: 40 }} />
-            </Header>
-            <Content>
-                {!isVerified && (
-                    <VerifyButton onClick={() => navigate('/instagram-verification')}>
-                        Verificar Instagram
-                    </VerifyButton>
+    setNewCrushName('');
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmAdd = () => {
+    if (newCrushName.trim()) {
+      addCrush(newCrushName);
+      setIsModalOpen(false);
+    }
+  };
+
+  const handleLogout = () => {
+    if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
+      logout();
+      navigate('/crush');
+    }
+  }
+
+  // Generate 5 slots
+  const slots = Array(5).fill(null).map((_, i) => crushes?.[i] || null);
+
+  return (
+    <Container>
+      <Header>
+        <IconButton onClick={handleBack}>
+          <IoArrowBack size={24} />
+        </IconButton>
+        <HeaderTitle>Mis Crushes</HeaderTitle>
+        <div style={{ width: 40 }} />
+      </Header>
+      <Content>
+        {!isVerified && (
+          <VerifyButton onClick={() => navigate('/instagram-verification')}>
+            Verificar Instagram
+          </VerifyButton>
+        )}
+
+        {isVerified && (
+          <>
+            <UserInfo>
+              <span>@{instagramUsername}</span>
+              <IoPerson />
+            </UserInfo>
+
+            <MatchedByInfo>
+              <span>Personas que te tienen en su lista</span>
+              <strong>{matchedByCount}</strong>
+            </MatchedByInfo>
+          </>
+        )}
+
+        <ListContainer>
+          {slots.map((crush, index) => {
+            const isMatch = crush && matches.includes(crush);
+            return (
+              <React.Fragment key={index}>
+                {crush ? (
+                  <CrushCard $isMatch={isMatch}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {isMatch && <MatchBadge>❤️</MatchBadge>}
+                      <CrushName $isMatch={isMatch}>@{crush}</CrushName>
+                    </div>
+                    <IconButton
+                      style={{ width: 30, height: 30, background: 'rgba(255,50,50,0.2)', border: 'none' }}
+                      onClick={() => removeCrush(index)}
+                    >
+                      <IoClose color="#ff5555" />
+                    </IconButton>
+                  </CrushCard>
+                ) : (
+                  <EmptySlot onClick={handleAddClick}>
+                    <IoAdd size={24} />
+                    <span style={{ marginLeft: 8 }}>Añadir Crush</span>
+                  </EmptySlot>
                 )}
-                
-                {isVerified && (
-                    <>
-                        <UserInfo>
-                            <span>@{instagramUsername}</span>
-                            <IoPerson />
-                        </UserInfo>
+              </React.Fragment>
+            );
+          })}
+        </ListContainer>
+      </Content>
 
-                        <MatchedByInfo>
-                            <span>Personas que te tienen en su lista</span>
-                            <strong>{matchedByCount}</strong>
-                        </MatchedByInfo>
-                    </>
-                )}
-
-                <ListContainer>
-                    {slots.map((crush, index) => {
-                        const isMatch = crush && matches.includes(crush);
-                        return (
-                        <React.Fragment key={index}>
-                            {crush ? (
-                                <CrushCard $isMatch={isMatch}>
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                        {isMatch && <MatchBadge>❤️</MatchBadge>}
-                                        <CrushName $isMatch={isMatch}>@{crush}</CrushName>
-                                    </div>
-                                    <IconButton
-                                        style={{ width: 30, height: 30, background: 'rgba(255,50,50,0.2)', border: 'none' }}
-                                        onClick={() => removeCrush(index)}
-                                    >
-                                        <IoClose color="#ff5555" />
-                                    </IconButton>
-                                </CrushCard>
-                            ) : (
-                                <EmptySlot onClick={handleAddClick}>
-                                    <IoAdd size={24} />
-                                    <span style={{ marginLeft: 8 }}>Añadir Crush</span>
-                                </EmptySlot>
-                            )}
-                        </React.Fragment>
-                    );
-                    })}
-                </ListContainer>
-            </Content>
-
-            {isModalOpen && (
-                <InputOverlay onClick={() => setIsModalOpen(false)}>
-                    <InputCard onClick={e => e.stopPropagation()}>
-                        <ModalTitle>Nuevo Crush</ModalTitle>
-                        <Input
-                            placeholder="Usuario (sin espacios)"
-                            value={newCrushName}
-                            onChange={e => setNewCrushName(e.target.value.replace(/\s/g, ''))}
-                            autoFocus
-                        />
-                        <ButtonGroup>
-                            <ModalButton $cancel onClick={() => setIsModalOpen(false)}>Cancelar</ModalButton>
-                            <ModalButton onClick={handleConfirmAdd}>Añadir</ModalButton>
-                        </ButtonGroup>
-                    </InputCard>
-                </InputOverlay>
-            )}
-        </Container>
-    );
+      {isModalOpen && (
+        <InputOverlay onClick={() => setIsModalOpen(false)}>
+          <InputCard onClick={e => e.stopPropagation()}>
+            <ModalTitle>Nuevo Crush</ModalTitle>
+            <Input
+              placeholder="Usuario (sin espacios)"
+              value={newCrushName}
+              onChange={e => setNewCrushName(e.target.value.replace(/\s/g, ''))}
+              autoFocus
+            />
+            <ButtonGroup>
+              <ModalButton $cancel onClick={() => setIsModalOpen(false)}>Cancelar</ModalButton>
+              <ModalButton onClick={handleConfirmAdd}>Añadir</ModalButton>
+            </ButtonGroup>
+          </InputCard>
+        </InputOverlay>
+      )}
+    </Container>
+  );
 }

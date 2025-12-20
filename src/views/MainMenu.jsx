@@ -6,19 +6,19 @@ import { IoHeart, IoGameController, IoSettings, IoChevronForward } from 'react-i
 const menuOptions = [
   {
     id: 1,
-    name: 'Crush',
-    description: 'Encuentra tu crush perfecto',
-    icon: '💕',
-    iconName: 'heart',
-    route: '/crush',
-  },
-  {
-    id: 2,
     name: 'Juegos',
     description: 'Diversión sin límites',
     icon: '🎮',
     iconName: 'game-controller',
     route: '/games',
+  },
+  {
+    id: 2,
+    name: 'Crush',
+    description: 'Encuentra tu crush perfecto',
+    icon: '💕',
+    iconName: 'heart',
+    route: '/crush',
   },
   {
     id: 3,
@@ -58,7 +58,6 @@ const Logo = styled.img`
   height: auto;
   margin-bottom: 20px;
   border-radius: 24px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 `;
 
 const Title = styled.h1`
@@ -90,13 +89,14 @@ const Card = styled.div`
   display: flex;
   align-items: center;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  border: 2px solid ${({ theme }) => theme.colors.border};
-  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s, border-color 0.3s;
 
   &:hover {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+    transform: translateY(-4px);
+    background: ${({ theme }) => `${theme.colors.primary}20`}; // 20% magenta tint
+    box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+    border-color: ${({ theme }) => theme.colors.secondary};
   }
 
   &:active {

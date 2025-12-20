@@ -12,6 +12,10 @@ import YoNuncaGame from './views/YoNuncaGame';
 import VerdadORetoGame from './views/VerdadORetoGame';
 import ReyDeCopasGame from './views/ReyDeCopasGame';
 import PicoPaloGame from './views/PicoPaloGame';
+import MedusaGame from './views/MedusaGame';
+import RouletteGame from './views/RouletteGame';
+import DiceGame from './views/DiceGame';
+import ImpostorGame from './views/ImpostorGame';
 
 // Placeholder for missing views if any
 const Placeholder = ({ title }) => (
@@ -32,13 +36,13 @@ import Settings from './views/Settings';
 // Protected Route specific for Crush
 const CrushRoute = ({ children }) => {
     const { user, loading } = useCrush();
-    
+
     if (loading) {
         return (
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 minHeight: '100vh',
                 color: '#fff'
             }}>
@@ -46,7 +50,7 @@ const CrushRoute = ({ children }) => {
             </div>
         );
     }
-    
+
     return user ? children : <Navigate to="/match" replace />;
 };
 
@@ -90,9 +94,18 @@ function App() {
                             <Route path="/game/verdadereto" element={<VerdadORetoGame />} />
                             <Route path="/game/reydecopas" element={<ReyDeCopasGame />} />
                             <Route path="/game/picopalo" element={<PicoPaloGame />} />
+                            <Route path="/game/medusa" element={<MedusaGame />} />
+                            <Route path="/game/ruleta" element={<RouletteGame />} />
+                            <Route path="/game/dados" element={<DiceGame />} />
+                            <Route path="/game/impostor" element={<ImpostorGame />} />
+                            <Route path="/footer-demo" element={<Placeholder title="Footer Demo" />} />
                             <Route path="/games/yo-nunca" element={<YoNuncaGame />} />
                             <Route path="/games/verdad-o-reto" element={<VerdadORetoGame />} />
                             <Route path="/games/rey-de-copas" element={<ReyDeCopasGame />} />
+                            <Route path="/games/medusa" element={<MedusaGame />} />
+                            <Route path="/games/ruleta" element={<RouletteGame />} />
+                            <Route path="/games/dados" element={<DiceGame />} />
+                            <Route path="/games/impostor" element={<ImpostorGame />} />
 
                             <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>

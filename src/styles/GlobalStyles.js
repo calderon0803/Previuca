@@ -8,7 +8,7 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    background-color: ${({ theme }) => theme.colors.background}; // Now light
+    background: radial-gradient(circle at top, #1a0210 0%, #0F0109 100%);
     color: ${({ theme }) => theme.colors.text.primary};
     font-family: ${({ theme }) => theme.typography.fontFamily};
     -webkit-font-smoothing: antialiased;

@@ -1,16 +1,17 @@
 export const theme = {
     colors: {
-        primary: '#BA0057', // Deep Pink/Magenta - Main Background
-        secondary: '#FFD800', // Gold/Yellow - Borders
-        background: '#BA0057', // App Background
-        surface: 'rgba(255, 255, 255, 0.1)', // Semi-transparent white for cards
-        error: '#FF5252',
+        primary: '#BA0057', // Deep Pink/Magenta
+        secondary: '#FFD800', // Gold/Yellow
+        background: '#0F0109', // Deep Dark Purple (Nearly Black)
+        surface: 'rgba(255, 255, 255, 0.05)', // Subtle glass surface
+        error: '#FF3B30',
         text: {
-            primary: '#FFFFFF', // White text for contrast on Pink
-            secondary: 'rgba(255, 255, 255, 0.7)',
-            disabled: 'rgba(255, 255, 255, 0.5)',
+            primary: '#FFFFFF',
+            secondary: 'rgba(255, 255, 255, 0.6)',
+            disabled: 'rgba(255, 255, 255, 0.3)',
         },
-        border: '#FFD800', // Explicit border color
+        border: 'rgba(255, 255, 255, 0.1)', // Subtle layout borders
+        background: '#222B56',
     },
     typography: {
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
