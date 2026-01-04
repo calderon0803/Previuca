@@ -53,31 +53,43 @@ const Content = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
-    gap: 30px;
+    justify-content: flex-start;
+    padding: 24px 12px;
+    gap: 12px;
 `;
 
 const Card = styled.div`
-    width: 180px;
-    height: 260px;
+    width: 140px;
+    height: 200px;
     background: ${props => props.$hidden ? '#0F0109' : '#fff'};
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
     transition: transform 0.2s;
     cursor: ${props => props.$hidden ? 'default' : 'pointer'};
     position: relative;
 
     ${props => props.$hidden && `
+        background: repeating-linear-gradient(
+            45deg,
+            #BA0057,
+            #BA0057 10px,
+            #8B0042 10px,
+            #8B0042 20px
+        );
         &::after {
-            content: '🃏';
-            font-size: 100px;
-            opacity: 0.5;
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 3px solid #FFD800;
+            border-radius: 4px;
         }
     `}
 
@@ -89,14 +101,14 @@ const Card = styled.div`
 `;
 
 const CardValue = styled.div`
-    font-size: 60px;
+    font-size: 48px;
     color: ${props => props.$red ? '#ff0000' : '#000'};
     font-weight: bold;
     z-index: 2;
 `;
 
 const CardSuit = styled.div`
-    font-size: 80px;
+    font-size: 60px;
     z-index: 2;
 `;
 
@@ -108,13 +120,25 @@ const ButtonsContainer = styled.div`
     max-width: 400px;
 `;
 
+const ControlsWrapper = styled.div`
+    width: 100%;
+    max-width: 400px;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: auto;
+    margin-bottom: 20px;
+`;
+
 const ChoiceButton = styled.button`
-    padding: 20px;
-    border-radius: 15px;
+    padding: 14px;
+    border-radius: 12px;
     border: 2px solid ${({ theme }) => theme.colors.secondary};
     background: transparent;
     color: #fff;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s;
@@ -131,25 +155,32 @@ const ChoiceButton = styled.button`
 `;
 
 const Message = styled.div`
-    font-size: 24px;
+    font-size: 18px;
     font-weight: bold;
     color: ${props => props.$success ? '#4CAF50' : '#ff4444'};
     text-align: center;
-    min-height: 30px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `;
 
 const Instructions = styled.div`
     text-align: center;
     color: #aaa;
-    font-size: 16px;
+    font-size: 14px;
     max-width: 400px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `;
 
 const PlayerIndicator = styled.div`
     background: ${({ theme }) => theme.colors.surface};
-    padding: 12px 24px;
-    border-radius: 16px;
-    margin-bottom: 20px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    margin-bottom: 0;
     text-align: center;
     border: 2px solid ${({ theme }) => theme.colors.secondary};
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -162,7 +193,7 @@ const PlayerLabel = styled.p`
 `;
 
 const PlayerName = styled.p`
-    font-size: 24px;
+    font-size: 20px;
     font-weight: bold;
     color: ${({ theme }) => theme.colors.text.primary};
     margin: 0;
@@ -170,10 +201,10 @@ const PlayerName = styled.p`
 
 const PlayerCardsContainer = styled.div`
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     justify-content: center;
-    margin-top: 12px;
+    margin-top: 8px;
     max-width: 400px;
 `;
 
@@ -195,12 +226,12 @@ const MiniCard = styled.div`
 const NextPlayerButton = styled.button`
     width: 100%;
     max-width: 400px;
-    border-radius: 16px;
+    border-radius: 12px;
     border: 2px solid ${({ theme }) => theme.colors.secondary};
   background: ${({ theme }) => theme.colors.primary};
-    padding: 18px;
+    padding: 12px;
     color: #fff;
-    font-size: 20px;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
@@ -208,7 +239,7 @@ const NextPlayerButton = styled.button`
     justify-content: center;
     align-items: center;
     gap: 8px;
-    margin-top: 20px;
+    margin-top: 0;
     transition: all 0.2s;
     
     &:hover {
@@ -391,35 +422,50 @@ const PicoPaloGame = () => {
             correct = (choice === 'rojo' && isRed) || (choice === 'negro' && !isRed);
 
             if (correct) {
-                setMessage('✅ ¡Correcto! Continúa el siguiente jugador');
+                setMessage('✅ ¡Correcto!');
             } else {
-                setMessage('❌ ¡Incorrecto! Bebe y pasa al siguiente');
+                setMessage('❌ ¡Incorrecto! Bebe');
             }
         } else if (gameState === 'palo') {
             // Adivinar el palo exacto
             correct = choice === suitNames[currentCard.suit];
 
             if (correct) {
-                setMessage('✅ ¡Correcto! Continúa el siguiente jugador');
+                setMessage('✅ ¡Correcto!');
             } else {
-                setMessage(`❌ Era ${suitNames[currentCard.suit]}! Bebe y pasa al siguiente`);
+                setMessage(`❌ Era ${suitNames[currentCard.suit]}! Bebe`);
             }
         } else if (gameState === 'dentro-fuera') {
             // dentro-fuera: adivinar si la tercera carta está dentro o fuera del rango de las 2 anteriores
+            const currentPlayerCardsList = playerCards[currentPlayerIndex] || [];
+            // Necesitamos al menos 2 cartas previas
+            if (currentPlayerCardsList.length < 2) return;
+
             const cardNumber = valueNumbers[currentCard.value];
-            const card1Number = valueNumbers[previousCards[0].value];
-            const card2Number = valueNumbers[previousCards[1].value];
+            const card1Number = valueNumbers[currentPlayerCardsList[0].value];
+            const card2Number = valueNumbers[currentPlayerCardsList[1].value];
 
             const minRange = Math.min(card1Number, card2Number);
             const maxRange = Math.max(card1Number, card2Number);
 
-            const isDentro = cardNumber > minRange && cardNumber < maxRange;
+            // Si las dos cartas anteriores son iguales, solo es "dentro" si la nueva carta es exactamente igual
+            let isDentro;
+            if (card1Number === card2Number) {
+                isDentro = cardNumber === card1Number;
+            } else {
+                isDentro = cardNumber > minRange && cardNumber < maxRange;
+            }
+
             correct = (choice === 'dentro' && isDentro) || (choice === 'fuera' && !isDentro);
 
             if (correct) {
                 setMessage('🎉 ¡Correcto! Reparte 3 tragos');
             } else {
-                setMessage(`❌ Era ${isDentro ? 'dentro' : 'fuera'} (${minRange}-${maxRange}). Bebe 2 tragos`);
+                if (card1Number === card2Number) {
+                    setMessage(`❌ Era ${isDentro ? 'dentro' : 'fuera'} (ambas cartas eran ${currentPlayerCardsList[0].value}). Bebe 2 tragos`);
+                } else {
+                    setMessage(`❌ Era ${isDentro ? 'dentro' : 'fuera'} (${minRange}-${maxRange}). Bebe 2 tragos`);
+                }
             }
         } else if (gameState === 'mayor-menor') {
             // Ronda extra: adivinar si la siguiente carta es mayor o menor que las del jugador
@@ -570,9 +616,20 @@ const PicoPaloGame = () => {
         } else if (gameState === 'palo') {
             return '¿Qué palo es?';
         } else if (gameState === 'dentro-fuera') {
-            // dentro-fuera: mostrar el rango de las 2 cartas anteriores
-            if (previousCards.length === 2) {
-                return `¿La carta está dentro (${previousCards[0].value}-${previousCards[1].value}) o fuera?`;
+            // dentro-fuera: mostrar el rango de las 2 cartas anteriores del jugador actual
+            const currentPlayerCardsList = playerCards[currentPlayerIndex] || [];
+            if (currentPlayerCardsList.length >= 2) {
+                const c1 = currentPlayerCardsList[0];
+                const c2 = currentPlayerCardsList[1];
+                const v1 = valueNumbers[c1.value];
+                const v2 = valueNumbers[c2.value];
+
+                // Mostrar siempre ordenado: Menor - Mayor
+                if (v1 <= v2) {
+                    return `¿La carta está dentro (${c1.value}-${c2.value}) o fuera?`;
+                } else {
+                    return `¿La carta está dentro (${c2.value}-${c1.value}) o fuera?`;
+                }
             }
             return '¿El valor está dentro o fuera?';
         } else if (gameState === 'mayor-menor') {
@@ -641,27 +698,29 @@ const PicoPaloGame = () => {
                     {message}
                 </Message>
 
-                <ButtonsContainer>
-                    {renderButtons()}
-                </ButtonsContainer>
+                <ControlsWrapper>
+                    <ButtonsContainer>
+                        {renderButtons()}
+                    </ButtonsContainer>
 
-                {canAdvancePlayer && players.length > 0 && (
-                    <NextPlayerButton onClick={advanceToNextPlayer}>
-                        {playersWhoAnswered + 1 < totalPlayers ? 'Siguiente jugador' : 'Siguiente pregunta'}
-                    </NextPlayerButton>
-                )}
+                    {canAdvancePlayer && players.length > 0 && (
+                        <NextPlayerButton onClick={advanceToNextPlayer}>
+                            {playersWhoAnswered + 1 < totalPlayers ? 'Siguiente jugador' : 'Siguiente pregunta'}
+                        </NextPlayerButton>
+                    )}
 
-                {completedMayorMenorSequence && (
-                    <NextPlayerButton onClick={handleNextPlayerInMayorMenor}>
-                        Siguiente jugador
-                    </NextPlayerButton>
-                )}
+                    {completedMayorMenorSequence && (
+                        <NextPlayerButton onClick={handleNextPlayerInMayorMenor}>
+                            Siguiente jugador
+                        </NextPlayerButton>
+                    )}
 
-                {isLastPhaseFinished && (
-                    <NextPlayerButton onClick={handleNext}>
-                        Nueva ronda <IoRefresh size={20} />
-                    </NextPlayerButton>
-                )}
+                    {isLastPhaseFinished && (
+                        <NextPlayerButton onClick={handleNext}>
+                            Nueva ronda <IoRefresh size={20} />
+                        </NextPlayerButton>
+                    )}
+                </ControlsWrapper>
             </Content>
         </Container>
     );
