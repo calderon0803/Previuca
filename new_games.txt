@@ -1,11 +1,3 @@
-- Illuminati
-Se colocan 15 cartas boca abajo en forma de pirámide sobre la mesa (una arriba, seguida de dos abajo, tres, cuatro y, finalmente, cinco).
-El jugador da la vuelta a una de las cinco cartas de abajo y luego debe elegir una de las cuatro de arriba al azar, diciendo si será más alta o más baja.
-Por ejemplo, primero da la vuelta a un cinco y dice "más alto", antes de elegir una carta de la fila de cuatro.
-Si es más alta, sigue jugando hasta llegar a la carta de arriba. Si falla, tiene que beber tantos dedos de su bebida como filas le queden por completar.
-Sustituye las cartas utilizadas por otras de la baraja y pasa al siguiente jugador.
-Sigue así hasta que todo el mundo haya ganado (o esté lo suficientemente borracho como para no volver a intentarlo).
-
 - El asesino de la bebida
 Una nueva vuelta de tuerca a un viejo clásico, esta vez como juego para beber: el asesino del guiño.
 Estamos seguros de que todo el mundo conoce las reglas estándar, pero recapitulemos.

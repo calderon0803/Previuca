@@ -32,12 +32,6 @@ const gameModes = [
         icon: '🃏',
     },
     {
-        id: 5,
-        name: 'Verdad o Reto',
-        description: 'Clásico de preguntas y desafíos',
-        icon: '🎭',
-    },
-    {
         id: 6,
         name: 'Ruleta',
         description: 'Gira y prueba tu suerte',
@@ -54,6 +48,18 @@ const gameModes = [
         name: 'Dados de Beber',
         description: 'Tira los dados y bebe',
         icon: '🎲',
+    },
+    {
+        id: 9,
+        name: 'Illuminati',
+        description: 'Escala la pirámide de cartas',
+        icon: '🔺',
+    },
+    {
+        id: 10,
+        name: 'Asesino',
+        description: 'Descubre quién es el asesino',
+        icon: '🔪',
     },
 ];
 
@@ -158,10 +164,11 @@ export default function GameModesList() {
         else if (game.id === 2) route = '/game/medusa';
         else if (game.id === 3) route = '/game/reydecopas';
         else if (game.id === 4) route = '/game/picopalo';
-        else if (game.id === 5) route = '/game/verdadereto';
         else if (game.id === 6) route = '/game/ruleta';
         else if (game.id === 7) route = '/game/impostor';
         else if (game.id === 8) route = '/game/dados';
+        else if (game.id === 9) route = '/game/illuminati';
+        else if (game.id === 10) route = '/game/asesino';
 
         if (route) navigate(route);
         else alert('Próximamente');

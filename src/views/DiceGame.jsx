@@ -60,32 +60,27 @@ const Content = styled.div`
   align-items: center;
 `;
 
-const TurnIndicator = styled(motion.div)`
+const PlayerIndicator = styled.div`
   background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  border-radius: 20px;
   padding: 12px 24px;
-  margin-bottom: 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  border-radius: 16px;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 `;
 
-const TurnLabel = styled.span`
+const PlayerLabel = styled.p`
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-weight: bold;
+  margin: 0 0 4px 0;
 `;
 
-const PlayerName = styled.span`
-  color: #fff;
-  font-size: 20px;
-  font-weight: 900;
-  text-shadow: 0 0 10px ${({ theme }) => theme.colors.secondary}50;
+const PlayerName = styled.p`
+  font-size: 24px;
+  font-weight: bold;
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0;
 `;
 
 const DiceContainer = styled.div`
@@ -278,14 +273,10 @@ export default function DiceGame() {
 
             <Content>
                 {players.length > 0 && (
-                    <TurnIndicator
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        key={currentPlayerIndex}
-                    >
-                        <TurnLabel>TURNO DE</TurnLabel>
+                    <PlayerIndicator>
+                        <PlayerLabel>Turno de:</PlayerLabel>
                         <PlayerName>{players[currentPlayerIndex]?.name}</PlayerName>
-                    </TurnIndicator>
+                    </PlayerIndicator>
                 )}
 
                 <DiceContainer>
