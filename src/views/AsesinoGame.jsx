@@ -125,14 +125,14 @@ const RoleContainer = styled.div`
 const SecretText = styled.span`
   font-size: ${props => props.$role === 'Asesino' ? '40px' : props.$role === 'Policía' ? '36px' : '28px'};
   font-weight: 900;
-  color: ${props => 
-    props.$role === 'Asesino' ? '#ff0000' : 
-    props.$role === 'Policía' ? '#00aaff' : 
-    props.theme.colors.secondary};
-  text-shadow: 0 0 20px ${props => 
-    props.$role === 'Asesino' ? '#ff000040' : 
-    props.$role === 'Policía' ? '#00aaff40' : 
-    props.theme.colors.secondary + '40'};
+  color: ${props =>
+        props.$role === 'Asesino' ? '#ff0000' :
+            props.$role === 'Policía' ? '#00aaff' :
+                props.theme.colors.secondary};
+  text-shadow: 0 0 20px ${props =>
+        props.$role === 'Asesino' ? '#ff000040' :
+            props.$role === 'Policía' ? '#00aaff40' :
+                props.theme.colors.secondary + '40'};
 `;
 
 const RoleDescription = styled.span`
@@ -225,7 +225,7 @@ const roles = [
 export default function AsesinoGame() {
     const navigate = useNavigate();
     const { players } = usePlayers();
-    
+
     const [gamePhase, setGamePhase] = useState('setup'); // setup, revealing, playing
     const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
     const [playerRoles, setPlayerRoles] = useState([]);
@@ -303,7 +303,7 @@ export default function AsesinoGame() {
                     <IconButton onClick={() => navigate('/games')}>
                         <IoArrowBack size={24} />
                     </IconButton>
-                    <HeaderTitle>Asesino 🔪</HeaderTitle>
+                    <HeaderTitle>Asesino</HeaderTitle>
                     <div style={{ width: '40px' }} />
                 </Header>
                 <Content>
@@ -330,7 +330,7 @@ export default function AsesinoGame() {
                     <IconButton onClick={() => navigate('/games')}>
                         <IoArrowBack size={24} />
                     </IconButton>
-                    <HeaderTitle>Asesino 🔪</HeaderTitle>
+                    <HeaderTitle>Asesin</HeaderTitle>
                     <IconButton onClick={resetGame}>
                         <IoRefresh size={24} />
                     </IconButton>
@@ -368,7 +368,7 @@ export default function AsesinoGame() {
 
     if (gamePhase === 'revealing') {
         const currentRole = playerRoles[currentPlayerIndex];
-        
+
         return (
             <Container>
                 <Header>
@@ -394,7 +394,7 @@ export default function AsesinoGame() {
                             <br />
                             ¡No dejes que otros vean la pantalla!
                         </Instruction>
-                        
+
                         <SecretBox $isRevealing={swipeOffset > 150} key={currentPlayerIndex}>
                             <RoleContainer $revealed={swipeOffset > 50}>
                                 <SecretText $role={currentRole.role.name}>
@@ -433,7 +433,7 @@ export default function AsesinoGame() {
                             </SwipeCover>
                         </SecretBox>
 
-                        <Button 
+                        <Button
                             onClick={handleNextPlayer}
                             disabled={!isRevealing}
                             style={{ opacity: isRevealing ? 1 : 0.5 }}

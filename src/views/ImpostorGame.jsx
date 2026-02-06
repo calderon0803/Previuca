@@ -7,6 +7,7 @@ import { usePlayers } from '../contexts/PlayersContext';
 
 import { wordBank } from '../data/impostorWords';
 
+
 const Container = styled.div`
   min-height: 100vh;
   background-color: ${({ theme }) => theme.colors.background};
@@ -56,6 +57,7 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
   padding: 24px;
+  perspective: 1000px;
 `;
 
 const Card = styled(motion.div)`
@@ -71,6 +73,7 @@ const Card = styled(motion.div)`
   margin: auto;
   width: 100%;
   max-width: 500px;
+  backface-visibility: hidden;
 `;
 
 const PhaseLabel = styled.span`
@@ -178,174 +181,201 @@ const RoleTag = styled.div`
   margin-top: 10px;
 `;
 
+const CheckboxContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 16px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: rgba(0,0,0,0.3);
+  }
+`;
+
+const Checkbox = styled.div`
+  width: 24px;
+  height: 24px;
+  border: 2px solid ${({ theme }) => theme.colors.secondary};
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${props => props.$checked ? props.theme.colors.primary : 'transparent'};
+  transition: all 0.2s;
+`;
+
+const CheckboxLabel = styled.span`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 16px;
+  flex: 1;
+`;
+
+const CheckMark = styled.span`
+  color: #fff;
+  font-weight: bold;
+  font-size: 18px;
+`;
 
 
 export default function ImpostorGame() {
-    const navigate = useNavigate();
-    const { players } = usePlayers();
+  const navigate = useNavigate();
+  const { players } = usePlayers();
 
-    // Game Phases: 'start', 'reveal', 'describe', 'result'
-    const [phase, setPhase] = useState('start');
-    const [gameState, setGameState] = useState(null);
-    const [revealIndex, setRevealIndex] = useState(0);
-    const [isRevealing, setIsRevealing] = useState(false);
-    const [hasRevealed, setHasRevealed] = useState(false);
-    const [swipeOffset, setSwipeOffset] = useState(0);
-
-    const initGame = () => {
-        if (players.length < 3) return;
-
-        const randomWord = wordBank[Math.floor(Math.random() * wordBank.length)];
-        const imposterIndex = Math.floor(Math.random() * players.length);
-
-        const assignments = players.map((p, i) => ({
-            playerName: p.name,
-            role: i === imposterIndex ? 'impostor' : 'inocente',
-            word: i === imposterIndex ? randomWord.intruder : randomWord.word
-        }));
-
-        setGameState({ assignments });
-        setPhase('reveal');
-        setRevealIndex(0);
-        setIsRevealing(false);
-        setHasRevealed(false);
-        setSwipeOffset(0);
-    };
-
-    const handleNextReveal = () => {
-        if (revealIndex < players.length - 1) {
-            setRevealIndex(prev => prev + 1);
-            setIsRevealing(false);
-            setHasRevealed(false);
-            setSwipeOffset(0);
-        } else {
-            setPhase('describe');
-        }
-    };
+  // Game Phases: 'start', 'reveal', 'describe', 'result'
+  const [phase, setPhase] = useState('start');
+  const [gameState, setGameState] = useState(null);
+  const [revealIndex, setRevealIndex] = useState(0);
+  const [isRevealing, setIsRevealing] = useState(false);
+  const [hasRevealed, setHasRevealed] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
 
 
+  const initGame = () => {
+    if (players.length < 3) return;
 
-    const resetGame = () => {
-        setPhase('start');
-        setGameState(null);
-    };
+    const sourceWords = wordBank;
+    const innocentWord = sourceWords[Math.floor(Math.random() * sourceWords.length)];
+    const imposterWord = sourceWords[Math.floor(Math.random() * sourceWords.length)];
+    const imposterIndex = Math.floor(Math.random() * players.length);
 
-    if (players.length < 3) {
-        return (
-            <Container>
-                <Header>
-                    <IconButton onClick={() => navigate('/games')}><IoArrowBack size={24} /></IconButton>
-                    <HeaderTitle>Impostor</HeaderTitle>
-                    <div></div>
-                </Header>
-                <Content>
-                    <Card>
-                        <Title>Faltan jugadores</Title>
-                        <Instruction>Este juego requiere al menos 3 jugadores para ser divertido.</Instruction>
-                        <MainButton onClick={() => navigate('/games')}>Volver</MainButton>
-                    </Card>
-                </Content>
-            </Container>
-        );
+    const assignments = players.map((p, i) => ({
+      playerName: p.name,
+      role: i === imposterIndex ? 'impostor' : 'inocente',
+      word: i === imposterIndex ? imposterWord : innocentWord
+    }));
+
+    setGameState({ assignments });
+    setPhase('reveal');
+    setRevealIndex(0);
+    setIsRevealing(false);
+    setHasRevealed(false);
+    setSwipeOffset(0);
+  };
+
+  const handleNextReveal = () => {
+    if (revealIndex < players.length - 1) {
+      setRevealIndex(prev => prev + 1);
+      setIsRevealing(false);
+      setHasRevealed(false);
+      setSwipeOffset(0);
+    } else {
+      setPhase('describe');
     }
+  };
 
+  const resetGame = () => {
+    setPhase('start');
+    setGameState(null);
+  };
+
+  if (players.length < 3) {
     return (
-        <Container>
-            <Header>
-                <IconButton onClick={() => navigate('/games')}><IoArrowBack size={24} /></IconButton>
-                <HeaderTitle>Impostor</HeaderTitle>
-                <IconButton onClick={resetGame}><IoRefresh size={24} /></IconButton>
-            </Header>
-
-            <Content>
-                <AnimatePresence mode="wait">
-                    {phase === 'start' && (
-                        <Card key="start" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                            <PhaseLabel>Preparación</PhaseLabel>
-                            <Title>¿Quién es el impostor?</Title>
-                            <Instruction>
-                                Todos recibiréis la misma palabra, excepto uno que tendrá una ligeramente diferente.
-                                Tenéis que describirla sin ser demasiado obvios.
-                            </Instruction>
-                            <MainButton onClick={initGame}>EMPEZAR PARTIDA</MainButton>
-                        </Card>
-                    )}
-
-                    {phase === 'reveal' && (
-                        <Card key="reveal" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
-                            <Title>{players[revealIndex].name}</Title>
-                            <Instruction>Desliza para ver tu palabra en secreto y asegúrate de que nadie mire.</Instruction>
-
-                            <SecretBox $isRevealing={swipeOffset > 150}>
-                                <WordContainer>
-                                    {gameState.assignments[revealIndex].role === 'impostor' ? (
-                                        <>
-                                            <RoleTag $isImpostor={true}>
-                                                IMPOSTOR
-                                            </RoleTag>
-                                            <Instruction style={{ marginBottom: 0, color: '#00BA7C' }}>Tu pista: {gameState.assignments[revealIndex].word}</Instruction>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Instruction style={{ marginBottom: 0, color: '#00BA7C' }}>Tu palabra secreta</Instruction>
-                                            <SecretText>{gameState.assignments[revealIndex].word}</SecretText>
-                                        </>
-                                    )}
-                                </WordContainer>
-
-                                <SwipeCover
-                                    drag="x"
-                                    dragConstraints={{ left: 0, right: 400 }}
-                                    dragElastic={0}
-                                    dragMomentum={false}
-                                    onDrag={(event, info) => {
-                                        const newOffset = Math.max(0, Math.min(400, info.offset.x));
-                                        setSwipeOffset(newOffset);
-                                        if (newOffset > 150 && !hasRevealed) {
-                                            setHasRevealed(true);
-                                            setIsRevealing(true);
-                                        }
-                                    }}
-                                    onDragEnd={() => {
-                                        setSwipeOffset(0);
-                                    }}
-                                    animate={{ x: swipeOffset }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
-                                >
-                                    <SecretText style={{ color: '#FFD800' }}>DESLIZA →</SecretText>
-                                    <Instruction style={{ marginBottom: 0, color: '#FFD800', fontSize: '14px' }}>
-                                        Arrastra para revelar
-                                    </Instruction>
-                                </SwipeCover>
-                            </SecretBox>
-
-                            <MainButton
-                                onClick={handleNextReveal}
-                                disabled={!isRevealing}
-                                style={{ opacity: isRevealing ? 1 : 0.5 }}
-                            >
-                                {revealIndex < players.length - 1 ? 'SIGUIENTE JUGADOR' : 'LISTOS'}
-                            </MainButton>
-                        </Card>
-                    )}
-
-                    {phase === 'describe' && (
-                        <Card key="describe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                            <PhaseLabel>Debate</PhaseLabel>
-                            <Title>¡A debatir!</Title>
-                            <Instruction>
-                                Por turnos, decid UNA SOLA PALABRA que describa lo vuestro.
-                                El impostor debe intentar mimetizarse.
-                            </Instruction>
-
-                            <MainButton onClick={resetGame}>NUEVA PARTIDA</MainButton>
-                        </Card>
-                    )}
-
-
-
-                </AnimatePresence>
-            </Content>
-        </Container>
+      <Container>
+        <Header>
+          <IconButton onClick={() => navigate('/games')}><IoArrowBack size={24} /></IconButton>
+          <HeaderTitle>Impostor</HeaderTitle>
+          <div></div>
+        </Header>
+        <Content>
+          <Card>
+            <Title>Faltan jugadores</Title>
+            <Instruction>Este juego requiere al menos 3 jugadores para ser divertido.</Instruction>
+            <MainButton onClick={() => navigate('/games')}>Volver</MainButton>
+          </Card>
+        </Content>
+      </Container>
     );
+  }
+
+  return (
+    <Container>
+      <Header>
+        <IconButton onClick={() => navigate('/games')}><IoArrowBack size={24} /></IconButton>
+        <HeaderTitle>Impostor</HeaderTitle>
+        <IconButton onClick={resetGame}><IoRefresh size={24} /></IconButton>
+      </Header>
+
+      <Content>
+        <AnimatePresence mode="wait">
+          {phase === 'start' && (
+            <Card key="start" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+              <PhaseLabel>Preparación</PhaseLabel>
+              <Title>¿Quién es el impostor?</Title>
+              <Instruction>
+                Todos recibiréis la misma palabra, excepto uno que tendrá una ligeramente diferente.
+                Tenéis que describirla sin ser demasiado obvios.
+              </Instruction>
+              <MainButton onClick={initGame}>EMPEZAR PARTIDA</MainButton>
+            </Card>
+          )}
+
+          {phase === 'reveal' && (
+            <Card key="reveal" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+              <Title>{players[revealIndex].name}</Title>
+              <Instruction>Desliza para ver tu palabra en secreto y asegúrate de que nadie mire.</Instruction>
+
+              <SecretBox $isRevealing={swipeOffset > 150}>
+                <WordContainer>
+                  <Instruction style={{ marginBottom: 0, color: '#00BA7C' }}>Tu palabra secreta</Instruction>
+                  <SecretText>{gameState.assignments[revealIndex].word}</SecretText>
+                </WordContainer>
+
+                <SwipeCover
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 400 }}
+                  dragElastic={0}
+                  dragMomentum={false}
+                  onDrag={(event, info) => {
+                    const newOffset = Math.max(0, Math.min(400, info.offset.x));
+                    setSwipeOffset(newOffset);
+                    if (newOffset > 150 && !hasRevealed) {
+                      setHasRevealed(true);
+                      setIsRevealing(true);
+                    }
+                  }}
+                  onDragEnd={() => {
+                    setSwipeOffset(0);
+                  }}
+                  animate={{ x: swipeOffset }}
+                  transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                >
+                  <SecretText style={{ color: '#FFD800' }}>DESLIZA →</SecretText>
+                  <Instruction style={{ marginBottom: 0, color: '#FFD800', fontSize: '14px' }}>
+                    Arrastra para revelar
+                  </Instruction>
+                </SwipeCover>
+              </SecretBox>
+
+              <MainButton
+                onClick={handleNextReveal}
+                disabled={!isRevealing}
+                style={{ opacity: isRevealing ? 1 : 0.5 }}
+              >
+                {revealIndex < players.length - 1 ? 'SIGUIENTE JUGADOR' : 'LISTOS'}
+              </MainButton>
+            </Card>
+          )}
+
+          {phase === 'describe' && (
+            <Card key="describe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <PhaseLabel>Debate</PhaseLabel>
+              <Title>¡A debatir!</Title>
+              <Instruction>
+                Por turnos, decid algo que describa lo vuestro.
+                El impostor debe intentar mimetizarse.
+              </Instruction>
+
+              <MainButton onClick={resetGame}>NUEVA PARTIDA</MainButton>
+            </Card>
+          )}
+        </AnimatePresence>
+      </Content>
+    </Container>
+  );
 }

@@ -178,14 +178,14 @@ const Button = styled.button`
 `;
 
 const Message = styled.div`
-    background: ${({ theme, $type }) => 
-        $type === 'success' ? 'rgba(0, 255, 0, 0.2)' : 
-        $type === 'error' ? 'rgba(255, 0, 0, 0.2)' : 
-        theme.colors.surface};
-    border: 2px solid ${({ theme, $type }) => 
-        $type === 'success' ? '#00ff00' : 
-        $type === 'error' ? '#ff0000' : 
-        theme.colors.secondary};
+    background: ${({ theme, $type }) =>
+        $type === 'success' ? 'rgba(0, 255, 0, 0.2)' :
+            $type === 'error' ? 'rgba(255, 0, 0, 0.2)' :
+                theme.colors.surface};
+    border: 2px solid ${({ theme, $type }) =>
+        $type === 'success' ? '#00ff00' :
+            $type === 'error' ? '#ff0000' :
+                theme.colors.secondary};
     padding: 16px 24px;
     border-radius: 12px;
     color: ${({ theme }) => theme.colors.text.primary};
@@ -226,7 +226,7 @@ const createDeck = () => {
 export default function IlluminatiGame() {
     const navigate = useNavigate();
     const { players } = usePlayers();
-    
+
     const [deck, setDeck] = useState([]);
     const [pyramid, setPyramid] = useState([]);
     const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -243,11 +243,11 @@ export default function IlluminatiGame() {
 
     const initializeGame = () => {
         const newDeck = createDeck();
-        
+
         // Crear la pirámide: [1, 2, 3, 4, 5] cartas por fila
         const pyramidCards = [];
         let deckIndex = 0;
-        
+
         for (let row = 0; row < 5; row++) {
             const rowCards = [];
             for (let col = 0; col <= row; col++) {
@@ -262,7 +262,7 @@ export default function IlluminatiGame() {
             }
             pyramidCards.push(rowCards);
         }
-        
+
         setPyramid(pyramidCards);
         setDeck(newDeck.slice(deckIndex));
         setCurrentPlayerIndex(0);
@@ -320,9 +320,10 @@ export default function IlluminatiGame() {
                 setCompletedPlayers(newCompletedPlayers);
                 setMessage(`¡${players[currentPlayerIndex].name} ha ganado! 🎉`);
                 setMessageType('success');
-                
+
                 if (newCompletedPlayers.length === players.length) {
                     setMessage('¡Todos han ganado! 🎉🎉🎉');
+                    setGamePhase('finished');
                 } else {
                     setTimeout(() => {
                         nextPlayer();
@@ -342,7 +343,7 @@ export default function IlluminatiGame() {
             const rowsLeft = currentRow + 1;
             setMessage(`¡Fallaste! ${players[currentPlayerIndex].name} bebe ${rowsLeft} ${rowsLeft === 1 ? 'trago' : 'tragos'} 🍺`);
             setMessageType('error');
-            
+
             setTimeout(() => {
                 nextPlayer();
             }, 2500);
@@ -378,14 +379,14 @@ export default function IlluminatiGame() {
 
         setPyramid(replacedPyramid);
         setDeck(deck.slice(deckIndex));
-        
+
         let nextIndex = (currentPlayerIndex + 1) % players.length;
         // Saltar jugadores que ya completaron
         while (completedPlayers.includes(players[nextIndex].name)) {
             nextIndex = (nextIndex + 1) % players.length;
             if (nextIndex === currentPlayerIndex) break;
         }
-        
+
         setCurrentPlayerIndex(nextIndex);
         setCurrentRow(4);
         setCurrentCardIndex(null);
@@ -421,7 +422,7 @@ export default function IlluminatiGame() {
                 <IconButton onClick={() => navigate('/games')}>
                     <IoArrowBack size={24} />
                 </IconButton>
-                <HeaderTitle>Illuminati 🔺</HeaderTitle>
+                <HeaderTitle>Illuminati</HeaderTitle>
                 <IconButton onClick={initializeGame}>
                     <IoRefresh size={24} />
                 </IconButton>
@@ -429,21 +430,11 @@ export default function IlluminatiGame() {
 
             <Content>
 
-                <PlayerIndicator>
-                    <PlayerLabel>Turno de:</PlayerLabel>
-                    <PlayerName>{players[currentPlayerIndex]?.name}</PlayerName>
-                </PlayerIndicator>
-
-                {completedPlayers.length > 0 && (
-                    <Message $type="success">
-                        Completaron: {completedPlayers.join(', ')}
-                    </Message>
-                )}
-
-                {message && (
-                    <Message $type={messageType}>
-                        {message}
-                    </Message>
+                {gamePhase !== 'finished' && (
+                    <PlayerIndicator>
+                        <PlayerLabel>Turno de:</PlayerLabel>
+                        <PlayerName>{players[currentPlayerIndex]?.name}</PlayerName>
+                    </PlayerIndicator>
                 )}
 
                 <PyramidContainer>
@@ -475,13 +466,30 @@ export default function IlluminatiGame() {
 
                 {gamePhase === 'guessing' && (
                     <ButtonContainer>
-                        <Button onClick={() => makeGuess(true)} $variant="high">
+                        <Button onClick={() => makeGuess(true)}>
                             ⬆️ MAYOR
                         </Button>
                         <Button onClick={() => makeGuess(false)}>
                             ⬇️ MENOR
                         </Button>
                     </ButtonContainer>
+                )}
+
+                {gamePhase === 'finished' && (
+                    <>
+                        <Message $type="success">
+                            {message}
+                        </Message>
+                        <Button onClick={initializeGame} style={{ marginTop: '10px' }}>
+                            🔄 NUEVA PARTIDA
+                        </Button>
+                    </>
+                )}
+
+                {message && gamePhase !== 'finished' && gamePhase !== 'guessing' && (
+                    <Message $type={messageType}>
+                        {message}
+                    </Message>
                 )}
             </Content>
         </Container>

@@ -200,13 +200,31 @@ const CardsRow = styled.div`
 `;
 
 const CardBack = styled(motion.button)`
-  background: ${({ theme }) => theme.colors.background};
-  border:none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100px;
+  height: 140px;
+  background: repeating-linear-gradient(
+    45deg,
+    #BA0057,
+    #BA0057 10px,
+    #8B0042 10px,
+    #8B0042 20px
+  );
+  border-radius: 8px;
+  border: none;
   cursor: pointer;
-  font-size: 75px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    border: 2px solid #FFD800;
+    border-radius: 4px;
+  }
   
   &:hover {
     transform: translateY(-4px);
@@ -365,9 +383,7 @@ export default function ReyDeCopasGame() {
                         onClick={() => drawCard(index)}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                      >
-                        🃏
-                      </CardBack>
+                      />
                     ))}
                   </CardsRow>
                 </>

@@ -61,6 +61,12 @@ const gameModes = [
         description: 'Descubre quién es el asesino',
         icon: '🔪',
     },
+    {
+        id: 11,
+        name: 'Trazo & Trago',
+        description: 'Dibuja y adivina. El que pierda, bebe.',
+        icon: '🎨',
+    },
 ];
 
 const Container = styled.div`
@@ -169,6 +175,7 @@ export default function GameModesList() {
         else if (game.id === 8) route = '/game/dados';
         else if (game.id === 9) route = '/game/illuminati';
         else if (game.id === 10) route = '/game/asesino';
+        else if (game.id === 11) route = '/game/drinktionary';
 
         if (route) navigate(route);
         else alert('Próximamente');
