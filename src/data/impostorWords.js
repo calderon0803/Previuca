@@ -1,3 +1,107 @@
 export const wordBank = [
-  'Abrigada', 'Abrigado', 'Abrigo', 'Acogedor', 'Acuático', 'Actores', 'Adrenalina', 'Aeropuerto', 'Agua', 'Aguja', 'Aislado', 'Akatsuki', 'Ala', 'Alba', 'Aldea de la Arena', 'Aleta', 'Alegría', 'Alga', 'Algodón', 'Almohada', 'Altura', 'Amanecer', 'Amigos', 'Amistad', 'Amor', 'Anbu', 'Ancla', 'Anilla', 'Ansiedad', 'Antena', 'Anakin Skywalker', 'Anuel AA', 'Angelina Jolie', 'Aplicación', 'Apuntes', 'Árbol', 'Arañar', 'Arco', 'Arcoíris', 'Arena', 'Aroma', 'Arroz', 'Artificiales', 'Asas', 'Ash Ketchum', 'Asteroide', 'Astronauta', 'Aurora', 'Auriculares', 'Automático', 'Aventura', 'Aves', 'Alas', 'Aullido', 'Otoño', 'Bailar', 'Baloncesto', 'Bancos', 'Barbacoa', 'Barboss', 'Barco', 'Batería', 'Batman', 'Bad Bunny', 'Biblioteca', 'Bicicleta', 'Bigotes', 'Blanca', 'Blanco', 'Bolas', 'Bolas de Dragón', 'Bob Esponja', 'Bolígrafo', 'Bolsa', 'Bolsillo', 'Boreal', 'Bosque', 'Botar', 'Brad Pitt', 'Brazada', 'Brillante', 'Brillo', 'Brote', 'Brújula', 'Bufanda', 'Bulls', 'Butaca', 'Byakugan', 'Cacao', 'Cachorro', 'Cable', 'Cabeza', 'Café', 'Caer', 'Calabaza', 'Calcetines', 'Caliente', 'Calor', 'Cama', 'Cámara', 'Camilla', 'Caminar', 'Campanario', 'Campo', 'Canal', 'Canasta', 'Canción', 'Capa', 'Capitán América', 'Capítulo', 'Caparazón', 'Carámbano', 'Caramelo', 'Carbón', 'Cariño', 'Carne', 'Carlos Alcaraz', 'Carretera', 'Cartera', 'Castillo', 'Catedral', 'Caza', 'Celebración', 'Cell', 'Celos', 'Ceniza', 'Cepillo', 'Cerradura', 'Cesta', 'Césped', 'Champions League', 'Charizard', 'Charco', 'Checo Pérez', 'Chidori', 'Chimenea', 'Chocolate', 'Ciclista', 'Cielo', 'Científico', 'Cine', 'Circuito', 'Ciudad', 'Coche', 'Cocinar', 'Cofre', 'Cohete', 'Colgar', 'Collar', 'Colores', 'Columpios', 'Compras', 'Competir', 'Confianza', 'Conducir', 'Conexión', 'Congelado', 'Contacto', 'Control', 'Copo Nieve', 'Corazón', 'Cordones', 'Corona', 'Correa', 'Corriente', 'Correr', 'Corte', 'Cosecha', 'Crecer', 'Credibilidad', 'Cremallera', 'Crecer', 'Cristal', 'Cristiano Ronaldo', 'Cuaderno', 'Cuadrillero', 'Cubo', 'Cucharada', 'Cucurucho', 'Cuerdas', 'Cuero', 'Culo', 'Cumpleaños', 'Daenerys Targaryen', 'Darth Vader', 'Death Note', 'Dedos', 'Delfín', 'Deporte', 'Derechos', 'Derretir', 'Descanso', 'Deslizar', 'Destello', 'Destino', 'Devastador', 'Diamante', 'Dientes', 'Dinosaurio', 'Dinero', 'Director', 'Diversión', 'Dormir', 'Draco Malfoy', 'Dragón', 'Drama', 'Driblar', 'Dumbledore', 'Dulce', 'Dwayne Johnson', 'Ecolocalización', 'Edad', 'Egipto', 'Eléctrico', 'Embarque', 'Embutido', 'Emoción', 'Emocionante', 'Energía Maldita', 'Enfermería', 'Ensalada', 'Entusiasmo', 'Envidia', 'Envoltorio', 'Erupción', 'Escalada', 'Escamas', 'Espalda', 'Espacio', 'Espejo', 'Esfera', 'Espiral', 'Espíritu', 'Estación', 'Estacional', 'Estantería', 'Estrellas', 'Estrella', 'Estruendo', 'Estrés', 'Ethan Hunt', 'Expansión de Dominio', 'Experimento', 'Explorar', 'Explosión', 'Extinción', 'Exterior', 'Extraterrestre', 'Faceta', 'Fardo', 'Faraón', 'Fantasma', 'FC Barcelona', 'Fe', 'Fernando Alonso', 'Ferrari', 'Festival', 'Fiesta', 'Flash', 'Flor', 'Flores', 'Flotante', 'Fluir', 'Fogata', 'Fósil', 'Foto', 'Freezer', 'Frío', 'Fruta del Diablo', 'Fuego', 'Fuegos', 'Fuerza', 'Funda', 'Galaxia', 'Galactus', 'Galick Ho', 'Garras', 'Gary Oak', 'Gasolina', 'Gato', 'Gelatina', 'Gimnasio', 'Glaciar', 'Globo', 'Going Merry', 'Goku', 'Gotas', 'Gótico', 'Granja', 'Guantes', 'Guitarra', 'Haaland', 'Haki', 'Halloween', 'Hamburguesa', 'Harley Quinn', 'Harry Potter', 'Hechizo', 'Helado', 'Helio', 'Heno', 'Hermione Granger', 'Hielo', 'Higiene', 'Hoja', 'Hogar', 'Hogwarts', 'Hojas', 'Homer Simpson', 'Horizonte', 'Horneado', 'Horno', 'Hospital', 'Hueso', 'Huracán', 'Iceberg', 'Imagen', 'Impostor', 'Independencia', 'Inflado', 'Ingrediente', 'Invisible', 'Iron Man', 'Isla', 'Jack Sparrow', 'James Bond', 'Jardín', 'Jennifer Aniston', 'Jennifer Lopez', 'Jesse Pinkman', 'Jiraiya', 'Johnny Depp', 'Jon Snow', 'Joker', 'Joystick', 'Juego', 'Jugar', 'Juguetón', 'Jurásico', 'Kakashi Hatake', 'Kamehameha', 'Kaio-ken', 'Katy Perry', 'Ketchup', 'Kilómetros', 'Kim Kardashian', 'Kobe Bryant', 'Konoha', 'Kylo Ren', 'Kylie Jenner', 'L (Lawliet)', 'Laboratorio', 'Ladrido', 'Lakers', 'Lana', 'Laptop', 'Lava', 'Lealtad', 'LeBron James', 'Lechuga', 'Leña', 'Lente', 'Lento', 'León', 'Leonardo DiCaprio', 'Lewis Hamilton', 'Libertad', 'Libre', 'Licencia', 'Light Yagami', 'Lionel Messi', 'Líquido', 'Libro', 'Llamada', 'Llamas', 'Llaves', 'Llavero', 'Lluvia', 'Lobo', 'Loki', 'Lomo', 'Luces', 'Luffy', 'Luke Skywalker', 'Luz', 'Mago', 'Magia', 'Maleta', 'Manada', 'Manecilla', 'Manga', 'Mango', 'Manillar', 'Manos', 'Manta', 'Manzana', 'Mañana', 'Mapa', 'Maratón', 'Maradona', 'Marea', 'Margot Robbie', 'Marina', 'Mariposa', 'Mate', 'Max Verstappen', 'Mbappé', 'Medieval', 'Médico', 'Megumi Fushiguro', 'Melena', 'Melodía', 'Metal', 'Metrópolis', 'Michael Jordan', 'Mickey Mouse', 'Microscopio', 'Miedo', 'Migración', 'Mikasa Ackerman', 'Ministerio de Magia', 'Mochila', 'Mojado', 'Molido', 'Monitor', 'Monstruo', 'Montaña', 'Mozzarella', 'Motor', 'Movimiento', 'Móvil', 'Multitud', 'Mundial', 'Muñeco de Nieve', 'Muralla', 'Muralla Maria', 'Muralla Rose', 'Músculo', 'Música', 'Máscara', 'Naranja', 'Naruto Uzumaki', 'Natación', 'Naturaleza', 'Nave espacial', 'Navegar', 'Netflix', 'Neymar', 'Nieve', 'Nivel', 'Noche', 'Norte', 'Notas', 'Novak Djokovic', 'Nube', 'Nubes', 'Observar', 'Océano', 'Oído', 'Ojo', 'Ola', 'Olas', 'Ordenador', 'Orientación', 'Orilla', 'Oro', 'Oruga', 'Orquesta', 'Otoño', 'Ovni', 'Órbita', 'Pabilo', 'Páginas', 'Paja', 'Pala', 'Palillo', 'Palmera', 'Palomitas', 'Pan', 'Pánico', 'Pantalla', 'Paraguas', 'Paraíso', 'Parche', 'Par', 'Parque', 'Parrilla', 'Paseo', 'Pasta', 'Pastel', 'Pasos', 'Patas', 'Patinaje', 'Patines', 'Patio', 'Patricio Estrella', 'Pato Donald', 'Pedales', 'Película', 'Pelé', 'Pelota', 'Perro', 'Pesas', 'Peter Griffin', 'Pétalos', 'Pequeño', 'Picnic', 'Pico', 'Pies', 'Pikachu', 'Pirámide', 'Pirata', 'Piscina', 'Pista', 'Pizarra', 'Pizza', 'Planeta', 'Planta', 'Plástico', 'Playa', 'Poblacion', 'Poderes', 'Pokeball', 'Pokedex', 'Polo', 'Polen', 'Portátil', 'Posesión', 'Postre', 'Préstamo', 'Presión', 'Primavera', 'Procesador', 'Profundo', 'Profesor', 'Protección', 'Proyector', 'Puerta', 'Punta', 'Puntiagudo', 'Puntos', 'Radar Dragón', 'Rafa Nadal', 'Rasengan', 'Rascacielos', 'Rasgueo', 'Ratón', 'Rayo', 'Rayos', 'Real Madrid', 'Rebanada', 'Recreo', 'Receta', 'Recolectar', 'Red Bull', 'Redonda', 'Reflejo', 'Regar', 'Reglas', 'Regalo', 'Relámpago', 'Relajar', 'Relleno', 'Reloj', 'Resistencia', 'Respaldo', 'Rey', 'Río', 'Ritmo', 'Robert Downey Jr.', 'Robot', 'Roca', 'Roger Federer', 'Roja', 'Roland Garros', 'Ron Weasley', 'Ruedas', 'Rugido', 'Ryuk', 'Sábana', 'Sabana', 'Sable de Luz', 'Salado', 'Sándwich', 'Sanji', 'Sartén', 'Sasuke Uchiha', 'Satoru Gojo', 'Scarlett Johansson', 'Sed', 'Segundo', 'Sendero', 'Sentimiento', 'Shakira', 'Shaquille O\'Neal', 'Sharingan', 'Shinigami', 'Sidra', 'Siete', 'Silencio', 'Silla', 'Sinceridad', 'Sinfonía', 'Sistema', 'Suave', 'Sudor', 'Sueño', 'Suéter', 'Suela', 'Sol', 'Sombrero', 'Sombrero de Paja', 'Sombrilla', 'Spiderman', 'Sukuna', 'Super Saiyan', 'Superhéroe', 'Superman', 'Surf', 'Sushi', 'Tableta', 'Tabla', 'Tallada', 'Taylor Swift', 'Taza', 'Teclado', 'Teclas', 'Tejida', 'Teléfono', 'Telescopio', 'Televisión', 'Temblorosa', 'Temblor', 'Tengen Uzui', 'Tensión', 'Terror', 'Tesoro', 'Thanos', 'Thor', 'Thousand Sunny', 'Tiburón', 'Tienda', 'Tierra', 'Timbre', 'Tinta', 'Titán Acorazado', 'Titán Colosal', 'Titanic', 'Tom Cruise', 'Tormenta', 'Torre', 'Tortuga', 'Transatlántico', 'Transparente', 'Tren', 'Triángulo', 'Trigo', 'Triple', 'Tropical', 'Trueno', 'Único', 'Usopp', 'Vacaciones', 'Vagón', 'Valioso', 'Vela', 'Velas', 'Venom', 'Vegeta', 'Verde', 'Verduras', 'Varillas', 'Varita', 'Vía', 'Viaje', 'Viajar', 'Videojuego', 'Viento', 'Vin Diesel', 'Vinicius Jr', 'Vitral', 'Volcán', 'Volante', 'Voldemort', 'Vuelo', 'Walter White', 'Watson', 'Will Smith', 'Wimbledon', 'Yoda', 'Yuji Itadori', 'Zanahoria', 'Zapatos', 'Zoro'
-];
+  // —— OBJETOS, ACCIONES, LUGARES ——
+  'Abrigo','Acuático','Adrenalina','Aeropuerto','Agua','Aguja','Aislado','Ala','Alba',
+  'Aleta','Algodón','Almohada','Altura','Amanecer','Amigos','Ancla','Anilla','Antena',
+  'Árbol','Arañar','Arco','Arcoíris','Arena','Aroma','Arroz','Asteroide','Aurora',
+  'Auriculares','Aventura','Aves','Aullido','Otoño',
+
+  'Bailar','Baloncesto','Bancos','Barbacoa','Barco','Batería','Biblioteca',
+  'Bicicleta','Bigotes','Bolígrafo','Bolsa','Bolsillo','Bosque','Botar',
+  'Brazada','Brote','Brújula','Bufanda','Butaca',
+
+  'Cacao','Cachorro','Cable','Cabeza','Café','Caer','Calabaza','Calcetines',
+  'Caliente','Calor','Cama','Cámara','Caminar','Campanario','Campo','Canasta',
+  'Canción','Capa','Capítulo','Caparazón','Caramelo','Carbón','Carne','Carretera',
+  'Cartera','Castillo','Catedral','Celebración','Ceniza','Cepillo','Cerradura',
+  'Cesta','Césped','Charco','Chimenea','Chocolate','Ciclista','Cielo','Cine',
+  'Ciudad','Coche','Cocinar','Cofre','Cohete','Colgar','Collar','Columpios',
+  'Compras','Competir','Conducir','Congelado','Contacto','Copo de Nieve',
+  'Corazón','Cordones','Corona','Correa','Corriente','Correr','Corte','Cosecha',
+  'Crecer','Cremallera','Cristal','Cuaderno','Cubo','Cucharada','Cucurucho',
+  'Cuerdas','Cuero','Cumpleaños',
+
+  'Dedos','Delfín','Deporte','Derretir','Descanso','Deslizar','Destello',
+  'Diamante','Dientes','Dinosaurio','Dinero','Diversión','Dormir','Dragón',
+  'Drama','Dulce',
+
+  'Edad','Egipto','Embarque','Embutido','Enfermería','Ensalada','Envoltorio',
+  'Erupción','Escalada','Escamas','Espalda','Espacio','Espejo','Esfera',
+  'Espiral','Estación','Estantería','Estrellas','Estruendo','Explorar','Explosión',
+
+  'Fantasma','Festival','Fiesta','Flor','Fogata','Fósil','Foto','Frío','Fuego',
+
+  'Galaxia','Gasolina','Gato','Gelatina','Gimnasio','Glaciar','Globo','Gotas',
+  'Granja','Guantes','Guitarra',
+
+  'Hamburguesa','Helado','Helio','Hielo','Higiene','Hoja','Hogar','Hojas',
+  'Horizonte','Horno','Hospital','Hueso','Huracán','Iceberg','Invisible','Isla',
+
+  'Jardín','Joystick','Juego','Jurásico',
+
+  'Ketchup','Kilómetros',
+
+  'Laboratorio','Ladrido','Lana','Laptop','Lava','Lechuga','Leña','Lente','Lento',
+  'León','Libro','Llamada','Lluvia','Lobo','Luces','Luz',
+
+  'Mago','Magia','Maleta','Manada','Mango','Manillar','Manos','Manta','Manzana',
+  'Mapa','Maratón','Marea','Marina','Mariposa','Mate','Medieval','Médico',
+  'Melodía','Metal','Microscopio','Mochila','Mojado','Monitor','Monstruo',
+  'Montaña','Motor','Móvil','Multitud','Mundial','Muñeco de Nieve','Muralla',
+  'Músculo','Música','Máscara',
+
+  'Naranja','Natación','Naturaleza','Nave espacial','Navegar','Nieve','Noche',
+  'Norte','Notas','Nube',
+
+  'Observar','Océano','Oído','Ojo','Ola','Ordenador','Orilla','Oro','Orquesta',
+  'Ovni','Órbita',
+
+  // —— SERIES / PROGRAMAS ——
+  'Doraemon','Los Simpson','Futurama','Tom y Jerry','Looney Tunes','Scooby-Doo',
+  'Los Picapiedra','Rugrats','Phineas y Ferb',
+  'Hora de Aventuras','El Laboratorio de Dexter','Las Supernenas',
+  'Ed, Edd y Eddy','Agallas, el perro cobarde','Johnny Bravo','Garfield',
+  'Hannah Montana','Zack y Cody','iCarly','Drake & Josh','Victorious','Zoey 101',
+  'Lizzie McGuire','El Príncipe de Bel-Air','Malcolm in the Middle',
+  'Art Attack','El Grand Prix','Humor Amarillo','El Hormiguero','Barrio Sésamo',
+
+  // —— PERSONAS (REALES + FICCIÓN) ——
+  'Leonardo DiCaprio','Brad Pitt','Johnny Depp','Tom Cruise','Will Smith',
+  'Robert Downey Jr.','Dwayne Johnson','Keanu Reeves','Morgan Freeman',
+  'Jim Carrey','Jackie Chan','Harrison Ford','Al Pacino',
+  'Scarlett Johansson','Jennifer Aniston','Angelina Jolie','Margot Robbie',
+  'Emma Watson','Natalie Portman','Anne Hathaway',
+
+  'Michael Jackson','Madonna','Elvis Presley','Shakira','Bad Bunny',
+  'Taylor Swift','Beyoncé','Rihanna','Bruno Mars','Eminem',
+  'Justin Bieber','Ariana Grande','Ed Sheeran',
+
+  'Lionel Messi','Cristiano Ronaldo','Michael Jordan','LeBron James',
+  'Kobe Bryant','Pelé','Maradona','Rafa Nadal','Roger Federer',
+  'Novak Djokovic','Usain Bolt','Mike Tyson','Muhammad Ali',
+
+  'Harry Potter','Darth Vader','Luke Skywalker','Yoda','James Bond',
+  'Indiana Jones','Rocky Balboa','Rambo','Forrest Gump','Jack Sparrow',
+  'Batman','Superman','Spiderman','Iron Man','Homer Simpson',
+  'Bart Simpson','Mickey Mouse','Donald Duck',
+
+  'Gandalf','Frodo Bolsón','Legolas','Aragorn','Neo','Morpheus','Terminator',
+  'Robocop','E.T.','King Kong','Godzilla','Captain America','Hulk',
+  'Deadpool','Wolverine','Buzz Lightyear','Woody','Shrek','Donkey',
+  'Optimus Prime',
+
+  'Joker','Thanos','Voldemort','Lex Luthor','Green Goblin','Magneto',
+  'Scarface','Freddy Krueger','Jason Voorhees','Pennywise',
+  'Hannibal Lecter','El Padrino',
+
+  'Walter White','Jesse Pinkman','Sheldon Cooper','Ross Geller',
+  'Rachel Green','Chandler Bing','Michael Scott','Daenerys Targaryen',
+  'Jon Snow','Tyrion Lannister','Sherlock Holmes','Rick Sanchez',
+  'Morty','Eleven','Dustin','House','Dexter Morgan','Lisa Simpson',
+
+  'Albert Einstein','Napoleón Bonaparte','Cleopatra','Julio César',
+  'Cristóbal Colón','Neil Armstrong','Marie Curie','Leonardo da Vinci',
+  'Miguel Ángel','Pablo Picasso','Isaac Newton','Galileo Galilei',
+  'Abraham Lincoln','George Washington','Mahatma Gandhi',
+  'Martin Luther King','Amelia Earhart','Frida Kahlo'
+]
+;

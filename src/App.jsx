@@ -17,7 +17,7 @@ import DiceGame from './views/DiceGame';
 import ImpostorGame from './views/ImpostorGame';
 import IlluminatiGame from './views/IlluminatiGame';
 import AsesinoGame from './views/AsesinoGame';
-import DrinktionaryGame from './views/DrinktionaryGame';
+import TrazoTragoGame from './views/TrazoTragoGame';
 
 // Placeholder for missing views if any
 const Placeholder = ({ title }) => (
@@ -101,7 +101,7 @@ function App() {
                             <Route path="/game/impostor" element={<ImpostorGame />} />
                             <Route path="/game/illuminati" element={<IlluminatiGame />} />
                             <Route path="/game/asesino" element={<AsesinoGame />} />
-                            <Route path="/game/drinktionary" element={<DrinktionaryGame />} />
+                            <Route path="/game/trazotrago" element={<TrazoTragoGame />} />
                             <Route path="/footer-demo" element={<Placeholder title="Footer Demo" />} />
                             <Route path="/games/yo-nunca" element={<YoNuncaGame />} />
                             <Route path="/games/rey-de-copas" element={<ReyDeCopasGame />} />
@@ -111,7 +111,7 @@ function App() {
                             <Route path="/games/impostor" element={<ImpostorGame />} />
                             <Route path="/games/illuminati" element={<IlluminatiGame />} />
                             <Route path="/games/asesino" element={<AsesinoGame />} />
-                            <Route path="/games/drinktionary" element={<DrinktionaryGame />} />
+                            <Route path="/games/trazotrago" element={<TrazoTragoGame />} />
 
                             <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>

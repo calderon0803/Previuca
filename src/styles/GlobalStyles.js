@@ -7,6 +7,14 @@ export const GlobalStyles = createGlobalStyle`
     padding: 0;
   }
 
+  html {
+    overscroll-behavior: none;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
   body {
     background: radial-gradient(circle at top, #1a0210 0%, #0F0109 100%);
     color: ${({ theme }) => theme.colors.text.primary};
@@ -15,6 +23,19 @@ export const GlobalStyles = createGlobalStyle`
     -moz-osx-font-smoothing: grayscale;
     /* transition: background-color 0.3s ease, color 0.3s ease; Removed transition to feel native/static */
     overflow-x: hidden;
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  #root {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   code {

@@ -1,4 +1,4 @@
-export const drinktionaryWords = [
+export const trazoTragoWords = [
     // Objetos cotidianos (Fácil)
     'Casa',
     'Coche',
@@ -165,12 +165,11 @@ export const drinktionaryWords = [
     'Fiesta de cumpleaños',
     'Primera cita',
     'Entrevista de trabajo',
-    'Examen final',
+    'Examen',
     'Boda',
     'Graduación',
     'Mudanza',
     'Vacaciones',
-    'Black Friday',
     'Año nuevo',
     'Navidad',
     'Halloween',

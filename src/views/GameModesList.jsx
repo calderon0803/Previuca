@@ -175,7 +175,7 @@ export default function GameModesList() {
         else if (game.id === 8) route = '/game/dados';
         else if (game.id === 9) route = '/game/illuminati';
         else if (game.id === 10) route = '/game/asesino';
-        else if (game.id === 11) route = '/game/drinktionary';
+        else if (game.id === 11) route = '/game/trazotrago';
 
         if (route) navigate(route);
         else alert('Próximamente');

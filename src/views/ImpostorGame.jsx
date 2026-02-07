@@ -241,13 +241,12 @@ export default function ImpostorGame() {
 
     const sourceWords = wordBank;
     const innocentWord = sourceWords[Math.floor(Math.random() * sourceWords.length)];
-    const imposterWord = sourceWords[Math.floor(Math.random() * sourceWords.length)];
     const imposterIndex = Math.floor(Math.random() * players.length);
 
     const assignments = players.map((p, i) => ({
       playerName: p.name,
       role: i === imposterIndex ? 'impostor' : 'inocente',
-      word: i === imposterIndex ? imposterWord : innocentWord
+      word: i === imposterIndex ? null : innocentWord
     }));
 
     setGameState({ assignments });
@@ -308,8 +307,9 @@ export default function ImpostorGame() {
               <PhaseLabel>Preparación</PhaseLabel>
               <Title>¿Quién es el impostor?</Title>
               <Instruction>
-                Todos recibiréis la misma palabra, excepto uno que tendrá una ligeramente diferente.
-                Tenéis que describirla sin ser demasiado obvios.
+                Todos recibiréis la misma palabra excepto uno: el impostor, que no tendrá ninguna palabra.
+                Describid vuestra palabra por turnos. El impostor debe intentar pasar desapercibido.
+                ¡Al final votad quién creéis que es el impostor!
               </Instruction>
               <MainButton onClick={initGame}>EMPEZAR PARTIDA</MainButton>
             </Card>
@@ -322,8 +322,15 @@ export default function ImpostorGame() {
 
               <SecretBox $isRevealing={swipeOffset > 150}>
                 <WordContainer>
-                  <Instruction style={{ marginBottom: 0, color: '#00BA7C' }}>Tu palabra secreta</Instruction>
-                  <SecretText>{gameState.assignments[revealIndex].word}</SecretText>
+                  {gameState.assignments[revealIndex].role === 'impostor' ? (
+                    <>
+                      <SecretText style={{ fontSize: '28px', color: '#BA0057' }}>
+                        ERES EL IMPOSTOR
+                      </SecretText>
+                    </>
+                  ) : (
+                    <SecretText>{gameState.assignments[revealIndex].word}</SecretText>
+                  )}
                 </WordContainer>
 
                 <SwipeCover
@@ -367,8 +374,9 @@ export default function ImpostorGame() {
               <PhaseLabel>Debate</PhaseLabel>
               <Title>¡A debatir!</Title>
               <Instruction>
-                Por turnos, decid algo que describa lo vuestro.
-                El impostor debe intentar mimetizarse.
+                Por turnos, decid algo que describa vuestra palabra sin ser demasiado obvios.
+                El impostor debe intentar adivinar la palabra y mimetizarse con el resto.
+                Al final, ¡votad quién creéis que es el impostor!
               </Instruction>
 
               <MainButton onClick={resetGame}>NUEVA PARTIDA</MainButton>

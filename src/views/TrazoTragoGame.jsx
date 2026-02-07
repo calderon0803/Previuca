@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoArrowBack, IoRefresh, IoEye, IoEyeOff, IoPlay } from 'react-icons/io5';
 import { FaBroom } from 'react-icons/fa';
-import { drinktionaryWords } from '../data/drinktionaryWords';
+import { trazoTragoWords } from '../data/trazoTragoWords';
 
 const Container = styled.div`
     min-height: 100vh;
@@ -141,9 +141,7 @@ const WordText = styled.div`
     font-weight: bold;
     flex: 1;
     text-align: center;
-    filter: ${props => props.$hidden ? 'blur(8px)' : 'none'};
     user-select: ${props => props.$hidden ? 'none' : 'auto'};
-    transition: filter 0.2s;
 `;
 
 const TimerDisplay = styled.div`
@@ -286,7 +284,7 @@ const COLORS = [
 
 const BRUSH_SIZES = [2, 5, 10, 15];
 
-export default function DrinktionaryGame() {
+export default function TrazoTragoGame() {
     const navigate = useNavigate();
     const canvasRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -340,7 +338,7 @@ export default function DrinktionaryGame() {
     };
 
     const selectNewWord = () => {
-        const randomWord = drinktionaryWords[Math.floor(Math.random() * drinktionaryWords.length)];
+        const randomWord = trazoTragoWords[Math.floor(Math.random() * trazoTragoWords.length)];
         setCurrentWord(randomWord);
         setShowWord(false);
         setElapsedTime(0); // Reset timer
@@ -432,7 +430,7 @@ export default function DrinktionaryGame() {
                     {showWord ? <IoEyeOff size={24} /> : <IoEye size={24} />}
                 </IconButton>
                 <WordText $hidden={!showWord}>
-                    {currentWord}
+                    {showWord ? currentWord : '???'}
                 </WordText>
                 <TimerDisplay>
                     {formatTime(elapsedTime)}
