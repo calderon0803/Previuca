@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { IoArrowBack, IoRefresh } from 'react-icons/io5';
+import { IoRefresh } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'framer-motion';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -11,104 +14,60 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Header = styled.div`
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: rgba(15, 1, 9, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-  position: sticky;
-  top: 0;
-  z-index: 10;
-`;
-
-const HeaderTitle = styled.h1`
-  font-size: 20px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-`;
-
-const IconButton = styled.button`
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.text.primary};
-  transition: background 0.2s;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
 const GameContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 24px;
+  padding: ${({ theme }) => theme.spacing(6)};
   text-align: center;
 `;
 
 const pulse = keyframes`
-  0% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.8; }
+  0% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.6; }
 `;
 
 const MainCircle = styled(motion.div)`
-  width: 250px;
-  height: 250px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   background: ${({ theme }) => theme.colors.surface};
-  border: 4px solid ${({ theme }) => theme.colors.secondary};
+  border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.border)};
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
-  box-shadow: 0 0 30px ${({ theme }) => `${theme.colors.secondary}40`};
+  box-shadow: ${({ theme }) => theme.shadows.md};
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
     width: 100%;
     height: 100%;
-    background: ${({ theme }) => `radial-gradient(circle, ${theme.colors.primary}30 0%, transparent 70%)`};
-    animation: ${pulse} 2s infinite ease-in-out;
+    background: ${({ theme }) => `radial-gradient(circle, ${theme.colors.primaryMuted} 0%, transparent 70%)`};
+    animation: ${pulse} 2.4s infinite ease-in-out;
   }
 `;
 
 const BigText = styled(motion.h2)`
-  font-size: 80px;
-  font-weight: 900;
-  color: #fff;
+  font-size: 64px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
   margin: 0;
   z-index: 2;
-  text-shadow: 0 4px 12px rgba(0,0,0,0.5);
 `;
 
 const InstructionText = styled.p`
-  font-size: 20px;
+  font-size: ${({ theme }) => theme.typography.fontSize.md};
   color: ${({ theme }) => theme.colors.text.secondary};
-  margin-top: 40px;
+  margin-top: ${({ theme }) => theme.spacing(8)};
   max-width: 280px;
   line-height: 1.5;
-`;
-
-const MedusaIcon = styled.div`
-  font-size: 60px;
-  margin-bottom: 20px;
 `;
 
 export default function MedusaGame() {
@@ -140,28 +99,28 @@ export default function MedusaGame() {
 
     return (
         <Container>
-            <Header>
-                <IconButton onClick={() => navigate('/games')}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <HeaderTitle>Medusa</HeaderTitle>
-                <IconButton onClick={resetGame}>
-                    <IoRefresh size={24} />
-                </IconButton>
-            </Header>
+            <PageHeader
+                title="Medusa"
+                onBack={() => navigate('/games')}
+                rightAction={
+                    <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+                        <IoRefresh size={20} />
+                    </IconButton>
+                }
+            />
 
             <GameContent>
                 <AnimatePresence mode="wait">
                     {gameState === 'idle' && (
                         <motion.div
                             key="idle"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
                             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                         >
-                            <MainCircle $clickable onClick={startGame} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <BigText style={{ fontSize: '24px' }}>EMPEZAR</BigText>
+                            <MainCircle $clickable onClick={startGame} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                                <BigText style={{ fontSize: '22px' }}>EMPEZAR</BigText>
                             </MainCircle>
                             <InstructionText>
                                 Bajad todos la cabeza. Al pulsar el botón comenzará la cuenta atrás.
@@ -181,7 +140,7 @@ export default function MedusaGame() {
                                     key={count}
                                     initial={{ scale: 0.5, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    transition={{ type: 'spring', damping: 10 }}
+                                    transition={{ type: 'spring', damping: 12 }}
                                 >
                                     {count === 0 ? '🔥' : count}
                                 </BigText>
@@ -195,27 +154,27 @@ export default function MedusaGame() {
                     {gameState === 'result' && (
                         <motion.div
                             key="result"
-                            initial={{ opacity: 0, scale: 1.2 }}
+                            initial={{ opacity: 0, scale: 1.1 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
                             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                         >
                             <MainCircle
-                                style={{ borderColor: '#BA0057', boxShadow: '0 0 50px rgba(186, 0, 87, 0.6)' }}
-                                animate={{ scale: [1, 1.1, 1] }}
-                                transition={{ repeat: Infinity, duration: 1 }}
+                                $active
+                                animate={{ scale: [1, 1.05, 1] }}
+                                transition={{ repeat: Infinity, duration: 1.2 }}
                             >
-                                <BigText style={{ fontSize: '40px' }}>¡MIRAD!</BigText>
+                                <BigText style={{ fontSize: '36px' }}>¡MIRAD!</BigText>
                             </MainCircle>
-                            <InstructionText style={{ color: '#fff', fontWeight: 'bold' }}>
+                            <InstructionText style={{ color: '#fff', fontWeight: 600 }}>
                                 ¡Si cruzas la mirada con alguien, BEBEIS!
                             </InstructionText>
-                            <IconButton
-                                onClick={resetGame}
-                                style={{ marginTop: '30px', width: 'auto', padding: '0 24px' }}
-                            >
-                                <IoRefresh size={20} style={{ marginRight: '8px' }} /> Volver a jugar
-                            </IconButton>
+                            <div style={{ marginTop: '32px' }}>
+                                <Button size="lg" onClick={resetGame}>
+                                    <IoRefresh size={18} />
+                                    Volver a jugar
+                                </Button>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>

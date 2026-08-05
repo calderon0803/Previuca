@@ -1,135 +1,94 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoArrowBack, IoPersonCircle, IoTrash, IoLogOut } from 'react-icons/io5';
+import { IoPersonCircle, IoLogOut } from 'react-icons/io5';
 import { useCrush } from '../contexts/CrushContext';
-import { getInstagramVerification, deleteInstagramVerification } from '../services/instagramService';
+import { deleteInstagramVerification } from '../services/instagramService';
 import { supabase } from '../config/supabase';
+import PageHeader from '../components/ui/PageHeader';
+import Button from '../components/ui/Button';
 
 const Container = styled.div`
     min-height: 100vh;
     background: ${({ theme }) => theme.colors.background};
-    padding-bottom: 80px;
-`;
-
-const Header = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background: rgba(15, 1, 9, 0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-    position: sticky;
-    top: 0;
-    z-index: 10;
-`;
-
-const HeaderTitle = styled.h1`
-    color: #fff;
-    margin: 0;
-    font-size: 24px;
-`;
-
-const IconButton = styled.button`
-    background: ${({ theme }) => theme.colors.surface};
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    color: #fff;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    transition: background 0.2s;
-
-    &:hover {
-        background: ${({ theme }) => theme.colors.primary};
-    }
+    padding-bottom: ${({ theme }) => theme.spacing(10)};
 `;
 
 const Content = styled.div`
-    padding: 20px;
+    padding: ${({ theme }) => theme.spacing(5)};
+    max-width: 560px;
+    margin: 0 auto;
+`;
+
+const EmptyState = styled.div`
+    text-align: center;
+    padding: ${({ theme }) => theme.spacing(10)} ${({ theme }) => theme.spacing(5)};
+`;
+
+const EmptyTitle = styled.h2`
+    color: ${({ theme }) => theme.colors.text.primary};
+    font-size: ${({ theme }) => theme.typography.fontSize.xl};
+    margin-bottom: ${({ theme }) => theme.spacing(2)};
+`;
+
+const EmptyText = styled.p`
+    color: ${({ theme }) => theme.colors.text.secondary};
+    margin-bottom: ${({ theme }) => theme.spacing(6)};
+`;
+
+const LoadingText = styled.div`
+    text-align: center;
+    color: ${({ theme }) => theme.colors.text.secondary};
+    padding: ${({ theme }) => theme.spacing(9)} ${({ theme }) => theme.spacing(5)};
 `;
 
 const Section = styled.div`
-    margin-bottom: 30px;
+    margin-bottom: ${({ theme }) => theme.spacing(7)};
 `;
 
 const SectionTitle = styled.h2`
-    color: ${({ theme }) => theme.colors.secondary};
-    font-size: 18px;
-    margin-bottom: 15px;
-    padding-left: 10px;
+    color: ${({ theme }) => theme.colors.text.secondary};
+    font-size: ${({ theme }) => theme.typography.fontSize.xs};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+    margin-bottom: ${({ theme }) => theme.spacing(3)};
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.08em;
 `;
 
 const SettingItem = styled.div`
     background: ${({ theme }) => theme.colors.surface};
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 12px;
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radii.md};
+    padding: ${({ theme }) => theme.spacing(5)};
+    margin-bottom: ${({ theme }) => theme.spacing(3)};
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.2s;
+    gap: ${({ theme }) => theme.spacing(3)};
+    cursor: ${({ $interactive }) => ($interactive ? 'pointer' : 'default')};
+    transition: background ${({ theme }) => theme.transitions.fast},
+        border-color ${({ theme }) => theme.transitions.fast};
 
     &:hover {
-        border-color: ${({ theme }) => theme.colors.secondary};
-        background: ${({ theme }) => `${theme.colors.primary}10`};
+        border-color: ${({ theme, $interactive }) => ($interactive ? theme.colors.borderStrong : theme.colors.border)};
+        background: ${({ theme, $interactive }) => ($interactive ? theme.colors.surfaceHover : theme.colors.surface)};
     }
 `;
 
 const SettingInfo = styled.div`
     flex: 1;
+    min-width: 0;
 `;
 
 const SettingLabel = styled.div`
-    color: #fff;
-    font-weight: 500;
+    color: ${({ theme }) => theme.colors.text.primary};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
     margin-bottom: 4px;
 `;
 
 const SettingValue = styled.div`
-    color: #aaa;
-    font-size: 14px;
-`;
-
-const Button = styled.button`
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    background: ${props => props.$danger ? '#ff4444' : props.theme.colors.secondary};
-    color: ${props => props.$danger ? '#fff' : '#000'};
-    transition: opacity 0.2s;
-
-    &:hover {
-        opacity: 0.8;
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-`;
-
-const DangerZone = styled.div`
-    border: 2px solid #ff3b30;
-    background: rgba(255, 59, 48, 0.05);
-    border-radius: 16px;
-    padding: 20px;
-    margin-top: 20px;
-`;
-
-const DangerTitle = styled.h3`
-    color: #ff4444;
-    margin-top: 0;
-    margin-bottom: 15px;
+    color: ${({ theme }) => theme.colors.text.secondary};
+    font-size: ${({ theme }) => theme.typography.fontSize.sm};
 `;
 
 const Settings = () => {
@@ -159,17 +118,9 @@ const Settings = () => {
     if (contextLoading) {
         return (
             <Container>
-                <Header>
-                    <IconButton onClick={handleBack}>
-                        <IoArrowBack size={24} />
-                    </IconButton>
-                    <HeaderTitle>Ajustes</HeaderTitle>
-                    <div style={{ width: 40 }} />
-                </Header>
+                <PageHeader title="Ajustes" onBack={handleBack} />
                 <Content>
-                    <div style={{ textAlign: 'center', color: '#888', padding: '40px 20px' }}>
-                        Cargando...
-                    </div>
+                    <LoadingText>Cargando...</LoadingText>
                 </Content>
             </Container>
         );
@@ -179,24 +130,18 @@ const Settings = () => {
     if (!user) {
         return (
             <Container>
-                <Header>
-                    <IconButton onClick={handleBack}>
-                        <IoArrowBack size={24} />
-                    </IconButton>
-                    <HeaderTitle>Ajustes</HeaderTitle>
-                    <div style={{ width: 40 }} />
-                </Header>
+                <PageHeader title="Ajustes" onBack={handleBack} />
                 <Content>
-                    <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                        <IoPersonCircle size={80} color="#555" style={{ marginBottom: '20px' }} />
-                        <h2 style={{ color: '#fff', marginBottom: '10px' }}>No has iniciado sesión</h2>
-                        <p style={{ color: '#aaa', marginBottom: '30px' }}>
+                    <EmptyState>
+                        <IoPersonCircle size={72} color="#5C616D" style={{ marginBottom: '20px' }} />
+                        <EmptyTitle>No has iniciado sesión</EmptyTitle>
+                        <EmptyText>
                             Inicia sesión para acceder a la configuración de tu cuenta
-                        </p>
+                        </EmptyText>
                         <Button onClick={() => navigate('/crush')}>
-                            Iniciar Sesión
+                            Iniciar sesión
                         </Button>
-                    </div>
+                    </EmptyState>
                 </Content>
             </Container>
         );
@@ -273,13 +218,7 @@ const Settings = () => {
 
     return (
         <Container>
-            <Header>
-                <IconButton onClick={handleBack}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <HeaderTitle>Ajustes</HeaderTitle>
-                <div style={{ width: 40 }} />
-            </Header>
+            <PageHeader title="Ajustes" onBack={handleBack} />
 
             <Content>
                 <Section>
@@ -297,7 +236,7 @@ const Settings = () => {
                             <SettingLabel>Contraseña</SettingLabel>
                             <SettingValue>••••••••</SettingValue>
                         </SettingInfo>
-                        <Button onClick={handleChangePassword}>Cambiar</Button>
+                        <Button variant="secondary" onClick={handleChangePassword}>Cambiar</Button>
                     </SettingItem>
                 </Section>
 
@@ -314,7 +253,7 @@ const Settings = () => {
                                 <SettingLabel>Usuario verificado</SettingLabel>
                                 <SettingValue>@{instagramData.instagram_username}</SettingValue>
                             </SettingInfo>
-                            <Button $danger onClick={handleRemoveInstagram}>
+                            <Button variant="danger" onClick={handleRemoveInstagram}>
                                 Desvincular
                             </Button>
                         </SettingItem>
@@ -324,7 +263,7 @@ const Settings = () => {
                                 <SettingLabel>Instagram</SettingLabel>
                                 <SettingValue>No vinculado</SettingValue>
                             </SettingInfo>
-                            <Button onClick={() => navigate('/instagram-verification')}>
+                            <Button variant="secondary" onClick={() => navigate('/instagram-verification')}>
                                 Verificar
                             </Button>
                         </SettingItem>
@@ -334,21 +273,22 @@ const Settings = () => {
                 <Section>
                     <SectionTitle>Sesión</SectionTitle>
 
-                    <SettingItem style={{ cursor: 'pointer' }} onClick={logout}>
+                    <SettingItem $interactive onClick={logout}>
                         <SettingInfo>
-                            <SettingLabel style={{ color: '#fff' }}>Cerrar sesión</SettingLabel>
+                            <SettingLabel>Cerrar sesión</SettingLabel>
                         </SettingInfo>
-                        <IoLogOut size={24} color="#fff" />
+                        <IoLogOut size={20} color="#D2D4D9" />
                     </SettingItem>
                 </Section>
 
                 <Section>
+                    <SectionTitle>Zona de riesgo</SectionTitle>
                     <SettingItem>
                         <SettingInfo>
                             <SettingLabel>Eliminar cuenta</SettingLabel>
                             <SettingValue>Esta acción no se puede deshacer</SettingValue>
                         </SettingInfo>
-                        <Button $danger onClick={handleDeleteAccount}>
+                        <Button variant="danger" onClick={handleDeleteAccount}>
                             Eliminar
                         </Button>
                     </SettingItem>

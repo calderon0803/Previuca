@@ -21,9 +21,10 @@ const Container = styled.div`
 `;
 
 const Logo = styled.img`
-  width: 150px;
-  height: 150px;
+  width: 96px;
+  height: 96px;
   object-fit: contain;
+  border-radius: ${({ theme }) => theme.radii.lg};
 `;
 
 const SplashScreen = ({ onFinish }) => {

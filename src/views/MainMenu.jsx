@@ -1,34 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoHeart, IoGameController, IoSettings, IoChevronForward } from 'react-icons/io5';
-
-const menuOptions = [
-  {
-    id: 1,
-    name: 'Juegos',
-    description: 'Diversión sin límites',
-    icon: '🎮',
-    iconName: 'game-controller',
-    route: '/games',
-  },
-  {
-    id: 2,
-    name: 'Crush',
-    description: 'Encuentra tu crush perfecto',
-    icon: '💕',
-    iconName: 'heart',
-    route: '/crush',
-  },
-  {
-    id: 3,
-    name: 'Ajustes',
-    description: 'Personaliza tu experiencia',
-    icon: '⚙️',
-    iconName: 'settings',
-    route: '/ajustes',
-  },
-];
 
 const Container = styled.div`
   min-height: 100vh;
@@ -39,64 +11,73 @@ const Container = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  padding: 20px;
-  max-width: 600px;
+  padding: ${({ theme }) => theme.spacing(6)} ${({ theme }) => theme.spacing(5)};
+  max-width: 440px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    max-width: 560px;
+    padding-top: ${({ theme }) => theme.spacing(10)};
+  }
 `;
 
-const Header = styled.div`
+const Kicker = styled.div`
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 20px 0;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  margin-bottom: ${({ theme }) => theme.spacing(7)};
 `;
 
 const Logo = styled.img`
-  width: 150px;
-  height: auto;
-  margin-bottom: 20px;
-  border-radius: 24px;
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: ${({ theme }) => theme.radii.sm};
 `;
 
-const Title = styled.h1`
-  font-size: 32px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-  margin-bottom: 8px;
-`;
-
-const Subtitle = styled.p`
-  font-size: 18px;
+const Wordmark = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text.secondary};
-  margin: 0;
-  margin-bottom: 32px;
+  text-transform: uppercase;
+  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
 `;
 
-const MenuContainer = styled.div`
+const Headline = styled.h1`
+  font-size: 2rem;
+  line-height: 1.15;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.tight};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0 0 ${({ theme }) => theme.spacing(9)} 0;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    font-size: 2.5rem;
+  }
+`;
+
+const HeroCard = styled.div`
+  position: relative;
+  overflow: hidden;
+  background: ${({ theme }) => theme.colors.primaryMuted};
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.spacing(6)};
+  min-height: 148px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-`;
-
-const Card = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border-radius: 16px;
-  padding: 20px;
+  justify-content: flex-end;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  transition: transform 0.2s, box-shadow 0.2s, background 0.3s, border-color 0.3s;
+  transition: transform ${({ theme }) => theme.transitions.base},
+    border-color ${({ theme }) => theme.transitions.base};
+  margin-bottom: ${({ theme }) => theme.spacing(3)};
 
   &:hover {
-    transform: translateY(-4px);
-    background: ${({ theme }) => `${theme.colors.primary}20`}; // 20% magenta tint
-    box-shadow: 0 12px 24px rgba(0,0,0,0.4);
-    border-color: ${({ theme }) => theme.colors.secondary};
+    border-color: ${({ theme }) => theme.colors.primaryHover};
   }
 
   &:active {
@@ -104,35 +85,83 @@ const Card = styled.div`
   }
 `;
 
-const IconContainer = styled.div`
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
-  background: ${({ theme }) => `${theme.colors.primary}15`}; // 15% opacity primary
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 16px;
-  font-size: 24px;
+const HeroWatermark = styled.span`
+  position: absolute;
+  bottom: -18px;
+  right: -6px;
+  font-size: 96px;
+  opacity: 0.16;
+  transform: rotate(-8deg);
+  pointer-events: none;
+`;
+
+const HeroLabel = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.primary};
+  text-transform: uppercase;
+  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
+  margin-bottom: ${({ theme }) => theme.spacing(2)};
+  z-index: 1;
 `;
 
-const TextContainer = styled.div`
-  flex: 1;
-`;
-
-const CardTitle = styled.h2`
-  font-size: 18px;
-  font-weight: 600;
+const HeroTitle = styled.h2`
+  font-size: ${({ theme }) => theme.typography.fontSize.xxl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.tight};
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-  margin-bottom: 4px;
+  margin: 0 0 4px 0;
+  z-index: 1;
 `;
 
-const CardDescription = styled.p`
-  font-size: 14px;
+const HeroSubtitle = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
   color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0;
+  z-index: 1;
+`;
+
+const SecondaryRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${({ theme }) => theme.spacing(3)};
+  margin-top: ${({ theme }) => theme.spacing(3)};
+`;
+
+const SecondaryTile = styled.div`
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.spacing(4)};
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(3)};
+  cursor: pointer;
+  transition: background ${({ theme }) => theme.transitions.fast},
+    border-color ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceHover};
+    border-color: ${({ theme }) => theme.colors.borderStrong};
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+`;
+
+const SecondaryIcon = styled.span`
+  font-size: 18px;
+  flex-shrink: 0;
+`;
+
+const SecondaryLabel = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${({ theme }) => theme.colors.text.primary};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 export default function MainMenu() {
@@ -141,26 +170,30 @@ export default function MainMenu() {
   return (
     <Container>
       <Content>
-        <Header>
+        <Kicker>
           <Logo src="/logo.png" alt="Previuca" />
-        </Header>
-        <MenuContainer>
-          {menuOptions.map((option) => (
-            <Card
-              key={option.id}
-              onClick={() => navigate(option.route)}
-            >
-              <IconContainer>
-                {option.icon}
-              </IconContainer>
-              <TextContainer>
-                <CardTitle>{option.name}</CardTitle>
-                <CardDescription>{option.description}</CardDescription>
-              </TextContainer>
-              <IoChevronForward size={24} color="#ccc" />
-            </Card>
-          ))}
-        </MenuContainer>
+          <Wordmark>Previuca</Wordmark>
+        </Kicker>
+
+        <Headline>¿A qué jugamos hoy?</Headline>
+
+        <HeroCard onClick={() => navigate('/games')}>
+          <HeroWatermark aria-hidden="true">🎮</HeroWatermark>
+          <HeroLabel>Empezar</HeroLabel>
+          <HeroTitle>Juegos</HeroTitle>
+          <HeroSubtitle>Diversión sin límites</HeroSubtitle>
+        </HeroCard>
+
+        <SecondaryRow>
+          <SecondaryTile onClick={() => navigate('/crush')}>
+            <SecondaryIcon>💕</SecondaryIcon>
+            <SecondaryLabel>Crush</SecondaryLabel>
+          </SecondaryTile>
+          <SecondaryTile onClick={() => navigate('/ajustes')}>
+            <SecondaryIcon>⚙️</SecondaryIcon>
+            <SecondaryLabel>Ajustes</SecondaryLabel>
+          </SecondaryTile>
+        </SecondaryRow>
       </Content>
     </Container>
   );

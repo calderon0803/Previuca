@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoArrowBack, IoRefresh, IoEye, IoEyeOff, IoPlay } from 'react-icons/io5';
-import { FaBroom } from 'react-icons/fa';
+import { IoRefresh, IoEye, IoEyeOff, IoPlay, IoTrashOutline, IoCheckmark } from 'react-icons/io5';
 import { trazoTragoWords } from '../data/trazoTragoWords';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const Container = styled.div`
     min-height: 100vh;
@@ -20,51 +22,32 @@ const StartOverlay = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 1, 9, 0.9);
-    backdrop-filter: blur(10px);
+    background: rgba(10, 11, 14, 0.92);
+    backdrop-filter: blur(8px);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 20;
-    gap: 20px;
+    gap: ${({ theme }) => theme.spacing(5)};
+    padding: ${({ theme }) => theme.spacing(6)};
+    box-sizing: border-box;
 `;
 
 const StartTitle = styled.h2`
-    color: #fff;
-    font-size: 32px;
+    color: ${({ theme }) => theme.colors.text.primary};
+    font-size: ${({ theme }) => theme.typography.fontSize.xxl};
     margin: 0;
     text-align: center;
 `;
 
 const StartDescription = styled.p`
-    color: #ccca;
-    font-size: 16px;
+    color: ${({ theme }) => theme.colors.text.secondary};
+    font-size: ${({ theme }) => theme.typography.fontSize.md};
     text-align: center;
-    max-width: 80%;
+    max-width: 320px;
     margin: 0;
     line-height: 1.5;
-`;
-
-const StartButton = styled.button`
-    background: ${({ theme }) => theme.colors.primary};
-    color: #fff;
-    border: none;
-    padding: 16px 40px;
-    border-radius: 50px;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    &:hover {
-        transform: scale(1.05);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-    }
 `;
 
 const ResultOverlay = styled(StartOverlay)`
@@ -76,86 +59,49 @@ const ResultTitle = styled(StartTitle)`
 `;
 
 const ResultValue = styled.div`
-    font-size: 48px;
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 0 0 20px ${({ theme }) => theme.colors.primary};
+    font-size: ${({ theme }) => theme.typography.fontSize.display};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+    color: ${({ theme }) => theme.colors.text.primary};
 `;
 
 const ResultDetail = styled.p`
-    color: #fff;
-    font-size: 18px;
+    color: ${({ theme }) => theme.colors.text.primary};
+    font-size: ${({ theme }) => theme.typography.fontSize.md};
     margin: 5px 0;
 `;
 
-const Header = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background: rgba(15, 1, 9, 0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-    position: sticky;
-    top: 0;
-    z-index: 10;
-`;
-
-const HeaderTitle = styled.h1`
-    color: #fff;
-    margin: 0;
-    font-size: 24px;
-`;
-
-const IconButton = styled.button`
-    background: ${({ theme }) => theme.colors.surface};
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    color: #fff;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    transition: background 0.2s;
-
-    &:hover {
-        background: ${({ theme }) => theme.colors.primary};
-    }
-`;
-
 const WordRevealBar = styled.div`
-    padding: 16px 20px;
+    padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(5)};
     background: ${({ theme }) => theme.colors.surface};
-    border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: ${({ theme }) => theme.spacing(3)};
 `;
 
 const WordText = styled.div`
     color: ${({ theme }) => theme.colors.text.primary};
-    font-size: 20px;
-    font-weight: bold;
+    font-size: ${({ theme }) => theme.typography.fontSize.lg};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
     flex: 1;
     text-align: center;
     user-select: ${props => props.$hidden ? 'none' : 'auto'};
 `;
 
 const TimerDisplay = styled.div`
-    background: ${({ theme }) => theme.colors.surface};
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    color: ${({ theme }) => theme.colors.primary};
-    width: 40px;
-    height: 40px;
+    background: ${({ theme }) => theme.colors.surfaceRaised};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    color: ${({ theme }) => theme.colors.text.primary};
+    min-width: 44px;
+    height: 42px;
+    padding: 0 ${({ theme }) => theme.spacing(2)};
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
-    font-weight: bold;
-    font-size: 14px;
+    border-radius: ${({ theme }) => theme.radii.md};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+    font-size: ${({ theme }) => theme.typography.fontSize.sm};
     font-variant-numeric: tabular-nums;
 `;
 
@@ -176,18 +122,18 @@ const Canvas = styled.canvas`
 `;
 
 const Toolbar = styled.div`
-    padding: 12px 16px;
+    padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(4)};
     background: ${({ theme }) => theme.colors.surface};
-    border-top: 2px solid ${({ theme }) => theme.colors.secondary};
+    border-top: 1px solid ${({ theme }) => theme.colors.border};
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: ${({ theme }) => theme.spacing(3)};
 `;
 
 const ToolbarRow = styled.div`
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: ${({ theme }) => theme.spacing(3)};
     justify-content: center;
     flex-wrap: wrap;
 `;
@@ -199,34 +145,34 @@ const BottomActionsRow = styled(ToolbarRow)`
 `;
 
 const ColorButton = styled.button`
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    border: 3px solid ${props => props.$active ? '#FFD800' : 'transparent'};
+    border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.accent : 'transparent')};
     background: ${props => props.$color};
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: transform ${({ theme }) => theme.transitions.fast};
+    box-shadow: ${({ theme }) => theme.shadows.sm};
 
     &:hover {
-        transform: scale(1.1);
+        transform: scale(1.08);
     }
 `;
 
 const BrushSizeButton = styled.button`
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    border: 2px solid ${props => props.$active ? '#FFD800' : ({ theme }) => theme.colors.secondary};
-    background: ${({ theme }) => theme.colors.surface};
+    border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.accent : theme.colors.border)};
+    background: ${({ theme }) => theme.colors.surfaceRaised};
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: border-color ${({ theme }) => theme.transitions.fast};
 
     &:hover {
-        background: ${({ theme }) => theme.colors.primary};
+        border-color: ${({ theme }) => theme.colors.borderStrong};
     }
 `;
 
@@ -234,42 +180,7 @@ const BrushPreview = styled.div`
     width: ${props => props.$size}px;
     height: ${props => props.$size}px;
     border-radius: 50%;
-    background: #fff;
-`;
-
-const ActionButton = styled.button`
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    background: ${({ theme }) => theme.colors.primary};
-    color: #fff;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.2s;
-    white-space: nowrap;
-
-    &:hover {
-        transform: scale(1.05);
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        &:hover {
-            transform: none;
-        }
-    }
-`;
-
-const Divider = styled.div`
-    width: 2px;
-    height: 30px;
-    background: ${({ theme }) => theme.colors.secondary};
-    margin: 0 4px;
+    background: ${({ theme }) => theme.colors.text.primary};
 `;
 
 const COLORS = [
@@ -415,19 +326,19 @@ export default function TrazoTragoGame() {
 
     return (
         <Container>
-            <Header>
-                <IconButton onClick={() => navigate('/games')}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <HeaderTitle>Trazo & Trago</HeaderTitle>
-                <IconButton onClick={selectNewWord}>
-                    <IoRefresh size={24} />
-                </IconButton>
-            </Header>
+            <PageHeader
+                title="Trazo & Trago"
+                onBack={() => navigate('/games')}
+                rightAction={
+                    <IconButton variant="ghost" onClick={selectNewWord} aria-label="Nueva palabra">
+                        <IoRefresh size={20} />
+                    </IconButton>
+                }
+            />
 
             <WordRevealBar>
-                <IconButton onClick={() => setShowWord(!showWord)}>
-                    {showWord ? <IoEyeOff size={24} /> : <IoEye size={24} />}
+                <IconButton variant="ghost" size="sm" onClick={() => setShowWord(!showWord)} aria-label="Mostrar/ocultar palabra">
+                    {showWord ? <IoEyeOff size={20} /> : <IoEye size={20} />}
                 </IconButton>
                 <WordText $hidden={!showWord}>
                     {showWord ? currentWord : '???'}
@@ -445,10 +356,10 @@ export default function TrazoTragoGame() {
                             Dibuja la palabra asignada y haz que tus amigos adivinen.
                             ¡El tiempo corre!
                         </StartDescription>
-                        <StartButton onClick={handleStartGame}>
-                            <IoPlay size={24} />
-                            JUGAR
-                        </StartButton>
+                        <Button size="lg" onClick={handleStartGame}>
+                            <IoPlay size={20} />
+                            Jugar
+                        </Button>
                     </StartOverlay>
                 )}
                 <Canvas
@@ -472,9 +383,9 @@ export default function TrazoTragoGame() {
                         <ResultValue>
                             {calculateSips()} {calculateSips() === 1 ? 'trago' : 'tragos'} 🍺
                         </ResultValue>
-                        <StartButton onClick={() => setShowResult(false)}>
-                            ACEPTAR
-                        </StartButton>
+                        <Button size="lg" onClick={() => setShowResult(false)}>
+                            Aceptar
+                        </Button>
                     </ResultOverlay>
                 )}
             </CanvasContainer>
@@ -506,19 +417,20 @@ export default function TrazoTragoGame() {
                 </ToolbarRow>
 
                 <BottomActionsRow>
-                    <ActionButton onClick={clearCanvas}>
-                        <FaBroom size={18} />
-                        LIMPIAR
-                    </ActionButton>
+                    <Button variant="secondary" size="sm" onClick={clearCanvas}>
+                        <IoTrashOutline size={16} />
+                        Limpiar
+                    </Button>
 
-                    <ActionButton onClick={() => { clearCanvas(); selectNewWord(); }}>
-                        <IoRefresh size={18} />
-                        NUEVA
-                    </ActionButton>
+                    <Button variant="secondary" size="sm" onClick={() => { clearCanvas(); selectNewWord(); }}>
+                        <IoRefresh size={16} />
+                        Nueva
+                    </Button>
 
-                    <ActionButton onClick={handleFinish} disabled={isTimerPaused}>
-                        ✓ FINALIZAR
-                    </ActionButton>
+                    <Button size="sm" onClick={handleFinish} disabled={isTimerPaused}>
+                        <IoCheckmark size={16} />
+                        Finalizar
+                    </Button>
                 </BottomActionsRow>
             </Toolbar>
         </Container>

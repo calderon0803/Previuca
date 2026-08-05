@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoArrowBack, IoRefresh, IoArrowForward } from 'react-icons/io5';
+import { IoRefresh } from 'react-icons/io5';
 import { usePlayers } from '../contexts/PlayersContext';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const Container = styled.div`
     min-height: 100vh;
@@ -11,75 +14,38 @@ const Container = styled.div`
     flex-direction: column;
 `;
 
-const Header = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background: rgba(15, 1, 9, 0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-    position: sticky;
-    top: 0;
-    z-index: 10;
-`;
-
-const HeaderTitle = styled.h1`
-    color: #fff;
-    margin: 0;
-    font-size: 24px;
-`;
-
-const IconButton = styled.button`
-    background: ${({ theme }) => theme.colors.surface};
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    color: #fff;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    transition: background 0.2s;
-
-    &:hover {
-        background: ${({ theme }) => theme.colors.primary};
-    }
-`;
-
 const Content = styled.div`
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 24px 12px;
-    gap: 12px;
+    padding: ${({ theme }) => theme.spacing(6)} ${({ theme }) => theme.spacing(3)};
+    gap: ${({ theme }) => theme.spacing(3)};
 `;
 
 const Card = styled.div`
     width: 140px;
     height: 200px;
-    background: ${props => props.$hidden ? '#0F0109' : '#fff'};
-    border-radius: 8px;
+    background: ${props => props.$hidden ? props.theme.colors.background : '#fff'};
+    border-radius: ${({ theme }) => theme.radii.md};
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s;
+    gap: ${({ theme }) => theme.spacing(2)};
+    box-shadow: ${({ theme }) => theme.shadows.md};
+    transition: transform ${({ theme }) => theme.transitions.fast};
     cursor: ${props => props.$hidden ? 'default' : 'pointer'};
     position: relative;
 
     ${props => props.$hidden && `
         background: repeating-linear-gradient(
             45deg,
-            #BA0057,
-            #BA0057 10px,
-            #8B0042 10px,
-            #8B0042 20px
+            ${props.theme.colors.primary},
+            ${props.theme.colors.primary} 10px,
+            ${props.theme.colors.primaryActive} 10px,
+            ${props.theme.colors.primaryActive} 20px
         );
         &::after {
             content: '';
@@ -88,34 +54,34 @@ const Card = styled.div`
             left: 8px;
             right: 8px;
             bottom: 8px;
-            border: 3px solid #FFD800;
+            border: 2px solid rgba(255, 255, 255, 0.35);
             border-radius: 4px;
         }
     `}
 
     ${props => !props.$hidden && `
         &:hover {
-            transform: scale(1.05);
+            transform: scale(1.03);
         }
     `}
 `;
 
 const CardValue = styled.div`
-    font-size: 48px;
-    color: ${props => props.$red ? '#ff0000' : '#000'};
-    font-weight: bold;
+    font-size: 44px;
+    color: ${props => props.$red ? '#C0392B' : '#262626'};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
     z-index: 2;
 `;
 
 const CardSuit = styled.div`
-    font-size: 60px;
+    font-size: 56px;
     z-index: 2;
 `;
 
 const ButtonsContainer = styled.div`
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    gap: ${({ theme }) => theme.spacing(3)};
     width: 100%;
     max-width: 400px;
 `;
@@ -123,43 +89,21 @@ const ButtonsContainer = styled.div`
 const ControlsWrapper = styled.div`
     width: 100%;
     max-width: 400px;
-    height: 140px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: ${({ theme }) => theme.spacing(3)};
     margin-top: auto;
-    margin-bottom: 20px;
-`;
-
-const ChoiceButton = styled.button`
-    padding: 14px;
-    border-radius: 12px;
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    background: transparent;
-    color: #fff;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-        background: ${({ theme }) => theme.colors.secondary};
-        color: #000;
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+    margin-bottom: ${({ theme }) => theme.spacing(5)};
 `;
 
 const Message = styled.div`
-    font-size: 18px;
-    font-weight: bold;
-    color: ${props => props.$success ? '#4CAF50' : '#ff4444'};
+    font-size: ${({ theme }) => theme.typography.fontSize.md};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+    color: ${({ theme, $success }) => $success ? theme.colors.success : theme.colors.error};
     text-align: center;
-    min-height: 50px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -167,10 +111,10 @@ const Message = styled.div`
 
 const Instructions = styled.div`
     text-align: center;
-    color: #aaa;
-    font-size: 14px;
+    color: ${({ theme }) => theme.colors.text.secondary};
+    font-size: ${({ theme }) => theme.typography.fontSize.sm};
     max-width: 400px;
-    min-height: 40px;
+    min-height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -178,79 +122,49 @@ const Instructions = styled.div`
 
 const PlayerIndicator = styled.div`
     background: ${({ theme }) => theme.colors.surface};
-    padding: 8px 16px;
-    border-radius: 12px;
-    margin-bottom: 0;
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    padding: ${({ theme }) => theme.spacing(2)} ${({ theme }) => theme.spacing(4)};
+    border-radius: ${({ theme }) => theme.radii.md};
     text-align: center;
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 `;
 
 const PlayerLabel = styled.p`
-    font-size: 14px;
+    font-size: ${({ theme }) => theme.typography.fontSize.xs};
     color: ${({ theme }) => theme.colors.text.secondary};
     margin: 0 0 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 `;
 
 const PlayerName = styled.p`
-    font-size: 20px;
-    font-weight: bold;
+    font-size: ${({ theme }) => theme.typography.fontSize.lg};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
     color: ${({ theme }) => theme.colors.text.primary};
     margin: 0;
 `;
 
 const PlayerCardsContainer = styled.div`
     display: flex;
-    gap: 6px;
+    gap: ${({ theme }) => theme.spacing(1.5)};
     flex-wrap: wrap;
     justify-content: center;
-    margin-top: 8px;
+    margin-top: ${({ theme }) => theme.spacing(2)};
     max-width: 400px;
 `;
 
 const MiniCard = styled.div`
-    width: 40px;
-    height: 56px;
+    width: 38px;
+    height: 52px;
     background: #fff;
-    border-radius: 6px;
+    border-radius: ${({ theme }) => theme.radii.sm};
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
     font-size: 12px;
-    color: ${props => props.$red ? '#ff0000' : '#000'};
-    font-weight: bold;
-`;
-
-const NextPlayerButton = styled.button`
-    width: 100%;
-    max-width: 400px;
-    border-radius: 12px;
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-  background: ${({ theme }) => theme.colors.primary};
-    padding: 12px;
-    color: #fff;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin-top: 0;
-    transition: all 0.2s;
-    
-    &:hover {
-        background: ${({ theme }) => theme.colors.primary};
-        transform: translateY(-2px);
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+    color: ${props => props.$red ? '#C0392B' : '#262626'};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
 `;
 
 const suits = ['♠️', '♥️', '♦️', '♣️'];
@@ -535,51 +449,51 @@ const PicoPaloGame = () => {
             if (gameState === 'pico') {
                 return (
                     <>
-                        <ChoiceButton onClick={() => handleChoice('rojo')}>
+                        <Button variant="secondary" onClick={() => handleChoice('rojo')}>
                             🔴 Rojo
-                        </ChoiceButton>
-                        <ChoiceButton onClick={() => handleChoice('negro')}>
+                        </Button>
+                        <Button variant="secondary" onClick={() => handleChoice('negro')}>
                             ⚫ Negro
-                        </ChoiceButton>
+                        </Button>
                     </>
                 );
             } else if (gameState === 'palo') {
                 return (
                     <>
-                        <ChoiceButton onClick={() => handleChoice('Pica')}>
+                        <Button variant="secondary" onClick={() => handleChoice('Pica')}>
                             ♠️ Pica
-                        </ChoiceButton>
-                        <ChoiceButton onClick={() => handleChoice('Corazón')}>
+                        </Button>
+                        <Button variant="secondary" onClick={() => handleChoice('Corazón')}>
                             ♥️ Corazón
-                        </ChoiceButton>
-                        <ChoiceButton onClick={() => handleChoice('Diamante')}>
+                        </Button>
+                        <Button variant="secondary" onClick={() => handleChoice('Diamante')}>
                             ♦️ Diamante
-                        </ChoiceButton>
-                        <ChoiceButton onClick={() => handleChoice('Trébol')}>
+                        </Button>
+                        <Button variant="secondary" onClick={() => handleChoice('Trébol')}>
                             ♣️ Trébol
-                        </ChoiceButton>
+                        </Button>
                     </>
                 );
             } else if (gameState === 'dentro-fuera') {
                 return (
                     <>
-                        <ChoiceButton onClick={() => handleChoice('dentro')}>
+                        <Button variant="secondary" onClick={() => handleChoice('dentro')}>
                             📥 Dentro
-                        </ChoiceButton>
-                        <ChoiceButton onClick={() => handleChoice('fuera')}>
+                        </Button>
+                        <Button variant="secondary" onClick={() => handleChoice('fuera')}>
                             📤 Fuera
-                        </ChoiceButton>
+                        </Button>
                     </>
                 );
             } else if (gameState === 'mayor-menor') {
                 return (
                     <>
-                        <ChoiceButton onClick={() => handleChoice('mayor')}>
+                        <Button variant="secondary" onClick={() => handleChoice('mayor')}>
                             ⬆️ Mayor
-                        </ChoiceButton>
-                        <ChoiceButton onClick={() => handleChoice('menor')}>
+                        </Button>
+                        <Button variant="secondary" onClick={() => handleChoice('menor')}>
                             ⬇️ Menor
-                        </ChoiceButton>
+                        </Button>
                     </>
                 );
             }
@@ -651,20 +565,20 @@ const PicoPaloGame = () => {
 
     return (
         <Container>
-            <Header>
-                <IconButton onClick={() => navigate('/games')}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <HeaderTitle>Pico Palo</HeaderTitle>
-                <IconButton onClick={generateNewCard}>
-                    <IoRefresh size={24} />
-                </IconButton>
-            </Header>
+            <PageHeader
+                title="Pico Palo"
+                onBack={() => navigate('/games')}
+                rightAction={
+                    <IconButton variant="ghost" onClick={generateNewCard} aria-label="Nueva carta">
+                        <IoRefresh size={20} />
+                    </IconButton>
+                }
+            />
 
             <Content>
                 {currentPlayer && (
                     <PlayerIndicator>
-                        <PlayerLabel>Turno de:</PlayerLabel>
+                        <PlayerLabel>Turno de</PlayerLabel>
                         <PlayerName>{currentPlayer.name}</PlayerName>
                         {playerCards[currentPlayerIndex] && playerCards[currentPlayerIndex].length > 0 && (
                             <PlayerCardsContainer>
@@ -704,21 +618,21 @@ const PicoPaloGame = () => {
                     </ButtonsContainer>
 
                     {canAdvancePlayer && players.length > 0 && (
-                        <NextPlayerButton onClick={advanceToNextPlayer}>
+                        <Button fullWidth onClick={advanceToNextPlayer}>
                             {playersWhoAnswered + 1 < totalPlayers ? 'Siguiente jugador' : 'Siguiente pregunta'}
-                        </NextPlayerButton>
+                        </Button>
                     )}
 
                     {completedMayorMenorSequence && (
-                        <NextPlayerButton onClick={handleNextPlayerInMayorMenor}>
+                        <Button fullWidth onClick={handleNextPlayerInMayorMenor}>
                             Siguiente jugador
-                        </NextPlayerButton>
+                        </Button>
                     )}
 
                     {isLastPhaseFinished && (
-                        <NextPlayerButton onClick={handleNext}>
-                            Nueva ronda <IoRefresh size={20} />
-                        </NextPlayerButton>
+                        <Button fullWidth onClick={handleNext}>
+                            Nueva ronda <IoRefresh size={18} />
+                        </Button>
                     )}
                 </ControlsWrapper>
             </Content>

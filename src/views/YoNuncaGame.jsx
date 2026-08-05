@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoArrowBack, IoSettingsOutline } from 'react-icons/io5';
+import { IoSettingsOutline } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'framer-motion';
 import { yoNuncaQuestions as defaultQuestions } from '../data/yoNuncaQuestions';
 import OptionsEditor from '../components/OptionsEditor';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const QUESTIONS_KEY = 'yonunca_questions';
 
@@ -15,58 +18,14 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Header = styled.div`
-  padding: 20px;
-  padding-top: 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(15, 1, 9, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-  position: sticky;
-  top: 0;
-  z-index: 10;
-`;
-
-const IconButton = styled.button`
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.text.primary};
-  transition: background 0.2s;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
-const CounterContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const Counter = styled.span`
-  color: ${({ theme }) => theme.colors.secondary};
-  font-size: 18px;
-  font-weight: bold;
-`;
-
 const Content = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 24px;
-  max-width: 600px;
+  padding: ${({ theme }) => theme.spacing(6)};
+  max-width: 560px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -74,30 +33,33 @@ const Content = styled.div`
 
 const QuestionCard = styled(motion.div)`
   background: ${({ theme }) => theme.colors.surface};
-  border-radius: 24px;
-  padding: 32px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  padding: ${({ theme }) => theme.spacing(8)};
   width: 100%;
-  min-height: 280px;
+  min-height: 260px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  margin-bottom: 32px;
+  box-shadow: ${({ theme }) => theme.shadows.md};
+  margin-bottom: ${({ theme }) => theme.spacing(6)};
   box-sizing: border-box;
 `;
 
 const YoNuncaTitle = styled.h2`
-  font-size: 28px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.colors.text.primary}; // White text
-  margin: 0 0 16px 0;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 ${({ theme }) => theme.spacing(4)} 0;
   text-align: center;
 `;
 
 const QuestionText = styled.p`
-  font-size: 24px;
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   color: ${({ theme }) => theme.colors.text.primary};
   text-align: center;
   line-height: 1.4;
@@ -105,33 +67,19 @@ const QuestionText = styled.p`
 `;
 
 const Instruction = styled.p`
-  font-size: 18px;
+  font-size: ${({ theme }) => theme.typography.fontSize.md};
   color: ${({ theme }) => theme.colors.text.secondary};
   text-align: center;
-  opacity: 0.9;
   margin: 0;
 `;
 
-const NextButton = styled(motion.button)`
-  margin: 0 24px 40px 24px;
-  border-radius: 16px;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  background: ${({ theme }) => theme.colors.primary};
-  padding: 18px;
-  width: calc(100% - 48px);
-  max-width: 550px;
-  align-self: center;
-  color: #fff;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  transition: all 0.2s;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-    transform: translateY(-2px);
-  }
+const ButtonWrap = styled.div`
+  padding: ${({ theme }) => theme.spacing(4)} ${({ theme }) => theme.spacing(6)}
+    ${({ theme }) => theme.spacing(8)};
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 export default function YoNuncaGame() {
@@ -181,19 +129,15 @@ export default function YoNuncaGame() {
 
     return (
         <Container>
-            <Header>
-                <IconButton onClick={() => navigate(-1)}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <CounterContainer>
-                    <Counter>
-                        {currentQuestionIndex + 1}/{questions.length}
-                    </Counter>
-                    <IconButton onClick={() => setShowEditor(true)}>
-                        <IoSettingsOutline size={24} />
+            <PageHeader
+                title={`${currentQuestionIndex + 1}/${questions.length}`}
+                onBack={() => navigate(-1)}
+                rightAction={
+                    <IconButton variant="ghost" onClick={() => setShowEditor(true)} aria-label="Editar frases">
+                        <IoSettingsOutline size={20} />
                     </IconButton>
-                </CounterContainer>
-            </Header>
+                }
+            />
 
             <OptionsEditor
                 visible={showEditor}
@@ -208,9 +152,9 @@ export default function YoNuncaGame() {
                 <AnimatePresence mode="wait">
                     <QuestionCard
                         key={currentQuestionIndex}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1 }}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.2 }}
                     >
                         <YoNuncaTitle>Yo nunca...</YoNuncaTitle>
@@ -223,12 +167,11 @@ export default function YoNuncaGame() {
                 </Instruction>
             </Content>
 
-            <NextButton
-                onClick={handleNext}
-                whileTap={{ scale: 0.98 }}
-            >
-                {isLastQuestion ? 'Finalizar' : 'Siguiente'}
-            </NextButton>
+            <ButtonWrap>
+                <Button size="lg" fullWidth onClick={handleNext}>
+                    {isLastQuestion ? 'Finalizar' : 'Siguiente'}
+                </Button>
+            </ButtonWrap>
         </Container>
     );
 }

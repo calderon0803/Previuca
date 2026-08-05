@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled, { keyframes, css } from 'styled-components';
-import { IoArrowBack, IoRefresh, IoSettingsOutline } from 'react-icons/io5';
+import styled from 'styled-components';
+import { IoRefresh, IoSettingsOutline } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
 import OptionsEditor from '../components/OptionsEditor';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const OPTS_KEY = 'roulette_custom_options';
 
@@ -29,43 +32,9 @@ const Container = styled.div`
   overflow: hidden;
 `;
 
-const Header = styled.div`
-  padding: 20px;
+const HeaderActions = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: rgba(15, 1, 9, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-  position: sticky;
-  top: 0;
-  z-index: 100;
-`;
-
-const HeaderTitle = styled.h1`
-  font-size: 20px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-`;
-
-const IconButton = styled.button`
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.text.primary};
-  transition: all 0.2s;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-    transform: scale(1.05);
-  }
+  gap: ${({ theme }) => theme.spacing(2)};
 `;
 
 const GameContent = styled.div`
@@ -74,38 +43,39 @@ const GameContent = styled.div`
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  padding: 24px;
+  padding: ${({ theme }) => theme.spacing(6)};
   position: relative;
 `;
 
 const PlayerIndicator = styled.div`
   background: ${({ theme }) => theme.colors.surface};
-  padding: 12px 24px;
-  border-radius: 16px;
-  margin-bottom: 20px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(6)};
+  border-radius: ${({ theme }) => theme.radii.md};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
   text-align: center;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 `;
 
 const PlayerLabel = styled.p`
-  font-size: 14px;
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
   color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 `;
 
 const PlayerName = styled.p`
-  font-size: 24px;
-  font-weight: bold;
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text.primary};
   margin: 0;
 `;
 
 const RouletteContainer = styled.div`
   position: relative;
-  width: min(85vw, 400px);
+  width: min(85vw, 380px);
   aspect-ratio: 1;
-  margin-bottom: 50px;
+  margin-bottom: ${({ theme }) => theme.spacing(10)};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -113,11 +83,10 @@ const RouletteContainer = styled.div`
 
 const OuterRing = styled.div`
   position: absolute;
-  width: 104%;
-  height: 104%;
+  width: 103%;
+  height: 103%;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FFD800 0%, #B8860B 50%, #FFD800 100%);
-  box-shadow: 0 0 30px rgba(255, 216, 0, 0.3), inset 0 0 10px rgba(0,0,0,0.5);
+  background: ${({ theme }) => theme.colors.neutral[700]};
   z-index: 0;
 `;
 
@@ -127,9 +96,9 @@ const WheelWrapper = styled(motion.div)`
   height: 100%;
   border-radius: 50%;
   overflow: hidden;
-  border: 4px solid #0F0109;
+  border: 3px solid ${({ theme }) => theme.colors.background};
   z-index: 1;
-  box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+  box-shadow: ${({ theme }) => theme.shadows.lg};
 `;
 
 const Slices = styled.div`
@@ -152,10 +121,10 @@ const SliceText = styled.div`
   justify-content: center;
   color: #fff;
   font-size: min(3vw, 13px);
-  font-weight: 800;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-shadow: 1px 1px 4px rgba(0,0,0,1);
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
   pointer-events: none;
   white-space: nowrap;
   padding-left: 45px; /* Clear the center cap (30px radius) + safety */
@@ -164,79 +133,49 @@ const SliceText = styled.div`
 
 const Pointer = styled.div`
   position: absolute;
-  top: -20px;
+  top: -18px;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
-  height: 50px;
+  width: 36px;
+  height: 44px;
   z-index: 10;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
-  
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+
   &::before {
     content: '';
     position: absolute;
     width: 0;
     height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-top: 35px solid ${({ theme }) => theme.colors.secondary};
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-top: 30px solid ${({ theme }) => theme.colors.accent};
   }
-  
+
   &::after {
     content: '';
     position: absolute;
-    top: -5px;
+    top: -4px;
     left: 50%;
     transform: translateX(-50%);
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     background: #fff;
     border-radius: 50%;
-    box-shadow: 0 0 10px #fff;
   }
 `;
 
 const CenterCap = styled.div`
   position: absolute;
-  width: 60px;
-  height: 60px;
-  background: radial-gradient(circle at center, #fff 0%, #FFD800 30%, #BA0057 100%);
+  width: 54px;
+  height: 54px;
+  background: ${({ theme }) => theme.colors.surfaceRaised};
   border-radius: 50%;
   z-index: 5;
-  border: 4px solid #0F0109;
-  box-shadow: 0 0 20px rgba(186, 0, 87, 0.6), inset 0 0 10px rgba(0,0,0,0.5);
+  border: 3px solid ${({ theme }) => theme.colors.background};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
   display: flex;
   justify-content: center;
   align-items: center;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    width: 60%;
-    height: 60%;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 100%);
-  }
-`;
-
-const SpinButton = styled(motion.button)`
-  padding: 20px 60px;
-  border-radius: 20px;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  background: ${({ theme }) => theme.colors.primary};
-  color: #fff;
-  font-size: 22px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 12px 30px rgba(186, 0, 87, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: scale(0.95);
-  }
 `;
 
 const ResultOverlay = styled(motion.div)`
@@ -245,28 +184,43 @@ const ResultOverlay = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 1, 9, 0.9);
-  backdrop-filter: blur(10px);
+  background: rgba(10, 11, 14, 0.85);
+  backdrop-filter: blur(6px);
   z-index: 200;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 30px;
+  padding: ${({ theme }) => theme.spacing(8)};
   text-align: center;
 `;
 
 const ResultCard = styled(motion.div)`
   background: ${({ theme }) => theme.colors.surface};
-  border: 3px solid ${({ theme }) => theme.colors.secondary};
-  border-radius: 32px;
-  padding: 40px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  padding: ${({ theme }) => theme.spacing(9)};
   width: 100%;
   max-width: 360px;
-  box-shadow: 0 0 60px ${({ theme }) => `${theme.colors.secondary}30`};
+  box-shadow: ${({ theme }) => theme.shadows.lg};
 `;
 
-// Redundant options constant removed to avoid shadowing confusion
+const ResultLabel = styled.h3`
+  color: ${({ theme }) => theme.colors.accent};
+  margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
+  letter-spacing: 0.1em;
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  text-transform: uppercase;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+`;
+
+const ResultValue = styled.h2`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.xxl};
+  margin: 0;
+  line-height: 1.25;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+`;
 
 export default function RouletteGame() {
   const navigate = useNavigate();
@@ -320,9 +274,9 @@ export default function RouletteGame() {
   // Generate conic-gradient string
   const segmentSize = 360 / options.length;
 
-  // Alternating colors: primary and secondary
+  // Alternating colors: primary and accent
   const getColors = (count) => {
-    const baseColors = ['#BA0057', '#FFD800'];
+    const baseColors = ['#B23A63', '#D9A54B'];
     const result = [];
     for (let i = 0; i < count; i++) {
       result.push(baseColors[i % baseColors.length]);
@@ -375,20 +329,24 @@ export default function RouletteGame() {
 
   return (
     <Container>
-      <Header>
-        <IconButton onClick={() => navigate('/games')}>
-          <IoArrowBack size={24} />
-        </IconButton>
-        <HeaderTitle>Ruleta</HeaderTitle>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <IconButton onClick={() => setShowEditor(true)}>
-            <IoSettingsOutline size={22} />
-          </IconButton>
-          <IconButton onClick={() => { setRotation(0); setShowResult(false); setResult(null); }}>
-            <IoRefresh size={24} />
-          </IconButton>
-        </div>
-      </Header>
+      <PageHeader
+        title="Ruleta"
+        onBack={() => navigate('/games')}
+        rightAction={
+          <HeaderActions>
+            <IconButton variant="ghost" onClick={() => setShowEditor(true)} aria-label="Opciones">
+              <IoSettingsOutline size={20} />
+            </IconButton>
+            <IconButton
+              variant="ghost"
+              onClick={() => { setRotation(0); setShowResult(false); setResult(null); }}
+              aria-label="Reiniciar"
+            >
+              <IoRefresh size={20} />
+            </IconButton>
+          </HeaderActions>
+        }
+      />
 
       <OptionsEditor
         visible={showEditor}
@@ -405,7 +363,7 @@ export default function RouletteGame() {
       <GameContent>
         {players.length > 0 && (
           <PlayerIndicator>
-            <PlayerLabel>Turno de:</PlayerLabel>
+            <PlayerLabel>Turno de</PlayerLabel>
             <PlayerName>{players[currentPlayerIndex]?.name}</PlayerName>
           </PlayerIndicator>
         )}
@@ -427,14 +385,9 @@ export default function RouletteGame() {
           <CenterCap />
         </RouletteContainer>
 
-        <SpinButton
-          onClick={handleSpin}
-          disabled={isSpinning}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {isSpinning ? 'GIRANDO...' : '¡GIRAR!'}
-        </SpinButton>
+        <Button size="lg" onClick={handleSpin} disabled={isSpinning}>
+          {isSpinning ? 'Girando...' : 'Girar'}
+        </Button>
 
         <AnimatePresence>
           {showResult && (
@@ -445,24 +398,17 @@ export default function RouletteGame() {
               onClick={nextTurn}
             >
               <ResultCard
-                initial={{ scale: 0.5, y: 50 }}
-                animate={{ scale: 1, y: 0 }}
-                transition={{ type: 'spring', damping: 15 }}
+                initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                transition={{ duration: 0.2 }}
               >
-                <motion.div
-                  initial={{ rotate: -10 }}
-                  animate={{ rotate: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <h3 style={{ color: '#FFD800', margin: '0 0 15px 0', letterSpacing: '3px' }}>RESULTADO</h3>
-                  <h2 style={{ color: '#fff', fontSize: '32px', margin: 0, lineHeight: 1.2 }}>{result}</h2>
-                </motion.div>
-                <IconButton
-                  onClick={nextTurn}
-                  style={{ width: '100%', marginTop: '30px', height: '54px' }}
-                >
-                  CONTINUAR
-                </IconButton>
+                <ResultLabel>Resultado</ResultLabel>
+                <ResultValue>{result}</ResultValue>
+                <div style={{ marginTop: '32px' }}>
+                  <Button size="lg" fullWidth onClick={nextTurn}>
+                    Continuar
+                  </Button>
+                </div>
               </ResultCard>
             </ResultOverlay>
           )}

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoArrowBack, IoRefresh } from 'react-icons/io5';
+import { IoRefresh } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
 import { cardRules, generateDeck, shuffleDeck } from '../data/reyDeCopasRules';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -13,46 +16,14 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Header = styled.div`
-  padding: 20px;
-  padding-top: 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(15, 1, 9, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-  position: sticky;
-  top: 0;
-  z-index: 10;
-`;
-
-const IconButton = styled.button`
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.text.primary};
-  transition: background 0.2s;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
 const Content = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 24px;
-  max-width: 600px;
+  padding: ${({ theme }) => theme.spacing(6)};
+  max-width: 560px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -60,44 +31,45 @@ const Content = styled.div`
 
 const PlayerIndicator = styled.div`
   background: ${({ theme }) => theme.colors.surface};
-  padding: 12px 24px;
-  border-radius: 16px;
-  margin-bottom: 20px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(6)};
+  border-radius: ${({ theme }) => theme.radii.md};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
   text-align: center;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 `;
 
 const PlayerLabel = styled.p`
-  font-size: 14px;
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
   color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 `;
 
 const PlayerName = styled.p`
-  font-size: 24px;
-  font-weight: bold;
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text.primary};
   margin: 0;
 `;
 
 const Counter = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
   text-align: center;
 `;
 
 const CounterText = styled.p`
-  font-size: 18px;
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-weight: 600;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   margin: 0;
 `;
 
 const KingsText = styled.p`
-  font-size: 16px;
-  color: ${({ theme }) => theme.colors.secondary}; // Use Gold for Kings
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.accent};
   margin: 4px 0 0 0;
-  font-weight: bold;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
 `;
 
 const CardContainer = styled(motion.div)`
@@ -109,72 +81,52 @@ const CardContainer = styled(motion.div)`
 
 const Card = styled.div`
   background: #fff;
-  border-radius: 20px;
-  width: 200px;
-  height: 280px;
+  border-radius: ${({ theme }) => theme.radii.lg};
+  width: 180px;
+  height: 250px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  margin-bottom: 24px;
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  margin-bottom: ${({ theme }) => theme.spacing(6)};
 `;
 
 const CardValue = styled.span`
-  font-size: 72px;
-  font-weight: bold;
-  color: #333;
+  font-size: 64px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: #262626;
 `;
 
 const CardSuit = styled.span`
-  font-size: 48px;
-  margin-top: 8px;
+  font-size: 42px;
+  margin-top: ${({ theme }) => theme.spacing(2)};
 `;
 
 const RuleContainer = styled.div`
   background: ${({ theme }) => theme.colors.surface};
-  border-radius: 16px;
-  padding: 20px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.spacing(5)};
   width: 100%;
-  margin-bottom: 24px;
+  margin-bottom: ${({ theme }) => theme.spacing(6)};
   box-sizing: border-box;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
 `;
 
 const RuleName = styled.h3`
-  font-size: 24px;
-  font-weight: bold;
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 8px 0;
+  margin: 0 0 ${({ theme }) => theme.spacing(2)} 0;
   text-align: center;
 `;
 
 const RuleDescription = styled.p`
-  font-size: 16px;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
   color: ${({ theme }) => theme.colors.text.secondary};
   text-align: center;
   line-height: 1.5;
   margin: 0;
-`;
-
-const NextButton = styled.button`
-  width: 100%;
-  border-radius: 16px;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  background: ${({ theme }) => theme.colors.primary};
-  padding: 18px;
-  color: #fff;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  transition: all 0.2s;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-    transform: translateY(-2px);
-  }
 `;
 
 const DrawContainer = styled.div`
@@ -185,35 +137,34 @@ const DrawContainer = styled.div`
 `;
 
 const SelectText = styled.h2`
-  font-size: 20px;
-  font-weight: bold;
+  font-size: ${({ theme }) => theme.typography.fontSize.md};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 24px 0;
+  margin: 0 0 ${({ theme }) => theme.spacing(6)} 0;
 `;
 
 const CardsRow = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 16px;
+  gap: ${({ theme }) => theme.spacing(4)};
   width: 100%;
 `;
 
 const CardBack = styled(motion.button)`
-  width: 100px;
-  height: 140px;
+  width: 90px;
+  height: 126px;
   background: repeating-linear-gradient(
     45deg,
-    #BA0057,
-    #BA0057 10px,
-    #8B0042 10px,
-    #8B0042 20px
+    ${({ theme }) => theme.colors.primary},
+    ${({ theme }) => theme.colors.primary} 10px,
+    ${({ theme }) => theme.colors.primaryActive} 10px,
+    ${({ theme }) => theme.colors.primaryActive} 20px
   );
-  border-radius: 8px;
-  border: none;
+  border-radius: ${({ theme }) => theme.radii.sm};
   cursor: pointer;
   position: relative;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: ${({ theme }) => theme.shadows.sm};
 
   &::after {
     content: '';
@@ -222,12 +173,8 @@ const CardBack = styled(motion.button)`
     left: 6px;
     right: 6px;
     bottom: 6px;
-    border: 2px solid #FFD800;
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 4px;
-  }
-  
-  &:hover {
-    transform: translateY(-4px);
   }
 `;
 
@@ -238,37 +185,16 @@ const GameOver = styled.div`
 `;
 
 const GameOverTitle = styled.h2`
-  font-size: 32px;
-  font-weight: bold;
+  font-size: ${({ theme }) => theme.typography.fontSize.xxl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 12px 0;
+  margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
 `;
 
 const GameOverText = styled.p`
-  font-size: 18px;
+  font-size: ${({ theme }) => theme.typography.fontSize.md};
   color: ${({ theme }) => theme.colors.text.secondary};
-  margin: 0 0 32px 0;
-`;
-
-const RestartButton = styled.button`
-  border-radius: 16px;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  background: ${({ theme }) => theme.colors.primary};
-  padding: 18px 32px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #fff;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  transition: all 0.2s;
-  
-  &:hover {
-    filter: brightness(1.2);
-    transform: translateY(-2px);
-  }
+  margin: 0 0 ${({ theme }) => theme.spacing(8)} 0;
 `;
 
 export default function ReyDeCopasGame() {
@@ -319,19 +245,20 @@ export default function ReyDeCopasGame() {
 
   return (
     <Container>
-      <Header>
-        <IconButton onClick={() => navigate(-1)}>
-          <IoArrowBack size={24} />
-        </IconButton>
-        <IconButton onClick={resetGame}>
-          <IoRefresh size={24} />
-        </IconButton>
-      </Header>
+      <PageHeader
+        title="Rey de Copas"
+        onBack={() => navigate(-1)}
+        rightAction={
+          <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+            <IoRefresh size={20} />
+          </IconButton>
+        }
+      />
 
       <Content>
         {currentPlayer && !currentCard && (
           <PlayerIndicator>
-            <PlayerLabel>Turno de:</PlayerLabel>
+            <PlayerLabel>Turno de</PlayerLabel>
             <PlayerName>{currentPlayer.name}</PlayerName>
           </PlayerIndicator>
         )}
@@ -351,9 +278,9 @@ export default function ReyDeCopasGame() {
           {currentCard ? (
             <CardContainer
               key="card"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.2 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
             >
               <Card>
                 <CardValue>{currentCard.value}</CardValue>
@@ -367,9 +294,9 @@ export default function ReyDeCopasGame() {
                 </RuleContainer>
               )}
 
-              <NextButton onClick={() => setCurrentCard(null)}>
+              <Button size="lg" fullWidth onClick={() => setCurrentCard(null)}>
                 Continuar
-              </NextButton>
+              </Button>
             </CardContainer>
           ) : (
             <DrawContainer key="draw">
@@ -381,8 +308,8 @@ export default function ReyDeCopasGame() {
                       <CardBack
                         key={index}
                         onClick={() => drawCard(index)}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       />
                     ))}
                   </CardsRow>
@@ -391,10 +318,10 @@ export default function ReyDeCopasGame() {
                 <GameOver>
                   <GameOverTitle>¡Juego Terminado!</GameOverTitle>
                   <GameOverText>Se robaron todas las cartas</GameOverText>
-                  <RestartButton onClick={resetGame}>
-                    <IoRefresh size={24} />
+                  <Button size="lg" onClick={resetGame}>
+                    <IoRefresh size={18} />
                     Jugar de Nuevo
-                  </RestartButton>
+                  </Button>
                 </GameOver>
               )}
             </DrawContainer>

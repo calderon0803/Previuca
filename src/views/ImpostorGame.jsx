@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoArrowBack, IoRefresh, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
+import { IoRefresh } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
-
 import { wordBank } from '../data/impostorWords';
-
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -15,114 +16,81 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Header = styled.div`
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: rgba(15, 1, 9, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-  position: sticky;
-  top: 0;
-  z-index: 100;
-`;
-
-const HeaderTitle = styled.h1`
-  font-size: 20px;
-  font-weight: bold;
-  color: #fff;
-  margin: 0;
-`;
-
-const IconButton = styled.button`
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: #fff;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
 const Content = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: ${({ theme }) => theme.spacing(6)};
   perspective: 1000px;
 `;
 
 const Card = styled(motion.div)`
   background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  border-radius: 24px;
-  padding: 30px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  padding: ${({ theme }) => theme.spacing(8)};
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  box-shadow: ${({ theme }) => theme.shadows.md};
   margin: auto;
   width: 100%;
-  max-width: 500px;
+  max-width: 480px;
   backface-visibility: hidden;
+  box-sizing: border-box;
 `;
 
 const PhaseLabel = styled.span`
   color: ${({ theme }) => theme.colors.primary};
-  font-size: 14px;
-  font-weight: bold;
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
+  letter-spacing: 0.08em;
+  margin-bottom: ${({ theme }) => theme.spacing(3)};
 `;
 
 const Title = styled.h2`
-  color: #fff;
-  font-size: 28px;
-  font-weight: 900;
-  margin-bottom: 24px;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.xxl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  margin: 0 0 ${({ theme }) => theme.spacing(5)} 0;
 `;
 
 const Instruction = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 16px;
+  font-size: ${({ theme }) => theme.typography.fontSize.md};
   line-height: 1.6;
-  margin-bottom: 30px;
+  margin-bottom: ${({ theme }) => theme.spacing(6)};
 `;
 
 const SecretBox = styled(motion.div)`
-  background: rgba(0,0,0,0.3);
-  border-radius: 20px;
-  padding: 40px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: ${({ theme }) => theme.radii.lg};
+  padding: ${({ theme }) => theme.spacing(9)};
   width: 100%;
-  margin: 20px 0;
-  border: 2px dashed ${props => props.$isRevealing ? props.theme.colors.primary : props.theme.colors.secondary + '50'};
+  margin: ${({ theme }) => theme.spacing(4)} 0;
+  border: 1px dashed ${({ theme, $isRevealing }) => ($isRevealing ? theme.colors.primary : theme.colors.border)};
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: ${({ theme }) => theme.spacing(3)};
   user-select: none;
   -webkit-touch-callout: none;
-  transition: border-color 0.2s;
+  transition: border-color ${({ theme }) => theme.transitions.fast};
   position: relative;
   overflow: hidden;
   touch-action: none;
+  box-sizing: border-box;
 `;
 
 const SecretText = styled.span`
-  font-size: 32px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.secondary};
-  text-shadow: 0 0 20px ${({ theme }) => theme.colors.secondary}40;
+  font-size: ${({ $size }) => $size || '32px'};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme, $variant }) =>
+    $variant === 'impostor' ? theme.colors.error :
+    $variant === 'swipe' ? theme.colors.accent :
+    theme.colors.text.primary};
 `;
 
 const SwipeCover = styled(motion.div)`
@@ -131,16 +99,16 @@ const SwipeCover = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(186, 0, 87, 0.95), rgba(186, 0, 87, 0.85));
-  backdrop-filter: blur(10px);
+  background: rgba(18, 19, 23, 0.94);
+  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: ${({ theme }) => theme.spacing(3)};
   cursor: grab;
   z-index: 10;
-  
+
   &:active {
     cursor: grabbing;
   }
@@ -150,78 +118,11 @@ const WordContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: ${({ theme }) => theme.spacing(3)};
   width: 100%;
   min-height: 140px;
   justify-content: center;
 `;
-
-const MainButton = styled(motion.button)`
-  background: ${({ theme }) => theme.colors.primary};
-  color: #fff;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  border-radius: 16px;
-  padding: 18px 40px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 20px;
-`;
-
-
-
-const RoleTag = styled.div`
-  color:#BA0057;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
-  text-transform: uppercase;
-  margin-top: 10px;
-`;
-
-const CheckboxContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0;
-  padding: 16px;
-  background: rgba(0,0,0,0.2);
-  border-radius: 12px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s;
-  
-  &:hover {
-    background: rgba(0,0,0,0.3);
-  }
-`;
-
-const Checkbox = styled.div`
-  width: 24px;
-  height: 24px;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${props => props.$checked ? props.theme.colors.primary : 'transparent'};
-  transition: all 0.2s;
-`;
-
-const CheckboxLabel = styled.span`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 16px;
-  flex: 1;
-`;
-
-const CheckMark = styled.span`
-  color: #fff;
-  font-weight: bold;
-  font-size: 18px;
-`;
-
 
 export default function ImpostorGame() {
   const navigate = useNavigate();
@@ -276,16 +177,12 @@ export default function ImpostorGame() {
   if (players.length < 3) {
     return (
       <Container>
-        <Header>
-          <IconButton onClick={() => navigate('/games')}><IoArrowBack size={24} /></IconButton>
-          <HeaderTitle>Impostor</HeaderTitle>
-          <div></div>
-        </Header>
+        <PageHeader title="Impostor" onBack={() => navigate('/games')} />
         <Content>
           <Card>
             <Title>Faltan jugadores</Title>
             <Instruction>Este juego requiere al menos 3 jugadores para ser divertido.</Instruction>
-            <MainButton onClick={() => navigate('/games')}>Volver</MainButton>
+            <Button size="lg" fullWidth onClick={() => navigate('/games')}>Volver</Button>
           </Card>
         </Content>
       </Container>
@@ -294,16 +191,20 @@ export default function ImpostorGame() {
 
   return (
     <Container>
-      <Header>
-        <IconButton onClick={() => navigate('/games')}><IoArrowBack size={24} /></IconButton>
-        <HeaderTitle>Impostor</HeaderTitle>
-        <IconButton onClick={resetGame}><IoRefresh size={24} /></IconButton>
-      </Header>
+      <PageHeader
+        title="Impostor"
+        onBack={() => navigate('/games')}
+        rightAction={
+          <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+            <IoRefresh size={20} />
+          </IconButton>
+        }
+      />
 
       <Content>
         <AnimatePresence mode="wait">
           {phase === 'start' && (
-            <Card key="start" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+            <Card key="start" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
               <PhaseLabel>Preparación</PhaseLabel>
               <Title>¿Quién es el impostor?</Title>
               <Instruction>
@@ -311,23 +212,21 @@ export default function ImpostorGame() {
                 Describid vuestra palabra por turnos. El impostor debe intentar pasar desapercibido.
                 ¡Al final votad quién creéis que es el impostor!
               </Instruction>
-              <MainButton onClick={initGame}>EMPEZAR PARTIDA</MainButton>
+              <Button size="lg" fullWidth onClick={initGame}>Empezar partida</Button>
             </Card>
           )}
 
           {phase === 'reveal' && (
-            <Card key="reveal" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+            <Card key="reveal" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
               <Title>{players[revealIndex].name}</Title>
               <Instruction>Desliza para ver tu palabra en secreto y asegúrate de que nadie mire.</Instruction>
 
               <SecretBox $isRevealing={swipeOffset > 150}>
                 <WordContainer>
                   {gameState.assignments[revealIndex].role === 'impostor' ? (
-                    <>
-                      <SecretText style={{ fontSize: '28px', color: '#BA0057' }}>
-                        ERES EL IMPOSTOR
-                      </SecretText>
-                    </>
+                    <SecretText $variant="impostor" $size="26px">
+                      ERES EL IMPOSTOR
+                    </SecretText>
                   ) : (
                     <SecretText>{gameState.assignments[revealIndex].word}</SecretText>
                   )}
@@ -352,20 +251,21 @@ export default function ImpostorGame() {
                   animate={{ x: swipeOffset }}
                   transition={{ type: "spring", stiffness: 500, damping: 40 }}
                 >
-                  <SecretText style={{ color: '#FFD800' }}>DESLIZA →</SecretText>
-                  <Instruction style={{ marginBottom: 0, color: '#FFD800', fontSize: '14px' }}>
+                  <SecretText $variant="swipe" $size="24px">DESLIZA →</SecretText>
+                  <Instruction style={{ marginBottom: 0, color: '#D9A54B', fontSize: '14px' }}>
                     Arrastra para revelar
                   </Instruction>
                 </SwipeCover>
               </SecretBox>
 
-              <MainButton
+              <Button
+                size="lg"
+                fullWidth
                 onClick={handleNextReveal}
                 disabled={!isRevealing}
-                style={{ opacity: isRevealing ? 1 : 0.5 }}
               >
-                {revealIndex < players.length - 1 ? 'SIGUIENTE JUGADOR' : 'LISTOS'}
-              </MainButton>
+                {revealIndex < players.length - 1 ? 'Siguiente jugador' : 'Listos'}
+              </Button>
             </Card>
           )}
 
@@ -379,7 +279,7 @@ export default function ImpostorGame() {
                 Al final, ¡votad quién creéis que es el impostor!
               </Instruction>
 
-              <MainButton onClick={resetGame}>NUEVA PARTIDA</MainButton>
+              <Button size="lg" fullWidth onClick={resetGame}>Nueva partida</Button>
             </Card>
           )}
         </AnimatePresence>

@@ -16,12 +16,11 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    background: radial-gradient(circle at top, #1a0210 0%, #0F0109 100%);
+    background: ${({ theme }) => theme.colors.background};
     color: ${({ theme }) => theme.colors.text.primary};
     font-family: ${({ theme }) => theme.typography.fontFamily};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* transition: background-color 0.3s ease, color 0.3s ease; Removed transition to feel native/static */
     overflow-x: hidden;
     overscroll-behavior: none;
     position: fixed;
@@ -44,8 +43,9 @@ export const GlobalStyles = createGlobalStyle`
 
   h1, h2, h3, h4, h5, h6 {
     margin-bottom: ${({ theme }) => theme.spacing(2)};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-    line-height: 1.2;
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
 
   p {
@@ -61,5 +61,31 @@ export const GlobalStyles = createGlobalStyle`
   button {
     cursor: pointer;
     font-family: inherit;
+    border: none;
+    background: none;
+    color: inherit;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.primaryHover};
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: ${({ theme }) => theme.colors.primaryMuted};
+    color: ${({ theme }) => theme.colors.text.primary};
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.neutral[700]};
+    border-radius: ${({ theme }) => theme.radii.pill};
   }
 `;

@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useCrush } from '../contexts/CrushContext';
-import { IoLogoInstagram, IoArrowBack, IoLockClosed, IoMail } from 'react-icons/io5';
+import { IoArrowBack, IoLockClosed, IoMail } from 'react-icons/io5';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -11,62 +14,48 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: ${({ theme }) => theme.spacing(5)};
+  position: relative;
 `;
 
-const Header = styled.div`
+const BackButtonWrap = styled.div`
   position: absolute;
-  top: 20px;
-  left: 20px;
-`;
-
-const IconButton = styled.button`
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.text.primary};
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-  }
+  top: ${({ theme }) => theme.spacing(5)};
+  left: ${({ theme }) => theme.spacing(5)};
 `;
 
 const LoginCard = styled.div`
   background: ${({ theme }) => theme.colors.surface};
-  border-radius: 20px;
-  padding: 30px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  padding: ${({ theme }) => theme.spacing(8)};
   width: 100%;
   max-width: 400px;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  box-sizing: border-box;
 `;
 
 const Title = styled.h1`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 24px;
-  margin-bottom: 30px;
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  margin-bottom: ${({ theme }) => theme.spacing(7)};
   text-align: center;
 `;
 
 const InputGroup = styled.div`
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
 `;
 
 const Label = styled.label`
   display: block;
   color: ${({ theme }) => theme.colors.text.secondary};
-  margin-bottom: 8px;
-  font-size: 14px;
+  margin-bottom: ${({ theme }) => theme.spacing(2)};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
 `;
 
 const InputWrapper = styled.div`
@@ -77,69 +66,17 @@ const InputWrapper = styled.div`
 
 const InputIcon = styled.div`
   position: absolute;
-  left: 12px;
+  left: ${({ theme }) => theme.spacing(4)};
   color: ${({ theme }) => theme.colors.text.secondary};
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 12px 12px 12px 40px;
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
-  color: #fff;
-  font-size: 16px;
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s;
-
-  &:focus {
-    border-color: ${({ theme }) => theme.colors.secondary};
-  }
-`;
-
-const Button = styled.button`
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.secondary};
-  color: #000;
-  font-weight: bold;
-  font-size: 16px;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.1s, filter 0.2s;
-  margin-top: 10px;
-  height: 50px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-`;
-
-const SecondaryButton = styled(Button)`
-  background: transparent;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  color: ${({ theme }) => theme.colors.secondary};
-  
-  &:hover {
-    background: ${({ theme }) => `${theme.colors.secondary}15`};
-  }
 `;
 
 const StatusMessage = styled.p`
-  margin-top: 20px;
+  margin-top: ${({ theme }) => theme.spacing(5)};
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 14px;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
   min-height: 20px;
+  text-align: center;
 `;
 
 export default function CrushLogin() {
@@ -250,24 +187,25 @@ export default function CrushLogin() {
 
   return (
     <Container>
-      <Header>
-        <IconButton onClick={() => navigate('/')}>
-          <IoArrowBack size={24} />
+      <BackButtonWrap>
+        <IconButton onClick={() => navigate('/')} aria-label="Volver">
+          <IoArrowBack size={20} />
         </IconButton>
-      </Header>
+      </BackButtonWrap>
       <LoginCard>
-        <Title>{isRegisterMode ? 'Crear Cuenta' : 'Iniciar Sesión'}</Title>
+        <Title>{isRegisterMode ? 'Crear cuenta' : 'Iniciar sesión'}</Title>
 
         {!isRegisterMode ? (
           // Formulario de Login
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} style={{ width: '100%' }}>
             <InputGroup>
-              <Label>Correo Electrónico</Label>
+              <Label>Correo electrónico</Label>
               <InputWrapper>
                 <InputIcon>
-                  <IoMail size={20} />
+                  <IoMail size={18} />
                 </InputIcon>
                 <Input
+                  $hasIcon
                   type="email"
                   placeholder="tu@email.com"
                   value={email}
@@ -281,9 +219,10 @@ export default function CrushLogin() {
               <Label>Contraseña</Label>
               <InputWrapper>
                 <InputIcon>
-                  <IoLockClosed size={20} />
+                  <IoLockClosed size={18} />
                 </InputIcon>
                 <Input
+                  $hasIcon
                   type="password"
                   placeholder="********"
                   value={password}
@@ -293,20 +232,21 @@ export default function CrushLogin() {
               </InputWrapper>
             </InputGroup>
 
-            <Button type="submit" disabled={!email || !password || isVerifying}>
-              {isVerifying ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            <Button type="submit" fullWidth size="lg" disabled={!email || !password || isVerifying}>
+              {isVerifying ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </Button>
           </form>
         ) : (
           // Formulario de Registro
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }} style={{ width: '100%' }}>
             <InputGroup>
-              <Label>Correo Electrónico</Label>
+              <Label>Correo electrónico</Label>
               <InputWrapper>
                 <InputIcon>
-                  <IoMail size={20} />
+                  <IoMail size={18} />
                 </InputIcon>
                 <Input
+                  $hasIcon
                   type="email"
                   placeholder="tu@email.com"
                   value={email}
@@ -320,9 +260,10 @@ export default function CrushLogin() {
               <Label>Contraseña</Label>
               <InputWrapper>
                 <InputIcon>
-                  <IoLockClosed size={20} />
+                  <IoLockClosed size={18} />
                 </InputIcon>
                 <Input
+                  $hasIcon
                   type="password"
                   placeholder="********"
                   value={password}
@@ -333,12 +274,13 @@ export default function CrushLogin() {
             </InputGroup>
 
             <InputGroup>
-              <Label>Confirmar Contraseña</Label>
+              <Label>Confirmar contraseña</Label>
               <InputWrapper>
                 <InputIcon>
-                  <IoLockClosed size={20} />
+                  <IoLockClosed size={18} />
                 </InputIcon>
                 <Input
+                  $hasIcon
                   type="password"
                   placeholder="********"
                   value={confirmPassword}
@@ -348,19 +290,23 @@ export default function CrushLogin() {
               </InputWrapper>
             </InputGroup>
 
-            <Button type="submit" disabled={!email || !password || !confirmPassword || isVerifying}>
+            <Button type="submit" fullWidth size="lg" disabled={!email || !password || !confirmPassword || isVerifying}>
               {isVerifying ? 'Creando cuenta...' : 'Registrarse'}
             </Button>
           </form>
         )}
 
-        <SecondaryButton
-          type="button"
-          onClick={toggleMode}
-          disabled={isVerifying}
-        >
-          {isRegisterMode ? '¿Ya tienes cuenta? Inicia Sesión' : '¿No tienes cuenta? Regístrate'}
-        </SecondaryButton>
+        <div style={{ width: '100%', marginTop: '12px' }}>
+          <Button
+            type="button"
+            variant="ghost"
+            fullWidth
+            onClick={toggleMode}
+            disabled={isVerifying}
+          >
+            {isRegisterMode ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+          </Button>
+        </div>
 
         <StatusMessage>{status}</StatusMessage>
       </LoginCard>

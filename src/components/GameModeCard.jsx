@@ -6,65 +6,59 @@ import { IoLockClosed } from 'react-icons/io5';
 const CardContainer = styled(motion.div)`
   cursor: pointer;
   width: 100%;
+  height: 100%;
 `;
 
 const Card = styled.div`
-  background: ${({ theme, $isLocked }) => $isLocked ? 'rgba(255, 255, 255, 0.02)' : theme.colors.surface};
-  border-radius: 20px;
-  padding: 24px;
-  height: 120px;
+  background: ${({ theme }) => theme.colors.surface};
+  border-radius: ${({ theme }) => theme.radii.md};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing(4)};
+  height: 128px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  border: 2px solid ${({ theme, $isLocked }) => $isLocked ? 'rgba(255, 255, 255, 0.1)' : theme.colors.secondary};
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex-direction: column;
   position: relative;
   overflow: hidden;
-  transition: all 0.2s;
-  opacity: ${({ $isLocked }) => $isLocked ? 0.6 : 1};
+  transition: background ${({ theme }) => theme.transitions.base},
+    border-color ${({ theme }) => theme.transitions.base};
+  opacity: ${({ $isLocked }) => ($isLocked ? 0.55 : 1)};
 
   &:hover {
-    box-shadow: ${({ $isLocked }) => $isLocked ? '0 4px 12px rgba(0,0,0,0.2)' : '0 12px 24px rgba(0,0,0,0.4)'};
-    background: ${({ theme, $isLocked }) => $isLocked ? 'rgba(255, 255, 255, 0.04)' : `${theme.colors.primary}20`};
-    transform: ${({ $isLocked }) => $isLocked ? 'none' : 'translateY(-2px)'};
+    background: ${({ theme, $isLocked }) => ($isLocked ? theme.colors.surface : theme.colors.surfaceHover)};
+    border-color: ${({ theme, $isLocked }) => ($isLocked ? theme.colors.border : theme.colors.borderStrong)};
   }
 `;
 
 const Icon = styled.span`
-  font-size: 64px;
+  font-size: 52px;
   position: absolute;
-  bottom: -10px;
+  top: -10px;
   right: -10px;
-  opacity: ${({ $isLocked }) => $isLocked ? 0.05 : 0.15};
-  filter: ${({ $isLocked }) => $isLocked ? 'grayscale(100%)' : 'none'};
-  transform: rotate(-15deg);
+  opacity: ${({ $isLocked }) => ($isLocked ? 0.04 : 0.14)};
+  filter: ${({ $isLocked }) => ($isLocked ? 'grayscale(100%)' : 'none')};
+  transform: rotate(-10deg);
   pointer-events: none;
 `;
 
 const Name = styled.h3`
-  font-size: 18px;
-  font-weight: 700;
-  color: ${({ theme, $isLocked }) => $isLocked ? 'rgba(255, 255, 255, 0.4)' : theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.md};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme, $isLocked }) => ($isLocked ? theme.colors.text.disabled : theme.colors.text.primary)};
   margin: 0;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  text-align: left;
+  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.snug};
+  line-height: 1.2;
   z-index: 2;
 `;
 
 const LockIndicator = styled.div`
   position: absolute;
-  top: 10px;
-  right: 10px;
-  color: rgba(255, 255, 255, 0.3);
+  top: ${({ theme }) => theme.spacing(2.5)};
+  right: ${({ theme }) => theme.spacing(2.5)};
+  color: ${({ theme }) => theme.colors.text.disabled};
   z-index: 3;
-`;
-
-const Description = styled.p`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.text.secondary};
-  margin: 0;
-  line-height: 1.4;
 `;
 
 export default function GameModeCard({ game, onClick, isLocked }) {
@@ -77,7 +71,7 @@ export default function GameModeCard({ game, onClick, isLocked }) {
       <Card $isLocked={isLocked}>
         {isLocked && (
           <LockIndicator>
-            <IoLockClosed size={16} />
+            <IoLockClosed size={14} />
           </LockIndicator>
         )}
         <Name $isLocked={isLocked}>{game.name}</Name>

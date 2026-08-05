@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoArrowBack, IoRefresh } from 'react-icons/io5';
+import { IoRefresh } from 'react-icons/io5';
 import { usePlayers } from '../contexts/PlayersContext';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const Container = styled.div`
     min-height: 100vh;
@@ -11,72 +14,36 @@ const Container = styled.div`
     flex-direction: column;
 `;
 
-const Header = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background: rgba(15, 1, 9, 0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-    position: sticky;
-    top: 0;
-    z-index: 10;
-`;
-
-const HeaderTitle = styled.h1`
-    color: #fff;
-    margin: 0;
-    font-size: 24px;
-`;
-
-const IconButton = styled.button`
-    background: ${({ theme }) => theme.colors.surface};
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    color: #fff;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    transition: background 0.2s;
-
-    &:hover {
-        background: ${({ theme }) => theme.colors.primary};
-    }
-`;
-
 const Content = styled.div`
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 24px 12px;
-    gap: 20px;
+    padding: ${({ theme }) => theme.spacing(6)} ${({ theme }) => theme.spacing(3)};
+    gap: ${({ theme }) => theme.spacing(5)};
     overflow-y: auto;
 `;
 
 const PlayerIndicator = styled.div`
     background: ${({ theme }) => theme.colors.surface};
-    padding: 12px 24px;
-    border-radius: 16px;
-    margin-bottom: 20px;
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(6)};
+    border-radius: ${({ theme }) => theme.radii.md};
+    margin-bottom: ${({ theme }) => theme.spacing(5)};
     text-align: center;
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 `;
 
 const PlayerLabel = styled.p`
-    font-size: 14px;
+    font-size: ${({ theme }) => theme.typography.fontSize.xs};
     color: ${({ theme }) => theme.colors.text.secondary};
     margin: 0 0 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 `;
 
 const PlayerName = styled.p`
-    font-size: 24px;
-    font-weight: bold;
+    font-size: ${({ theme }) => theme.typography.fontSize.xl};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
     color: ${({ theme }) => theme.colors.text.primary};
     margin: 0;
 `;
@@ -85,125 +52,78 @@ const PyramidContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    margin: 20px 0;
+    gap: ${({ theme }) => theme.spacing(2)};
+    margin: ${({ theme }) => theme.spacing(5)} 0;
 `;
 
 const PyramidRow = styled.div`
     display: flex;
-    gap: 8px;
+    gap: ${({ theme }) => theme.spacing(2)};
     justify-content: center;
 `;
 
 const Card = styled.div`
     width: 50px;
     height: 70px;
-    background: ${props => props.$revealed ? '#fff' : 'repeating-linear-gradient(45deg, #BA0057, #BA0057 10px, #8B0042 10px, #8B0042 20px)'};
-    border-radius: 6px;
+    background: ${({ theme, $revealed }) => $revealed
+        ? '#fff'
+        : `repeating-linear-gradient(45deg, ${theme.colors.primary}, ${theme.colors.primary} 10px, ${theme.colors.primaryActive} 10px, ${theme.colors.primaryActive} 20px)`};
+    border-radius: ${({ theme }) => theme.radii.sm};
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
     cursor: ${props => props.$clickable ? 'pointer' : 'default'};
-    transition: transform 0.2s;
+    transition: transform ${({ theme }) => theme.transitions.fast};
     position: relative;
-    border: 2px solid ${props => props.$current ? '#FFD800' : 'transparent'};
-
-    ${props => !props.$revealed && `
-        &::after {
-            content: '';
-            position: absolute;
-            top: 4px;
-            left: 4px;
-            right: 4px;
-            bottom: 4px;
-            border: 2px solid #FFD800;
-            border-radius: 4px;
-        }
-    `}
+    border: 2px solid ${({ theme, $current }) => ($current ? theme.colors.accent : 'transparent')};
 
     ${props => props.$clickable && `
         &:hover {
-            transform: scale(1.1);
-            border-color: ${props.$revealed ? '#FFD800' : 'transparent'};
+            transform: scale(1.08);
         }
     `}
 
     ${props => props.$used && `
-        opacity: 0.5;
+        opacity: 0.4;
     `}
 `;
 
 const CardValue = styled.div`
-    font-size: 20px;
-    font-weight: bold;
-    color: ${props => (props.$suit === '♥' || props.$suit === '♦') ? '#BA0057' : '#000'};
+    font-size: ${({ theme }) => theme.typography.fontSize.md};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+    color: ${props => (props.$suit === '♥' || props.$suit === '♦') ? '#C0392B' : '#262626'};
 `;
 
 const CardSuit = styled.div`
-    font-size: 18px;
-    color: ${props => (props.$suit === '♥' || props.$suit === '♦') ? '#BA0057' : '#000'};
+    font-size: ${({ theme }) => theme.typography.fontSize.sm};
+    color: ${props => (props.$suit === '♥' || props.$suit === '♦') ? '#C0392B' : '#262626'};
 `;
 
 const ButtonContainer = styled.div`
     display: flex;
-    gap: 12px;
-    margin: 20px 0;
-`;
-
-const Button = styled.button`
-    padding: 16px 32px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 12px;
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    background: ${({ theme, $variant }) => $variant === 'high' ? theme.colors.primary : theme.colors.surface};
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-        transform: scale(1.05);
-        background: ${({ theme }) => theme.colors.primary};
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        &:hover {
-            transform: none;
-        }
-    }
+    gap: ${({ theme }) => theme.spacing(3)};
+    margin: ${({ theme }) => theme.spacing(5)} 0;
+    width: 100%;
+    max-width: 400px;
 `;
 
 const Message = styled.div`
     background: ${({ theme, $type }) =>
-        $type === 'success' ? 'rgba(0, 255, 0, 0.2)' :
-            $type === 'error' ? 'rgba(255, 0, 0, 0.2)' :
+        $type === 'success' ? 'rgba(63, 167, 114, 0.12)' :
+            $type === 'error' ? 'rgba(229, 72, 77, 0.12)' :
                 theme.colors.surface};
-    border: 2px solid ${({ theme, $type }) =>
-        $type === 'success' ? '#00ff00' :
-            $type === 'error' ? '#ff0000' :
-                theme.colors.secondary};
-    padding: 16px 24px;
-    border-radius: 12px;
+    border: 1px solid ${({ theme, $type }) =>
+        $type === 'success' ? theme.colors.success :
+            $type === 'error' ? theme.colors.error :
+                theme.colors.border};
+    padding: ${({ theme }) => theme.spacing(4)} ${({ theme }) => theme.spacing(6)};
+    border-radius: ${({ theme }) => theme.radii.md};
     color: ${({ theme }) => theme.colors.text.primary};
     text-align: center;
     max-width: 400px;
-    font-size: 16px;
-`;
-
-const Instructions = styled.div`
-    background: ${({ theme }) => theme.colors.surface};
-    border: 2px solid ${({ theme }) => theme.colors.secondary};
-    padding: 16px;
-    border-radius: 12px;
-    color: ${({ theme }) => theme.colors.text.secondary};
-    max-width: 500px;
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 10px;
+    font-size: ${({ theme }) => theme.typography.fontSize.md};
 `;
 
 const SUITS = ['♠', '♥', '♦', '♣'];
@@ -398,13 +318,7 @@ export default function IlluminatiGame() {
     if (players.length === 0) {
         return (
             <Container>
-                <Header>
-                    <IconButton onClick={() => navigate('/games')}>
-                        <IoArrowBack size={24} />
-                    </IconButton>
-                    <HeaderTitle>Illuminati</HeaderTitle>
-                    <div style={{ width: '40px' }} />
-                </Header>
+                <PageHeader title="Illuminati" onBack={() => navigate('/games')} />
                 <Content>
                     <Message>
                         Necesitas agregar jugadores para jugar Illuminati.
@@ -418,21 +332,21 @@ export default function IlluminatiGame() {
 
     return (
         <Container>
-            <Header>
-                <IconButton onClick={() => navigate('/games')}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <HeaderTitle>Illuminati</HeaderTitle>
-                <IconButton onClick={initializeGame}>
-                    <IoRefresh size={24} />
-                </IconButton>
-            </Header>
+            <PageHeader
+                title="Illuminati"
+                onBack={() => navigate('/games')}
+                rightAction={
+                    <IconButton variant="ghost" onClick={initializeGame} aria-label="Reiniciar">
+                        <IoRefresh size={20} />
+                    </IconButton>
+                }
+            />
 
             <Content>
 
                 {gamePhase !== 'finished' && (
                     <PlayerIndicator>
-                        <PlayerLabel>Turno de:</PlayerLabel>
+                        <PlayerLabel>Turno de</PlayerLabel>
                         <PlayerName>{players[currentPlayerIndex]?.name}</PlayerName>
                     </PlayerIndicator>
                 )}
@@ -466,11 +380,11 @@ export default function IlluminatiGame() {
 
                 {gamePhase === 'guessing' && (
                     <ButtonContainer>
-                        <Button onClick={() => makeGuess(true)}>
-                            ⬆️ MAYOR
+                        <Button fullWidth onClick={() => makeGuess(true)}>
+                            ⬆️ Mayor
                         </Button>
-                        <Button onClick={() => makeGuess(false)}>
-                            ⬇️ MENOR
+                        <Button fullWidth variant="secondary" onClick={() => makeGuess(false)}>
+                            ⬇️ Menor
                         </Button>
                     </ButtonContainer>
                 )}
@@ -480,8 +394,8 @@ export default function IlluminatiGame() {
                         <Message $type="success">
                             {message}
                         </Message>
-                        <Button onClick={initializeGame} style={{ marginTop: '10px' }}>
-                            🔄 NUEVA PARTIDA
+                        <Button onClick={initializeGame}>
+                            Nueva partida
                         </Button>
                     </>
                 )}

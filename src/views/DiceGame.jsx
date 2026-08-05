@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
-import { IoArrowBack, IoRefresh } from 'react-icons/io5';
+import styled from 'styled-components';
+import { IoRefresh } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -14,96 +17,59 @@ const Container = styled.div`
   overflow-x: hidden;
 `;
 
-const Header = styled.div`
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: rgba(15, 1, 9, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-  position: sticky;
-  top: 0;
-  z-index: 100;
-`;
-
-const HeaderTitle = styled.h1`
-  font-size: 20px;
-  font-weight: bold;
-  color: #fff;
-  margin: 0;
-`;
-
-const IconButton = styled.button`
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: #fff;
-  transition: all 0.2s;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
 const Content = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: ${({ theme }) => theme.spacing(6)};
   align-items: center;
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 const PlayerIndicator = styled.div`
   background: ${({ theme }) => theme.colors.surface};
-  padding: 12px 24px;
-  border-radius: 16px;
-  margin-bottom: 20px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(6)};
+  border-radius: ${({ theme }) => theme.radii.md};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
   text-align: center;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 `;
 
 const PlayerLabel = styled.p`
-  font-size: 14px;
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
   color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 `;
 
 const PlayerName = styled.p`
-  font-size: 24px;
-  font-weight: bold;
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text.primary};
   margin: 0;
 `;
 
 const DiceContainer = styled.div`
   display: flex;
-  gap: 30px;
-  margin: 40px 0;
+  gap: ${({ theme }) => theme.spacing(6)};
+  margin: ${({ theme }) => theme.spacing(8)} 0;
   perspective: 1000px;
 `;
 
 const Die = styled(motion.div)`
-  width: 80px;
-  height: 80px;
+  width: 76px;
+  height: 76px;
   background: #fff;
-  border-radius: 16px;
+  border-radius: ${({ theme }) => theme.radii.md};
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 40px;
-  color: #000;
-  font-weight: bold;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.1);
+  box-shadow: ${({ theme }) => theme.shadows.md};
   position: relative;
-  border: 4px solid ${({ theme }) => theme.colors.secondary};
 `;
 
 // Dice dot layouts using a simple component
@@ -130,65 +96,46 @@ const DotGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   gap: 4px;
 `;
 
 const Dot = styled.div`
-  width: 12px;
-  height: 12px;
-  background: #000;
+  width: 11px;
+  height: 11px;
+  background: #262626;
   border-radius: 50%;
   opacity: ${props => props.$active ? 1 : 0};
   justify-self: center;
   align-self: center;
 `;
 
-const MainButton = styled(motion.button)`
-  padding: 20px 60px;
-  border-radius: 20px;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  background: ${({ theme }) => theme.colors.primary};
-  color: #fff;
-  font-size: 22px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 12px 30px rgba(186, 0, 87, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-top: 40px;
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
 const ResultOverlay = styled(motion.div)`
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
   background: ${({ theme }) => theme.colors.surface};
-  margin-top: 40px;
-  padding: 24px;
-  border-radius: 20px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  margin-top: ${({ theme }) => theme.spacing(8)};
+  padding: ${({ theme }) => theme.spacing(6)};
+  border-radius: ${({ theme }) => theme.radii.lg};
   width: 100%;
-  max-width: 500px;
+  max-width: 480px;
   text-align: center;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  box-shadow: ${({ theme }) => theme.shadows.md};
 `;
 
 const ResultTitle = styled.h2`
-  color: ${({ theme }) => theme.colors.secondary};
-  font-size: 18px;
-  letter-spacing: 3px;
-  margin: 0 0 10px 0;
+  color: ${({ theme }) => theme.colors.accent};
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  letter-spacing: 0.12em;
+  margin: 0 0 ${({ theme }) => theme.spacing(2)} 0;
   text-transform: uppercase;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
 `;
 
 const ResultRule = styled.p`
-  color: #fff;
-  font-size: 24px;
-  font-weight: bold;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   margin: 0;
   line-height: 1.4;
 `;
@@ -261,20 +208,20 @@ export default function DiceGame() {
 
     return (
         <Container>
-            <Header>
-                <IconButton onClick={() => navigate('/games')}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <HeaderTitle>Dados de Beber</HeaderTitle>
-                <IconButton onClick={resetGame}>
-                    <IoRefresh size={24} />
-                </IconButton>
-            </Header>
+            <PageHeader
+                title="Dados de Beber"
+                onBack={() => navigate('/games')}
+                rightAction={
+                    <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+                        <IoRefresh size={20} />
+                    </IconButton>
+                }
+            />
 
             <Content>
                 {players.length > 0 && (
                     <PlayerIndicator>
-                        <PlayerLabel>Turno de:</PlayerLabel>
+                        <PlayerLabel>Turno de</PlayerLabel>
                         <PlayerName>{players[currentPlayerIndex]?.name}</PlayerName>
                     </PlayerIndicator>
                 )}
@@ -305,24 +252,24 @@ export default function DiceGame() {
                 <AnimatePresence>
                     {result && (
                         <ResultOverlay
-                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 12 }}
                         >
-                            <ResultTitle>REGLA</ResultTitle>
+                            <ResultTitle>Regla</ResultTitle>
                             <ResultRule>{result}</ResultRule>
                         </ResultOverlay>
                     )}
                 </AnimatePresence>
 
-                <MainButton
+                <Button
+                    size="lg"
                     onClick={result ? nextTurn : rollDice}
                     disabled={isRolling}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    style={{ marginTop: '32px' }}
                 >
-                    {isRolling ? 'LANZANDO...' : result ? 'SIGUIENTE' : '¡LANZAR DADOS!'}
-                </MainButton>
+                    {isRolling ? 'Lanzando...' : result ? 'Siguiente' : 'Lanzar dados'}
+                </Button>
             </Content>
         </Container>
     );

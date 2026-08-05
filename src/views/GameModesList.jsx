@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoArrowBack, IoPeople } from 'react-icons/io5';
+import { IoPeople } from 'react-icons/io5';
 import { usePlayers } from '../contexts/PlayersContext';
 import GameModeCard from '../components/GameModeCard';
 import PlayersModal from '../components/PlayersModal';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
 
 const gameModes = [
     {
@@ -76,81 +78,69 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Header = styled.div`
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: rgba(15, 1, 9, 0.8); // Theme background with opacity
-  backdrop-filter: blur(10px);
-  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-  position: sticky;
-  top: 0;
-  z-index: 10;
-`;
-
-const HeaderTitle = styled.h1`
-  font-size: 20px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-`;
-
-const IconButton = styled.button`
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.text.primary};
-  position: relative;
-  transition: background 0.2s, border-color 0.2s;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
-const Badge = styled.div`
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: ${({ theme }) => theme.colors.secondary};
-  border-radius: 10px;
-  min-width: 20px;
-  height: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 4px;
-`;
-
-const BadgeText = styled.span`
-  color: #000;
-  font-size: 12px;
-  font-weight: bold;
-`;
-
 const ScrollContent = styled.div`
   flex: 1;
-  padding: 24px;
+  padding: ${({ theme }) => theme.spacing(5)};
   overflow-y: auto;
   width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
   box-sizing: border-box;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  align-content: start;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    padding: ${({ theme }) => theme.spacing(6)};
+  }
 
   &::-webkit-scrollbar {
     display: none;
   }
   -ms-overflow-style: none;
   scrollbar-width: none;
+`;
+
+const SectionLabel = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: ${({ theme }) => theme.spacing(3)};
+  margin-bottom: ${({ theme }) => theme.spacing(4)};
+`;
+
+const SectionEyebrow = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  text-transform: uppercase;
+  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 2px;
+    margin-right: ${({ theme }) => theme.spacing(2)};
+    background: ${({ theme }) => theme.colors.primary};
+    vertical-align: middle;
+  }
+`;
+
+const SectionCount = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: ${({ theme }) => theme.spacing(3)};
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: ${({ theme }) => theme.spacing(4)};
+  }
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
+    grid-template-columns: repeat(4, 1fr);
+  }
 `;
 
 export default function GameModesList() {
@@ -190,32 +180,38 @@ export default function GameModesList() {
 
     return (
         <Container>
-            <Header>
-                <IconButton onClick={() => navigate('/')}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <HeaderTitle>Juegos</HeaderTitle>
-                <IconButton onClick={() => setShowPlayersModal(true)}>
-                    <IoPeople size={24} />
-                    {players.length > 0 && (
-                        <Badge>
-                            <BadgeText>{players.length}</BadgeText>
-                        </Badge>
-                    )}
-                </IconButton>
-            </Header>
+            <PageHeader
+                title="Juegos"
+                onBack={() => navigate('/')}
+                rightAction={
+                    <IconButton
+                        variant="ghost"
+                        badge={players.length}
+                        onClick={() => setShowPlayersModal(true)}
+                        aria-label="Jugadores"
+                    >
+                        <IoPeople size={20} />
+                    </IconButton>
+                }
+            />
             <ScrollContent>
-                {gameModes.map(game => {
-                    const locked = isGameLocked(game.id);
-                    return (
-                        <GameModeCard
-                            key={game.id}
-                            game={game}
-                            isLocked={locked}
-                            onClick={() => handleGamePress(game, locked)}
-                        />
-                    );
-                })}
+                <SectionLabel>
+                    <SectionEyebrow>Modos de juego</SectionEyebrow>
+                    <SectionCount>{gameModes.length} disponibles</SectionCount>
+                </SectionLabel>
+                <Grid>
+                    {gameModes.map(game => {
+                        const locked = isGameLocked(game.id);
+                        return (
+                            <GameModeCard
+                                key={game.id}
+                                game={game}
+                                isLocked={locked}
+                                onClick={() => handleGamePress(game, locked)}
+                            />
+                        );
+                    })}
+                </Grid>
             </ScrollContent>
             <PlayersModal
                 visible={showPlayersModal}
@@ -224,5 +220,3 @@ export default function GameModesList() {
         </Container>
     );
 }
-
-

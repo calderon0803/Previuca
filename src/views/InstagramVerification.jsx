@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useCrush } from '../contexts/CrushContext';
-import { IoArrowBack, IoLogoInstagram, IoCheckmarkCircle, IoCloseCircle, IoCopy } from 'react-icons/io5';
+import { IoLogoInstagram, IoCheckmarkCircle, IoCloseCircle, IoCopy } from 'react-icons/io5';
 import {
     createInstagramVerification,
-    getInstagramVerification,
     verifyInstagramCode,
     updateInstagramUsername
 } from '../services/instagramService';
+import PageHeader from '../components/ui/PageHeader';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Card from '../components/ui/Card';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -17,192 +20,100 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Header = styled.div`
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-`;
-
-const IconButton = styled.button`
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.text.primary};
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
-const HeaderTitle = styled.h1`
-  font-size: 20px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-`;
-
 const Content = styled.div`
   flex: 1;
-  padding: 20px;
-  max-width: 600px;
+  padding: ${({ theme }) => theme.spacing(5)};
+  max-width: 560px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
 `;
 
-const Card = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border-radius: 20px;
-  padding: 30px;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  margin-bottom: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-`;
-
 const Title = styled.h2`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 20px;
-  margin: 0 0 10px 0;
+  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  margin: 0 0 ${({ theme }) => theme.spacing(2)} 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: ${({ theme }) => theme.spacing(2)};
 `;
 
 const Description = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 14px;
-  margin: 0 0 20px 0;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  margin: 0 0 ${({ theme }) => theme.spacing(5)} 0;
   line-height: 1.5;
 `;
 
 const InputGroup = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
 `;
 
 const Label = styled.label`
   display: block;
   color: ${({ theme }) => theme.colors.text.secondary};
-  margin-bottom: 8px;
-  font-size: 14px;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
-  color: #fff;
-  font-size: 16px;
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s;
-
-  &:focus {
-    border-color: ${({ theme }) => theme.colors.secondary};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const Button = styled.button`
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.secondary};
-  color: #000;
-  font-weight: bold;
-  font-size: 16px;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.1s;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.98);
-  }
-`;
-
-const SecondaryButton = styled(Button)`
-  background: transparent;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  color: ${({ theme }) => theme.colors.secondary};
-
-  &:hover {
-    background: ${({ theme }) => `${theme.colors.secondary}15`};
-  }
+  margin-bottom: ${({ theme }) => theme.spacing(2)};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
 `;
 
 const CodeBox = styled.div`
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  border-radius: 12px;
-  padding: 20px;
-  margin: 20px 0;
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.spacing(5)};
+  margin: ${({ theme }) => theme.spacing(5)} 0;
   text-align: center;
 `;
 
 const Code = styled.div`
-  font-size: 32px;
-  font-weight: bold;
-  color: ${({ theme }) => theme.colors.secondary};
-  letter-spacing: 4px;
+  font-size: ${({ theme }) => theme.typography.fontSize.xxl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.accent};
+  letter-spacing: 0.15em;
   font-family: monospace;
-  margin-bottom: 10px;
+  margin-bottom: ${({ theme }) => theme.spacing(2)};
 `;
 
 const CodeHint = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 12px;
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
   margin: 0;
 `;
 
 const StatusBadge = styled.div`
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: bold;
-  background: ${props => props.$verified ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'};
-  color: ${props => props.$verified ? '#22c55e' : '#ef4444'};
-  margin-top: 10px;
+  gap: ${({ theme }) => theme.spacing(1.5)};
+  padding: ${({ theme }) => theme.spacing(1.5)} ${({ theme }) => theme.spacing(3)};
+  border-radius: ${({ theme }) => theme.radii.pill};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  background: ${({ theme, $verified }) => $verified ? 'rgba(63, 167, 114, 0.14)' : 'rgba(229, 72, 77, 0.14)'};
+  color: ${({ theme, $verified }) => $verified ? theme.colors.success : theme.colors.error};
+  margin-top: ${({ theme }) => theme.spacing(2)};
+  margin-bottom: ${({ theme }) => theme.spacing(2)};
 `;
 
 const StepList = styled.ol`
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 14px;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
   line-height: 1.8;
-  padding-left: 20px;
-  margin: 15px 0;
+  padding-left: ${({ theme }) => theme.spacing(5)};
+  margin: ${({ theme }) => theme.spacing(4)} 0;
 `;
 
 const StatusMessage = styled.p`
-  margin-top: 15px;
+  margin-top: ${({ theme }) => theme.spacing(4)};
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 14px;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
   text-align: center;
+`;
+
+const ButtonStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(3)};
 `;
 
 export default function InstagramVerification() {
@@ -280,15 +191,10 @@ export default function InstagramVerification() {
     if (contextLoading) {
         return (
             <Container>
-                <Header>
-                    <IconButton onClick={() => navigate('/my-crushes')}>
-                        <IoArrowBack size={24} />
-                    </IconButton>
-                    <HeaderTitle>Verificación Instagram</HeaderTitle>
-                </Header>
+                <PageHeader title="Verificación Instagram" onBack={() => navigate('/my-crushes')} />
                 <Content>
                     <Card>
-                        <p style={{ textAlign: 'center', color: '#888' }}>Cargando...</p>
+                        <p style={{ textAlign: 'center', color: '#7C818C', margin: 0 }}>Cargando...</p>
                     </Card>
                 </Content>
             </Container>
@@ -297,27 +203,22 @@ export default function InstagramVerification() {
 
     return (
         <Container>
-            <Header>
-                <IconButton onClick={() => navigate('/my-crushes')}>
-                    <IoArrowBack size={24} />
-                </IconButton>
-                <HeaderTitle>Verificación Instagram</HeaderTitle>
-            </Header>
+            <PageHeader title="Verificación Instagram" onBack={() => navigate('/my-crushes')} />
             <Content>
                 <Card>
                     <Title>
-                        <IoLogoInstagram size={28} />
+                        <IoLogoInstagram size={24} />
                         Verificar Instagram
                     </Title>
                     {verification?.is_verified && (
                         <StatusBadge $verified>
-                            <IoCheckmarkCircle size={20} />
+                            <IoCheckmarkCircle size={18} />
                             Verificado
                         </StatusBadge>
                     )}
                     {verification && !verification.is_verified && (
                         <StatusBadge $verified={false}>
-                            <IoCloseCircle size={20} />
+                            <IoCloseCircle size={18} />
                             Pendiente de verificación
                         </StatusBadge>
                     )}
@@ -337,8 +238,8 @@ export default function InstagramVerification() {
                                     disabled={submitting}
                                 />
                             </InputGroup>
-                            <Button onClick={handleSubmitUsername} disabled={!username.trim() || submitting}>
-                                Generar Código
+                            <Button fullWidth size="lg" onClick={handleSubmitUsername} disabled={!username.trim() || submitting}>
+                                Generar código
                             </Button>
                         </>
                     )}
@@ -368,22 +269,25 @@ export default function InstagramVerification() {
                                 <li>Vuelve aquí y haz clic en "Verificar"</li>
                             </StepList>
 
-                            <Button onClick={handleCopyCode} style={{ marginBottom: '10px' }}>
-                                <IoCopy size={20} />
-                                Copiar Código
-                            </Button>
+                            <ButtonStack>
+                                <Button fullWidth size="lg" onClick={handleCopyCode}>
+                                    <IoCopy size={18} />
+                                    Copiar código
+                                </Button>
 
-                            <Button onClick={handleVerify} disabled={submitting}>
-                                Verificar Instagram
-                            </Button>
+                                <Button fullWidth size="lg" onClick={handleVerify} disabled={submitting}>
+                                    Verificar Instagram
+                                </Button>
 
-                            <SecondaryButton
-                                onClick={handleSubmitUsername}
-                                disabled={submitting}
-                                style={{ marginTop: '10px' }}
-                            >
-                                Cambiar Usuario
-                            </SecondaryButton>
+                                <Button
+                                    fullWidth
+                                    variant="secondary"
+                                    onClick={handleSubmitUsername}
+                                    disabled={submitting}
+                                >
+                                    Cambiar usuario
+                                </Button>
+                            </ButtonStack>
                         </>
                     )}
 
@@ -397,10 +301,10 @@ export default function InstagramVerification() {
                                     disabled
                                 />
                             </InputGroup>
-                            <Description style={{ marginTop: '20px', textAlign: 'center' }}>
+                            <Description style={{ marginTop: '4px', textAlign: 'center' }}>
                                 ✓ Tu Instagram está verificado. Ya puedes usar la sección Crush.
                             </Description>
-                            <Button onClick={() => navigate('/my-crushes')}>
+                            <Button fullWidth size="lg" onClick={() => navigate('/my-crushes')}>
                                 Ir a Mis Crushes
                             </Button>
                         </>

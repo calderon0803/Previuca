@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoArrowBack, IoRefresh, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
-import { motion, AnimatePresence } from 'framer-motion';
+import { IoRefresh } from 'react-icons/io5';
+import { motion } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -12,102 +15,66 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Header = styled.div`
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: rgba(15, 1, 9, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 2px solid ${({ theme }) => theme.colors.secondary};
-  position: sticky;
-  top: 0;
-  z-index: 100;
-`;
-
-const HeaderTitle = styled.h1`
-  font-size: 20px;
-  font-weight: bold;
-  color: #fff;
-  margin: 0;
-`;
-
-const IconButton = styled.button`
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: #fff;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
 const Content = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: ${({ theme }) => theme.spacing(6)};
 `;
 
 const Card = styled(motion.div)`
   background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  border-radius: 24px;
-  padding: 30px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  padding: ${({ theme }) => theme.spacing(8)};
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  box-shadow: ${({ theme }) => theme.shadows.md};
   margin: auto;
   width: 100%;
-  max-width: 500px;
+  max-width: 480px;
+  box-sizing: border-box;
 `;
 
 const PhaseLabel = styled.span`
   color: ${({ theme }) => theme.colors.primary};
-  font-size: 14px;
-  font-weight: bold;
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
+  letter-spacing: 0.08em;
+  margin-bottom: ${({ theme }) => theme.spacing(3)};
 `;
 
 const Title = styled.h2`
-  color: #fff;
-  font-size: 28px;
-  font-weight: 900;
-  margin-bottom: 24px;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.xxl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  margin: 0 0 ${({ theme }) => theme.spacing(5)} 0;
 `;
 
 const Instruction = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 16px;
+  font-size: ${({ theme }) => theme.typography.fontSize.md};
   line-height: 1.6;
-  margin-bottom: 30px;
+  margin-bottom: ${({ theme }) => theme.spacing(6)};
 `;
 
-const SecretBox = styled(motion.div)`
-  background: rgba(0,0,0,0.3);
-  border-radius: 20px;
-  padding: 40px;
+const SecretBox = styled.div`
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: ${({ theme }) => theme.radii.lg};
+  padding: ${({ theme }) => theme.spacing(9)};
   width: 100%;
-  margin: 20px 0;
-  border: 2px dashed ${props => props.$isRevealing ? props.theme.colors.primary : props.theme.colors.secondary + '50'};
+  margin: ${({ theme }) => theme.spacing(4)} 0;
+  border: 1px dashed ${({ theme, $isRevealing }) => ($isRevealing ? theme.colors.primary : theme.colors.border)};
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: ${({ theme }) => theme.spacing(3)};
   user-select: none;
   -webkit-touch-callout: none;
-  transition: border-color 0.2s;
+  transition: border-color ${({ theme }) => theme.transitions.fast};
   position: relative;
   overflow: hidden;
 `;
@@ -116,29 +83,28 @@ const RoleContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: ${({ theme }) => theme.spacing(3)};
   z-index: 1;
   opacity: ${props => props.$revealed ? 1 : 0};
   transition: opacity 0.1s;
 `;
 
+const roleColor = (role, theme) => {
+  if (role === 'Asesino') return theme.colors.error;
+  if (role === 'Policía') return '#5B8DEF';
+  return theme.colors.text.primary;
+};
+
 const SecretText = styled.span`
-  font-size: ${props => props.$role === 'Asesino' ? '40px' : props.$role === 'Policía' ? '36px' : '28px'};
-  font-weight: 900;
-  color: ${props =>
-        props.$role === 'Asesino' ? '#ff0000' :
-            props.$role === 'Policía' ? '#00aaff' :
-                props.theme.colors.secondary};
-  text-shadow: 0 0 20px ${props =>
-        props.$role === 'Asesino' ? '#ff000040' :
-            props.$role === 'Policía' ? '#00aaff40' :
-                props.theme.colors.secondary + '40'};
+  font-size: ${props => props.$role === 'Asesino' ? '36px' : props.$role === 'Policía' ? '32px' : '26px'};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${props => roleColor(props.$role, props.theme)};
 `;
 
 const RoleDescription = styled.span`
-  font-size: 14px;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
   color: ${({ theme }) => theme.colors.text.secondary};
-  margin-top: 8px;
+  margin-top: ${({ theme }) => theme.spacing(2)};
 `;
 
 const SwipeCover = styled(motion.div)`
@@ -147,73 +113,53 @@ const SwipeCover = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(186, 0, 87, 0.95), rgba(186, 0, 87, 0.85));
-  backdrop-filter: blur(10px);
+  background: rgba(18, 19, 23, 0.94);
+  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: ${({ theme }) => theme.spacing(3)};
+  cursor: grab;
   z-index: 10;
+
+  &:active {
+    cursor: grabbing;
+  }
 `;
 
 const SwipeText = styled.span`
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-`;
-
-const Button = styled.button`
-  width: 100%;
-  padding: 18px;
-  border-radius: 16px;
-  border: 2px solid ${({ theme }) => theme.colors.secondary};
-  background: ${({ theme }) => theme.colors.primary};
-  color: #fff;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
 `;
 
 const PlayerCounter = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: ${({ theme }) => theme.spacing(2)};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 14px;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
 `;
 
-const Counter = styled.span`
-  background: ${({ theme }) => theme.colors.surface};
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid ${({ theme }) => theme.colors.secondary};
-  font-weight: bold;
-  color: ${({ theme }) => theme.colors.secondary};
+const CounterValue = styled.span`
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  padding: ${({ theme }) => theme.spacing(1.5)} ${({ theme }) => theme.spacing(3)};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.primary};
 `;
 
 const ErrorMessage = styled.div`
-  background: rgba(255, 0, 0, 0.1);
-  border: 2px solid #ff0000;
-  border-radius: 12px;
-  padding: 20px;
-  color: #ff6666;
+  background: rgba(229, 72, 77, 0.1);
+  border: 1px solid ${({ theme }) => theme.colors.error};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.spacing(5)};
+  color: ${({ theme }) => theme.colors.error};
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
 `;
 
 const roles = [
@@ -299,16 +245,10 @@ export default function AsesinoGame() {
     if (players.length < 5) {
         return (
             <Container>
-                <Header>
-                    <IconButton onClick={() => navigate('/games')}>
-                        <IoArrowBack size={24} />
-                    </IconButton>
-                    <HeaderTitle>Asesino</HeaderTitle>
-                    <div style={{ width: '40px' }} />
-                </Header>
+                <PageHeader title="Asesino" onBack={() => navigate('/games')} />
                 <Content>
                     <Card>
-                        <Title>Jugadores Insuficientes</Title>
+                        <Title>Jugadores insuficientes</Title>
                         <ErrorMessage>
                             Se necesitan al menos 5 jugadores para jugar.
                             <br />
@@ -326,25 +266,22 @@ export default function AsesinoGame() {
     if (gamePhase === 'setup') {
         return (
             <Container>
-                <Header>
-                    <IconButton onClick={() => navigate('/games')}>
-                        <IoArrowBack size={24} />
-                    </IconButton>
-                    <HeaderTitle>Asesin</HeaderTitle>
-                    <IconButton onClick={resetGame}>
-                        <IoRefresh size={24} />
-                    </IconButton>
-                </Header>
+                <PageHeader
+                    title="Asesino"
+                    onBack={() => navigate('/games')}
+                    rightAction={
+                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+                            <IoRefresh size={20} />
+                        </IconButton>
+                    }
+                />
                 <Content>
-                    <Card
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                    >
+                    <Card>
                         <PhaseLabel>Preparación</PhaseLabel>
                         <Title>¿Listos para jugar?</Title>
                         <PlayerCounter>
                             <span>Jugadores:</span>
-                            <Counter>{players.length}</Counter>
+                            <CounterValue>{players.length}</CounterValue>
                         </PlayerCounter>
                         <Instruction>
                             Se asignarán roles secretos:
@@ -357,8 +294,8 @@ export default function AsesinoGame() {
                             <br /><br />
                             Cada jugador verá su rol en secreto.
                         </Instruction>
-                        <Button onClick={startGame}>
-                            Comenzar Juego
+                        <Button size="lg" fullWidth onClick={startGame}>
+                            Comenzar juego
                         </Button>
                     </Card>
                 </Content>
@@ -371,15 +308,15 @@ export default function AsesinoGame() {
 
         return (
             <Container>
-                <Header>
-                    <IconButton onClick={() => navigate('/games')}>
-                        <IoArrowBack size={24} />
-                    </IconButton>
-                    <HeaderTitle>Asesino 🔪</HeaderTitle>
-                    <IconButton onClick={resetGame}>
-                        <IoRefresh size={24} />
-                    </IconButton>
-                </Header>
+                <PageHeader
+                    title="Asesino"
+                    onBack={() => navigate('/games')}
+                    rightAction={
+                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+                            <IoRefresh size={20} />
+                        </IconButton>
+                    }
+                />
                 <Content>
                     <Card
                         key={currentPlayerIndex}
@@ -426,19 +363,20 @@ export default function AsesinoGame() {
                                 initial={{ x: 0 }}
                                 transition={{ type: "spring", stiffness: 500, damping: 40 }}
                             >
-                                <SecretText style={{ color: '#FFD800' }}>DESLIZA →</SecretText>
-                                <SwipeText style={{ color: '#FFD800', fontSize: '14px' }}>
+                                <SecretText $role="swipe" style={{ color: '#D9A54B' }}>DESLIZA →</SecretText>
+                                <SwipeText style={{ color: '#D9A54B' }}>
                                     Arrastra para revelar
                                 </SwipeText>
                             </SwipeCover>
                         </SecretBox>
 
                         <Button
+                            size="lg"
+                            fullWidth
                             onClick={handleNextPlayer}
                             disabled={!isRevealing}
-                            style={{ opacity: isRevealing ? 1 : 0.5 }}
                         >
-                            {currentPlayerIndex < playerRoles.length - 1 ? 'SIGUIENTE JUGADOR' : 'LISTOS'}
+                            {currentPlayerIndex < playerRoles.length - 1 ? 'Siguiente jugador' : 'Listos'}
                         </Button>
                     </Card>
                 </Content>
@@ -449,25 +387,25 @@ export default function AsesinoGame() {
     if (gamePhase === 'playing') {
         return (
             <Container>
-                <Header>
-                    <IconButton onClick={() => navigate('/games')}>
-                        <IoArrowBack size={24} />
-                    </IconButton>
-                    <HeaderTitle>Asesino 🔪</HeaderTitle>
-                    <IconButton onClick={resetGame}>
-                        <IoRefresh size={24} />
-                    </IconButton>
-                </Header>
+                <PageHeader
+                    title="Asesino"
+                    onBack={() => navigate('/games')}
+                    rightAction={
+                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+                            <IoRefresh size={20} />
+                        </IconButton>
+                    }
+                />
                 <Content>
                     <Card>
-                        <PhaseLabel>En Juego</PhaseLabel>
+                        <PhaseLabel>En juego</PhaseLabel>
                         <Title>¡Que empiece la partida!</Title>
                         <Instruction>
                             <strong>Asesino:</strong> Elimina jugadores guiñando un ojo sin que el policía te vea.
                             <br /><br />
                             <strong>Policía:</strong> Observa y descubre quién es el asesino.
                             <br /><br />
-                            <strong>Ciudadanos:</strong> Si el asesino te guiña, espera unos segundos y bebe un trago(Tras 3 tragos, mueres.).
+                            <strong>Ciudadanos:</strong> Si el asesino te guiña, espera unos segundos y bebe un trago (tras 3 tragos, mueres).
                             <br /><br />
                             El juego termina cuando:
                             <br />
@@ -475,8 +413,8 @@ export default function AsesinoGame() {
                             <br />
                             • El asesino elimina a la mitad de los jugadores (redondeando hacia arriba)
                         </Instruction>
-                        <Button onClick={resetGame}>
-                            Nueva Partida
+                        <Button size="lg" fullWidth onClick={resetGame}>
+                            Nueva partida
                         </Button>
                     </Card>
                 </Content>
