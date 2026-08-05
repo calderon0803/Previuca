@@ -1,4 +1,4 @@
-# Configuración de Base de Datos - PatronaLeague
+# Configuración de Base de Datos - Previuca
 
 ## Base de Datos con Supabase
 

@@ -1,5 +1,5 @@
 -- ===================================================
--- PatronaLeague Match & Instagram Verification Setup
+-- Previuca Match & Instagram Verification Setup
 -- ===================================================
 -- Execute this script in your Supabase SQL Editor
 -- to create the necessary tables and policies

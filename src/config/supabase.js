@@ -16,7 +16,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
     global: {
         headers: {
-            'x-client-info': 'patronaleague-app'
+            'x-client-info': 'previuca-app'
         }
     },
     db: {
