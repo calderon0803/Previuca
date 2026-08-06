@@ -2,20 +2,18 @@ import React, { createContext, useState, useEffect, useContext, useRef } from 'r
 import { signIn, signUp, signOut, onAuthStateChange } from '../services/authService';
 import { supabase } from '../config/supabase';
 
-const CRUSHES_KEY = 'patronaleague_crushes_user';
-
 const CrushContext = createContext();
 
 export const CrushProvider = ({ children }) => {
     const [user, setUser] = useState(null); // Ahora será el usuario de Supabase
     const [loading, setLoading] = useState(true);
-    const [crushes, setCrushes] = useState([]); // Lista de crushes del usuario
+    const [crushes, setCrushes] = useState([]); // Lista de crushes del usuario (de la fiesta activa)
     const [matches, setMatches] = useState([]); // Crushes con match mutuo
     const [isVerified, setIsVerified] = useState(false);
     const [instagramUsername, setInstagramUsername] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
     const [matchedByCount, setMatchedByCount] = useState(0);
-    const hasLoadedData = useRef(false); // Track si ya cargamos todos los datos
+    const hasLoadedData = useRef(false); // Track si ya cargamos la verificación de Instagram
 
     useEffect(() => {
         // Verificar sesión actual
@@ -26,21 +24,12 @@ export const CrushProvider = ({ children }) => {
         try {
             const result = onAuthStateChange((event, session) => {
                 console.log('Auth state changed:', event);
-                
+
                 if (session?.user) {
                     setUser(session.user);
                     // Solo cargar datos si el usuario cambió (login/registro nuevo)
                     if (!hasLoadedData.current) {
-                        (async () => {
-                            const [crushesData, username] = await Promise.all([
-                                loadCrushesFromDB(session.user.id),
-                                loadInstagramVerification(session.user),
-                            ]);
-                            
-                            if (username && crushesData) {
-                                await loadMatchedByCount(username, crushesData);
-                            }
-                        })();
+                        loadInstagramVerification(session.user);
                         hasLoadedData.current = true;
                     }
                 } else {
@@ -72,16 +61,7 @@ export const CrushProvider = ({ children }) => {
                 setUser(session.user);
                 // Solo cargar si no se ha cargado antes
                 if (!hasLoadedData.current) {
-                    const [crushesData, username] = await Promise.all([
-                        loadCrushesFromDB(session.user.id),
-                        loadInstagramVerification(session.user),
-                    ]);
-                    
-                    // Después de cargar crushes e Instagram, verificar matches
-                    if (username && crushesData) {
-                        await loadMatchedByCount(username, crushesData);
-                    }
-                    
+                    await loadInstagramVerification(session.user);
                     hasLoadedData.current = true;
                 }
             }
@@ -92,17 +72,27 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const loadCrushesFromDB = async (userId) => {
+    // Los crushes están enlazados a la fiesta activa: se cargan explícitamente
+    // desde la pantalla (que conoce el fiestaId via useFiesta), no en el login.
+    const loadCrushes = async (fiestaId) => {
+        if (!user || !fiestaId) return [];
+
         try {
             const { data, error } = await supabase
                 .from('users_crushes')
                 .select('match_name')
-                .eq('user_id', userId)
+                .eq('user_id', user.id)
+                .eq('fiesta_id', fiestaId)
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
             const crushList = data?.map(d => d.match_name) || [];
             setCrushes(crushList);
+
+            if (instagramUsername) {
+                await loadMatchedByCount(instagramUsername, crushList, fiestaId);
+            }
+
             return crushList;
         } catch (error) {
             console.error('Error loading crushes:', error);
@@ -120,15 +110,15 @@ export const CrushProvider = ({ children }) => {
                 .single();
 
             if (error && error.code !== 'PGRST116') throw error;
-            
+
             const verified = data?.is_verified || false;
             const username = data?.instagram_username || userObj?.email?.split('@')[0] || 'Usuario';
             const code = data?.verification_code || '';
-            
+
             setIsVerified(verified);
             setInstagramUsername(username);
             setVerificationCode(code);
-            
+
             return username;
         } catch (error) {
             console.error('Error loading instagram verification:', error);
@@ -146,46 +136,47 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const loadMatchedByCount = async (username, myCrushes) => {
+    const loadMatchedByCount = async (username, myCrushes, fiestaId) => {
         try {
             const { data, error } = await supabase
                 .from('users_crushes')
                 .select('user_id')
-                .eq('match_name', username);
+                .eq('match_name', username)
+                .eq('fiesta_id', fiestaId);
 
             if (error) throw error;
-            
+
             const count = data?.length || 0;
             setMatchedByCount(count);
-            
+
             // Si hay gente que me tiene Y yo tengo crushes, verificar matches mutuos
             if (count > 0 && myCrushes && myCrushes.length > 0) {
                 const userIds = data.map(d => d.user_id);
                 console.log('UserIds que me tienen:', userIds);
-                
+
                 if (userIds.length === 0) {
                     setMatches([]);
                     return;
                 }
-                
+
                 // Obtener los usernames de Instagram de quienes me tienen
                 const { data: igData, error: igError } = await supabase
                     .from('instagram_verification')
                     .select('instagram_username')
                     .in('user_id', userIds);
-                
+
                 console.log('Instagram data:', igData);
                 console.log('Instagram error:', igError);
-                
+
                 if (igError) throw igError;
-                
+
                 const theirUsernames = igData?.map(u => u.instagram_username) || [];
-                
+
                 // Encontrar matches mutuos: crushes míos que también me tienen
-                const mutualMatches = myCrushes.filter(crush => 
+                const mutualMatches = myCrushes.filter(crush =>
                     theirUsernames.includes(crush)
                 );
-                
+
                 setMatches(mutualMatches);
             } else {
                 setMatches([]);
@@ -203,11 +194,11 @@ export const CrushProvider = ({ children }) => {
             console.log('[CrushContext] calling signIn...');
             const result = await signIn(email, password);
             console.log('[CrushContext] signIn returned:', result);
-            
+
             const { data, error } = result;
             console.log('[CrushContext] extracted data:', data);
             console.log('[CrushContext] extracted error:', error);
-            
+
             if (error) {
                 console.log('[CrushContext] returning error');
                 return { success: false, error: error };
@@ -247,17 +238,18 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const addCrush = async (crushName) => {
+    const addCrush = async (crushName, fiestaId) => {
         if (!user) return { success: false, error: 'No user logged in' };
+        if (!fiestaId) return { success: false, error: 'No hay fiesta activa' };
         if (crushes.length >= 5) return { success: false, error: 'Max 5 crushes allowed' };
 
         try {
             const formattedName = crushName.replace(/\s+/g, '').toLowerCase();
-            
+
             const { data, error } = await supabase
                 .from('users_crushes')
                 .insert([
-                    { user_id: user.id, match_name: formattedName }
+                    { user_id: user.id, match_name: formattedName, fiesta_id: fiestaId }
                 ])
                 .select();
 
@@ -271,17 +263,18 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const removeCrush = async (index) => {
+    const removeCrush = async (index, fiestaId) => {
         if (!user) return { success: false, error: 'No user logged in' };
 
         try {
             const crushToRemove = crushes[index];
-            
+
             const { error } = await supabase
                 .from('users_crushes')
                 .delete()
                 .eq('user_id', user.id)
-                .eq('match_name', crushToRemove);
+                .eq('match_name', crushToRemove)
+                .eq('fiesta_id', fiestaId);
 
             if (error) throw error;
 
@@ -295,7 +288,7 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const updateCrush = async (index, newName) => {
+    const updateCrush = async (index, newName, fiestaId) => {
         if (!user) return { success: false, error: 'No user logged in' };
 
         try {
@@ -306,7 +299,8 @@ export const CrushProvider = ({ children }) => {
                 .from('users_crushes')
                 .update({ match_name: formattedName })
                 .eq('user_id', user.id)
-                .eq('match_name', oldCrushName);
+                .eq('match_name', oldCrushName)
+                .eq('fiesta_id', fiestaId);
 
             if (error) throw error;
 
@@ -334,6 +328,7 @@ export const CrushProvider = ({ children }) => {
                 login,
                 register,
                 logout,
+                loadCrushes,
                 addCrush,
                 removeCrush,
                 updateCrush,

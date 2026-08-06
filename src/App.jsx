@@ -30,10 +30,16 @@ const Placeholder = ({ title }) => (
 import SplashScreen from './components/SplashScreen';
 
 import { CrushProvider, useCrush } from './contexts/CrushContext';
+import { FiestaProvider } from './contexts/FiestaContext';
+import { PenasProvider } from './contexts/PenasContext';
 import CrushLogin from './views/CrushLogin';
 import CrushList from './views/CrushList';
 import InstagramVerification from './views/InstagramVerification';
 import Settings from './views/Settings';
+import FiestasHub from './views/FiestasHub';
+import PenasList from './views/PenasList';
+import CreatePena from './views/CreatePena';
+import PenaDetail from './views/PenaDetail';
 
 // Protected Route specific for Crush
 const CrushRoute = ({ children }) => {
@@ -53,7 +59,7 @@ const CrushRoute = ({ children }) => {
         );
     }
 
-    return user ? children : <Navigate to="/match" replace />;
+    return user ? children : <Navigate to="/crush" replace />;
 };
 
 function App() {
@@ -64,12 +70,14 @@ function App() {
             <GlobalStyles />
             {loading && <SplashScreen onFinish={() => setLoading(false)} />}
             <CrushProvider>
+                <FiestaProvider>
+                <PenasProvider>
                 <PlayersProvider>
                     <BrowserRouter>
                         <Routes>
                             <Route path="/" element={<MainMenu />} />
 
-                            {/* Crush Feature Routes */}
+                            {/* Crush Feature Routes (nested under Fiestas) */}
                             <Route path="/crush" element={<CrushLogin />} />
                             <Route
                                 path="/my-crushes"
@@ -87,6 +95,12 @@ function App() {
                                     </CrushRoute>
                                 }
                             />
+
+                            {/* Fiestas Feature Routes */}
+                            <Route path="/fiestas" element={<FiestasHub />} />
+                            <Route path="/fiestas/penas" element={<PenasList />} />
+                            <Route path="/fiestas/penas/nueva" element={<CreatePena />} />
+                            <Route path="/fiestas/penas/:id" element={<PenaDetail />} />
 
                             <Route path="/games" element={<GameModesList />} />
                             <Route path="/ajustes" element={<Settings />} />
@@ -117,6 +131,8 @@ function App() {
                         </Routes>
                     </BrowserRouter>
                 </PlayersProvider>
+                </PenasProvider>
+                </FiestaProvider>
             </CrushProvider>
         </ThemeProvider>
     );

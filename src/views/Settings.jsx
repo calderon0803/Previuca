@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoPersonCircle, IoLogOut } from 'react-icons/io5';
 import { useCrush } from '../contexts/CrushContext';
+import { useFiesta } from '../contexts/FiestaContext';
 import { deleteInstagramVerification } from '../services/instagramService';
 import { supabase } from '../config/supabase';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
 
 const Container = styled.div`
     min-height: 100vh;
@@ -102,6 +104,10 @@ const Settings = () => {
         refreshInstagramVerification,
         loading: contextLoading
     } = useCrush();
+    const { hasFiesta, fiestaName, redeemCode } = useFiesta();
+    const [fiestaCode, setFiestaCode] = useState('');
+    const [fiestaStatus, setFiestaStatus] = useState('');
+    const [redeeming, setRedeeming] = useState(false);
 
     // Construir objeto de datos de Instagram desde el contexto
     const instagramData = user && instagramUsername ? {
@@ -164,6 +170,23 @@ const Settings = () => {
         } catch (error) {
             console.error('Error sending reset email:', error);
             alert('Error al enviar el email: ' + error.message);
+        }
+    };
+
+    const handleRedeemFiestaCode = async () => {
+        if (!fiestaCode.trim()) return;
+
+        setRedeeming(true);
+        setFiestaStatus('');
+
+        const result = await redeemCode(fiestaCode);
+
+        setRedeeming(false);
+        if (result.success) {
+            setFiestaStatus(`¡Apuntado a ${result.fiesta.name}!`);
+            setFiestaCode('');
+        } else {
+            setFiestaStatus(result.error || 'Código no válido');
         }
     };
 
@@ -238,6 +261,41 @@ const Settings = () => {
                         </SettingInfo>
                         <Button variant="secondary" onClick={handleChangePassword}>Cambiar</Button>
                     </SettingItem>
+                </Section>
+
+                <Section>
+                    <SectionTitle>Fiesta</SectionTitle>
+
+                    {hasFiesta ? (
+                        <SettingItem>
+                            <SettingInfo>
+                                <SettingLabel>Fiesta activa</SettingLabel>
+                                <SettingValue>{fiestaName}</SettingValue>
+                            </SettingInfo>
+                        </SettingItem>
+                    ) : (
+                        <SettingItem>
+                            <SettingInfo>
+                                <SettingLabel>Código de fiesta</SettingLabel>
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                    <Input
+                                        placeholder="CÓDIGO"
+                                        value={fiestaCode}
+                                        onChange={(e) => setFiestaCode(e.target.value.toUpperCase())}
+                                        disabled={redeeming}
+                                    />
+                                    <Button
+                                        variant="secondary"
+                                        onClick={handleRedeemFiestaCode}
+                                        disabled={!fiestaCode.trim() || redeeming}
+                                    >
+                                        {redeeming ? '...' : 'Unirme'}
+                                    </Button>
+                                </div>
+                                {fiestaStatus && <SettingValue style={{ marginTop: '8px' }}>{fiestaStatus}</SettingValue>}
+                            </SettingInfo>
+                        </SettingItem>
+                    )}
                 </Section>
 
                 <Section>

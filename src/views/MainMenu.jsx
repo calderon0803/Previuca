@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { IoLockClosed } from 'react-icons/io5';
+import { useFiesta } from '../contexts/FiestaContext';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -75,6 +77,7 @@ const HeroCard = styled.div`
   transition: transform ${({ theme }) => theme.transitions.base},
     border-color ${({ theme }) => theme.transitions.base};
   margin-bottom: ${({ theme }) => theme.spacing(3)};
+  opacity: ${({ $locked }) => ($locked ? 0.6 : 1)};
 
   &:hover {
     border-color: ${({ theme }) => theme.colors.primaryHover};
@@ -93,6 +96,14 @@ const HeroWatermark = styled.span`
   opacity: 0.16;
   transform: rotate(-8deg);
   pointer-events: none;
+`;
+
+const LockBadge = styled.div`
+  position: absolute;
+  top: ${({ theme }) => theme.spacing(4)};
+  right: ${({ theme }) => theme.spacing(4)};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  z-index: 1;
 `;
 
 const HeroLabel = styled.span`
@@ -123,7 +134,7 @@ const HeroSubtitle = styled.p`
 
 const SecondaryRow = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: ${({ theme }) => theme.spacing(3)};
   margin-top: ${({ theme }) => theme.spacing(3)};
 `;
@@ -166,6 +177,11 @@ const SecondaryLabel = styled.span`
 
 export default function MainMenu() {
   const navigate = useNavigate();
+  const { hasFiesta } = useFiesta();
+
+  const handleFiestasClick = () => {
+    navigate(hasFiesta ? '/fiestas' : '/ajustes');
+  };
 
   return (
     <Container>
@@ -184,11 +200,21 @@ export default function MainMenu() {
           <HeroSubtitle>Diversión sin límites</HeroSubtitle>
         </HeroCard>
 
+        <HeroCard onClick={handleFiestasClick} $locked={!hasFiesta}>
+          <HeroWatermark aria-hidden="true">🎉</HeroWatermark>
+          {!hasFiesta && (
+            <LockBadge>
+              <IoLockClosed size={16} />
+            </LockBadge>
+          )}
+          <HeroLabel>{hasFiesta ? 'Empezar' : 'Bloqueado'}</HeroLabel>
+          <HeroTitle>Fiestas</HeroTitle>
+          <HeroSubtitle>
+            {hasFiesta ? 'Peñas y Crush de tu fiesta' : 'Introduce un código en Ajustes'}
+          </HeroSubtitle>
+        </HeroCard>
+
         <SecondaryRow>
-          <SecondaryTile onClick={() => navigate('/crush')}>
-            <SecondaryIcon>💕</SecondaryIcon>
-            <SecondaryLabel>Crush</SecondaryLabel>
-          </SecondaryTile>
           <SecondaryTile onClick={() => navigate('/ajustes')}>
             <SecondaryIcon>⚙️</SecondaryIcon>
             <SecondaryLabel>Ajustes</SecondaryLabel>

@@ -188,7 +188,7 @@ export default function CrushLogin() {
   return (
     <Container>
       <BackButtonWrap>
-        <IconButton onClick={() => navigate('/')} aria-label="Volver">
+        <IconButton onClick={() => navigate('/fiestas')} aria-label="Volver">
           <IoArrowBack size={20} />
         </IconButton>
       </BackButtonWrap>
