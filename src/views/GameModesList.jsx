@@ -2,6 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoPeople } from 'react-icons/io5';
+import {
+    EyeOff, Eye, Crown, Spade, Disc3, UserSearch,
+    Dice5, Triangle, Skull, Palette,
+} from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
 import GameModeCard from '../components/GameModeCard';
 import PlayersModal from '../components/PlayersModal';
@@ -13,61 +17,61 @@ const gameModes = [
         id: 1,
         name: 'Yo Nunca',
         description: 'Confiesa lo que nunca has hecho',
-        icon: '🤫',
+        icon: EyeOff,
     },
     {
         id: 2,
         name: 'Medusa',
         description: 'No cruces la mirada',
-        icon: '👀',
+        icon: Eye,
     },
     {
         id: 3,
         name: 'Rey de Copas',
         description: 'Juego de cartas legendario',
-        icon: '👑',
+        icon: Crown,
     },
     {
         id: 4,
         name: 'Pico Palo',
         description: 'Adivina la carta correcta',
-        icon: '🃏',
+        icon: Spade,
     },
     {
         id: 6,
         name: 'Ruleta',
         description: 'Gira y prueba tu suerte',
-        icon: '🎰',
+        icon: Disc3,
     },
     {
         id: 7,
         name: 'Impostor',
         description: '¿Quién es el infiltrado?',
-        icon: '🕵️‍♂️',
+        icon: UserSearch,
     },
     {
         id: 8,
         name: 'Dados de Beber',
         description: 'Tira los dados y bebe',
-        icon: '🎲',
+        icon: Dice5,
     },
     {
         id: 9,
         name: 'Illuminati',
         description: 'Escala la pirámide de cartas',
-        icon: '🔺',
+        icon: Triangle,
     },
     {
         id: 10,
         name: 'Asesino',
         description: 'Descubre quién es el asesino',
-        icon: '🔪',
+        icon: Skull,
     },
     {
         id: 11,
         name: 'Trazo & Trago',
         description: 'Dibuja y adivina. El que pierda, bebe.',
-        icon: '🎨',
+        icon: Palette,
     },
 ];
 

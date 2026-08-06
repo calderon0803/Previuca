@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
+import { Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
@@ -142,7 +143,7 @@ export default function MedusaGame() {
                                     animate={{ scale: 1, opacity: 1 }}
                                     transition={{ type: 'spring', damping: 12 }}
                                 >
-                                    {count === 0 ? '🔥' : count}
+                                    {count === 0 ? <Flame size={64} color="#F5A623" /> : count}
                                 </BigText>
                             </MainCircle>
                             <InstructionText>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { Tent, BookOpen, Heart } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
 import GameModeCard from '../components/GameModeCard';
 import PageHeader from '../components/ui/PageHeader';
@@ -103,8 +104,9 @@ export default function EventsHub() {
     }
 
     const subsections = [
-        { id: 'penas', name: 'Peñas', icon: '🎪', route: `/eventos/${eventId}/penas` },
-        { id: 'flechazo', name: 'Flechazo', icon: '💕', route: `/eventos/${eventId}/flechazo` },
+        { id: 'penas', name: 'Peñas', icon: Tent, route: `/eventos/${eventId}/penas` },
+        { id: 'album', name: 'Álbum de sellos', icon: BookOpen, route: `/eventos/${eventId}/album` },
+        { id: 'flechazo', name: 'Flechazo', icon: Heart, route: `/eventos/${eventId}/flechazo` },
     ];
 
     return (

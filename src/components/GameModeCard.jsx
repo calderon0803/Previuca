@@ -32,7 +32,7 @@ const Card = styled.div`
 `;
 
 const Icon = styled.span`
-  font-size: 52px;
+  display: flex;
   position: absolute;
   top: -10px;
   right: -10px;
@@ -75,7 +75,9 @@ export default function GameModeCard({ game, onClick, isLocked }) {
           </LockIndicator>
         )}
         <Name $isLocked={isLocked}>{game.name}</Name>
-        <Icon $isLocked={isLocked} role="img" aria-label={game.name}>{game.icon}</Icon>
+        <Icon $isLocked={isLocked} aria-hidden="true">
+          <game.icon size={52} />
+        </Icon>
       </Card>
     </CardContainer>
   );

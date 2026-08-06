@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoPersonCircle, IoLogOut } from 'react-icons/io5';
@@ -102,12 +102,24 @@ const Settings = () => {
         instagramUsername,
         verificationCode,
         refreshInstagramVerification,
+        firstName,
+        lastName,
+        saveProfile,
         loading: contextLoading
     } = useFlechazo();
     const { events, redeemCode } = useEvent();
     const [eventCode, setEventCode] = useState('');
     const [eventStatus, setEventStatus] = useState('');
     const [redeeming, setRedeeming] = useState(false);
+    const [firstNameInput, setFirstNameInput] = useState(firstName);
+    const [lastNameInput, setLastNameInput] = useState(lastName);
+    const [profileStatus, setProfileStatus] = useState('');
+    const [savingProfile, setSavingProfile] = useState(false);
+
+    useEffect(() => {
+        setFirstNameInput(firstName);
+        setLastNameInput(lastName);
+    }, [firstName, lastName]);
 
     // Construir objeto de datos de Instagram desde el contexto
     const instagramData = user && instagramUsername ? {
@@ -171,6 +183,16 @@ const Settings = () => {
             console.error('Error sending reset email:', error);
             alert('Error al enviar el email: ' + error.message);
         }
+    };
+
+    const handleSaveProfile = async () => {
+        setSavingProfile(true);
+        setProfileStatus('');
+
+        const result = await saveProfile(firstNameInput, lastNameInput);
+
+        setSavingProfile(false);
+        setProfileStatus(result.success ? 'Guardado' : (result.error || 'Error al guardar'));
     };
 
     const handleRedeemEventCode = async () => {
@@ -261,6 +283,46 @@ const Settings = () => {
                         </SettingInfo>
                         <Button variant="secondary" onClick={handleChangePassword}>Cambiar</Button>
                     </SettingItem>
+                </Section>
+
+                <Section>
+                    <SectionTitle>Perfil</SectionTitle>
+
+                    <SettingItem>
+                        <SettingInfo>
+                            <SettingLabel>Nombre</SettingLabel>
+                            <Input
+                                placeholder="Nombre"
+                                value={firstNameInput}
+                                onChange={(e) => setFirstNameInput(e.target.value)}
+                                disabled={savingProfile}
+                                style={{ marginTop: '8px' }}
+                            />
+                        </SettingInfo>
+                    </SettingItem>
+
+                    <SettingItem>
+                        <SettingInfo>
+                            <SettingLabel>Apellido</SettingLabel>
+                            <Input
+                                placeholder="Apellido"
+                                value={lastNameInput}
+                                onChange={(e) => setLastNameInput(e.target.value)}
+                                disabled={savingProfile}
+                                style={{ marginTop: '8px' }}
+                            />
+                        </SettingInfo>
+                    </SettingItem>
+
+                    <Button
+                        variant="secondary"
+                        fullWidth
+                        onClick={handleSaveProfile}
+                        disabled={!firstNameInput.trim() || !lastNameInput.trim() || savingProfile}
+                    >
+                        {savingProfile ? 'Guardando...' : 'Guardar'}
+                    </Button>
+                    {profileStatus && <SettingValue style={{ marginTop: '8px' }}>{profileStatus}</SettingValue>}
                 </Section>
 
                 <Section>

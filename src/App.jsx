@@ -42,6 +42,8 @@ import PenasList from './views/PenasList';
 import CreatePena from './views/CreatePena';
 import PenaDetail from './views/PenaDetail';
 import CreateEvent from './views/CreateEvent';
+import StampAlbum from './views/StampAlbum';
+import ScanStamp from './views/ScanStamp';
 
 const LoadingScreen = () => (
     <div style={{
@@ -132,6 +134,22 @@ function App() {
                             <Route path="/eventos/:eventId/penas" element={<PenasList />} />
                             <Route path="/eventos/:eventId/penas/nueva" element={<CreatePena />} />
                             <Route path="/eventos/:eventId/penas/:penaId" element={<PenaDetail />} />
+                            <Route
+                                path="/eventos/:eventId/album"
+                                element={
+                                    <FlechazoRoute>
+                                        <StampAlbum />
+                                    </FlechazoRoute>
+                                }
+                            />
+                            <Route
+                                path="/eventos/:eventId/album/escanear"
+                                element={
+                                    <FlechazoRoute>
+                                        <ScanStamp />
+                                    </FlechazoRoute>
+                                }
+                            />
 
                             <Route path="/games" element={<GameModesList />} />
                             <Route path="/ajustes" element={<Settings />} />

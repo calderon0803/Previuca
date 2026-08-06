@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
+import { ArrowUp, ArrowDown, PartyPopper, Beer } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
@@ -126,6 +127,12 @@ const Message = styled.div`
     font-size: ${({ theme }) => theme.typography.fontSize.md};
 `;
 
+const MessageInline = styled.span`
+    display: inline-flex;
+    align-items: center;
+    gap: ${({ theme }) => theme.spacing(2)};
+`;
+
 const SUITS = ['♠', '♥', '♦', '♣'];
 const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
@@ -238,11 +245,11 @@ export default function IlluminatiGame() {
                 // ¡Ganó!
                 const newCompletedPlayers = [...completedPlayers, players[currentPlayerIndex].name];
                 setCompletedPlayers(newCompletedPlayers);
-                setMessage(`¡${players[currentPlayerIndex].name} ha ganado! 🎉`);
+                setMessage(`¡${players[currentPlayerIndex].name} ha ganado!`);
                 setMessageType('success');
 
                 if (newCompletedPlayers.length === players.length) {
-                    setMessage('¡Todos han ganado! 🎉🎉🎉');
+                    setMessage('¡Todos han ganado!');
                     setGamePhase('finished');
                 } else {
                     setTimeout(() => {
@@ -261,7 +268,7 @@ export default function IlluminatiGame() {
             }
         } else {
             const rowsLeft = currentRow + 1;
-            setMessage(`¡Fallaste! ${players[currentPlayerIndex].name} bebe ${rowsLeft} ${rowsLeft === 1 ? 'trago' : 'tragos'} 🍺`);
+            setMessage(`¡Fallaste! ${players[currentPlayerIndex].name} bebe ${rowsLeft} ${rowsLeft === 1 ? 'trago' : 'tragos'}`);
             setMessageType('error');
 
             setTimeout(() => {
@@ -381,10 +388,10 @@ export default function IlluminatiGame() {
                 {gamePhase === 'guessing' && (
                     <ButtonContainer>
                         <Button fullWidth onClick={() => makeGuess(true)}>
-                            ⬆️ Mayor
+                            <ArrowUp size={16} /> Mayor
                         </Button>
                         <Button fullWidth variant="secondary" onClick={() => makeGuess(false)}>
-                            ⬇️ Menor
+                            <ArrowDown size={16} /> Menor
                         </Button>
                     </ButtonContainer>
                 )}
@@ -392,7 +399,10 @@ export default function IlluminatiGame() {
                 {gamePhase === 'finished' && (
                     <>
                         <Message $type="success">
-                            {message}
+                            <MessageInline>
+                                <PartyPopper size={18} />
+                                {message}
+                            </MessageInline>
                         </Message>
                         <Button onClick={initializeGame}>
                             Nueva partida
@@ -402,7 +412,11 @@ export default function IlluminatiGame() {
 
                 {message && gamePhase !== 'finished' && gamePhase !== 'guessing' && (
                     <Message $type={messageType}>
-                        {message}
+                        <MessageInline>
+                            {messageType === 'success' && <PartyPopper size={18} />}
+                            {messageType === 'error' && <Beer size={18} />}
+                            {message}
+                        </MessageInline>
                     </Message>
                 )}
             </Content>

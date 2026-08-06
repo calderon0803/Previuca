@@ -1,11 +1,14 @@
 import { supabase } from '../config/supabase';
 
-// Registro de nuevo usuario
-export const signUp = async (email, password) => {
+// Registro de nuevo usuario. metadata (first_name/last_name) queda en
+// auth.users.raw_user_meta_data y un trigger en BD crea el perfil a partir
+// de ella, sin depender de que ya haya sesión activa (email sin confirmar).
+export const signUp = async (email, password, metadata = {}) => {
     try {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
+            options: { data: metadata },
         });
 
         if (error) throw error;

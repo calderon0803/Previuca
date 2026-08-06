@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { IoClose, IoTrashOutline, IoAddCircle } from 'react-icons/io5';
+import { Users, User } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
 import Modal from './ui/Modal';
 import IconButton from './ui/IconButton';
@@ -192,7 +193,7 @@ export default function PlayersModal({ visible, onClose }) {
       <PlayersList>
         {players.length === 0 ? (
           <EmptyState>
-            <EmptyIcon>👥</EmptyIcon>
+            <EmptyIcon><Users size={40} /></EmptyIcon>
             <EmptyText>No hay jugadores</EmptyText>
             <EmptySubtext>Agrega jugadores para comenzar</EmptySubtext>
           </EmptyState>
@@ -200,7 +201,7 @@ export default function PlayersModal({ visible, onClose }) {
           players.map((player) => (
             <PlayerItem key={player.id}>
               <PlayerInfo>
-                <PlayerIcon>👤</PlayerIcon>
+                <PlayerIcon><User size={18} /></PlayerIcon>
                 <PlayerName>{player.name}</PlayerName>
               </PlayerInfo>
               <DeleteButton onClick={() => removePlayer(player.id)}>

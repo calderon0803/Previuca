@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { css } from 'styled-components';
+import { Gamepad2, PartyPopper, Settings, Plus } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
 import { useAdmin } from '../contexts/AdminContext';
 
@@ -113,7 +114,7 @@ const HeroWatermark = styled.span`
   position: absolute;
   bottom: -16px;
   right: -4px;
-  font-size: 72px;
+  display: flex;
   opacity: 0.14;
   transform: rotate(-8deg);
   pointer-events: none;
@@ -196,8 +197,9 @@ const SecondaryTile = styled.div`
 `;
 
 const SecondaryIcon = styled.span`
-  font-size: 18px;
+  display: flex;
   flex-shrink: 0;
+  color: ${({ theme }) => theme.colors.text.primary};
 `;
 
 const SecondaryLabel = styled.span`
@@ -225,7 +227,7 @@ export default function MainMenu() {
         <Headline>¿A qué jugamos hoy?</Headline>
 
         <PrimaryHeroCard onClick={() => navigate('/games')}>
-          <HeroWatermark aria-hidden="true">🎮</HeroWatermark>
+          <HeroWatermark aria-hidden="true"><Gamepad2 size={72} /></HeroWatermark>
           <HeroTop>
             <HeroTitle>Juegos</HeroTitle>
           </HeroTop>
@@ -239,7 +241,7 @@ export default function MainMenu() {
               onClick={() => navigate(`/eventos/${evento.id}`)}
               $colors={evento.colors}
             >
-              <HeroWatermark aria-hidden="true">🎉</HeroWatermark>
+              <HeroWatermark aria-hidden="true"><PartyPopper size={72} /></HeroWatermark>
               <HeroTop>
                 <HeroTitle>{evento.name}</HeroTitle>
               </HeroTop>
@@ -248,7 +250,7 @@ export default function MainMenu() {
           ))
         ) : (
           <HeroCard onClick={() => navigate('/ajustes')} $locked>
-            <HeroWatermark aria-hidden="true">🎉</HeroWatermark>
+            <HeroWatermark aria-hidden="true"><PartyPopper size={72} /></HeroWatermark>
             <HeroTop>
               <HeroTitle>Eventos</HeroTitle>
               <LockPill>Bloqueado</LockPill>
@@ -259,12 +261,12 @@ export default function MainMenu() {
 
         <SecondaryRow $columns={isAdmin ? 2 : 1}>
           <SecondaryTile onClick={() => navigate('/ajustes')}>
-            <SecondaryIcon>⚙️</SecondaryIcon>
+            <SecondaryIcon><Settings size={18} /></SecondaryIcon>
             <SecondaryLabel>Ajustes</SecondaryLabel>
           </SecondaryTile>
           {isAdmin && (
             <SecondaryTile onClick={() => navigate('/eventos/nuevo')}>
-              <SecondaryIcon>➕</SecondaryIcon>
+              <SecondaryIcon><Plus size={18} /></SecondaryIcon>
               <SecondaryLabel>Crear evento</SecondaryLabel>
             </SecondaryTile>
           )}

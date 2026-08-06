@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
+import { Skull, Shield, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
 import PageHeader from '../components/ui/PageHeader';
@@ -286,11 +287,11 @@ export default function AsesinoGame() {
                         <Instruction>
                             Se asignarán roles secretos:
                             <br />
-                            • 1 Asesino 🔪
+                            • 1 Asesino <Skull size={16} style={{ verticalAlign: 'middle' }} />
                             <br />
-                            • 1 Policía 👮
+                            • 1 Policía <Shield size={16} style={{ verticalAlign: 'middle' }} />
                             <br />
-                            • {players.length - 2} Ciudadanos 👤
+                            • {players.length - 2} Ciudadanos <User size={16} style={{ verticalAlign: 'middle' }} />
                             <br /><br />
                             Cada jugador verá su rol en secreto.
                         </Instruction>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFlechazo } from '../contexts/FlechazoContext';
-import { IoArrowBack, IoLockClosed, IoMail } from 'react-icons/io5';
+import { IoArrowBack, IoLockClosed, IoMail, IoPersonOutline } from 'react-icons/io5';
+import { Loader2 } from 'lucide-react';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -16,6 +17,15 @@ const Container = styled.div`
   justify-content: center;
   padding: ${({ theme }) => theme.spacing(5)};
   position: relative;
+`;
+
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+const Spinner = styled(Loader2)`
+  animation: ${spin} 1s linear infinite;
+  margin-bottom: 20px;
 `;
 
 const BackButtonWrap = styled.div`
@@ -83,6 +93,8 @@ export default function FlechazoLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [status, setStatus] = useState('');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -104,7 +116,7 @@ export default function FlechazoLogin() {
     return (
       <Container>
         <div style={{ textAlign: 'center', color: '#fff' }}>
-          <div style={{ fontSize: '32px', marginBottom: '20px' }}>🍷</div>
+          <Spinner size={32} />
           <div style={{ fontSize: '18px', fontWeight: 'bold' }}>Verificando sesión...</div>
         </div>
       </Container>
@@ -145,7 +157,7 @@ export default function FlechazoLogin() {
   };
 
   const handleRegister = async () => {
-    if (!email || !password) return;
+    if (!email || !password || !firstName.trim() || !lastName.trim()) return;
 
     if (password !== confirmPassword) {
       setStatus('Las contraseñas no coinciden');
@@ -161,7 +173,7 @@ export default function FlechazoLogin() {
     setStatus('Creando cuenta...');
 
     try {
-      const result = await register(email, password);
+      const result = await register(email, password, firstName, lastName);
 
       if (result.success) {
         setStatus('¡Cuenta creada! Verifica tu email para continuar.');
@@ -170,6 +182,8 @@ export default function FlechazoLogin() {
           setIsRegisterMode(false);
           setPassword('');
           setConfirmPassword('');
+          setFirstName('');
+          setLastName('');
         }, 3000);
       } else {
         setStatus(result.error || 'Error al crear cuenta');
@@ -186,6 +200,8 @@ export default function FlechazoLogin() {
     setStatus('');
     setPassword('');
     setConfirmPassword('');
+    setFirstName('');
+    setLastName('');
   };
 
   return (
@@ -243,6 +259,40 @@ export default function FlechazoLogin() {
           // Formulario de Registro
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }} style={{ width: '100%' }}>
             <InputGroup>
+              <Label>Nombre</Label>
+              <InputWrapper>
+                <InputIcon>
+                  <IoPersonOutline size={18} />
+                </InputIcon>
+                <Input
+                  $hasIcon
+                  type="text"
+                  placeholder="Tu nombre"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  disabled={isVerifying}
+                />
+              </InputWrapper>
+            </InputGroup>
+
+            <InputGroup>
+              <Label>Apellido</Label>
+              <InputWrapper>
+                <InputIcon>
+                  <IoPersonOutline size={18} />
+                </InputIcon>
+                <Input
+                  $hasIcon
+                  type="text"
+                  placeholder="Tu apellido"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  disabled={isVerifying}
+                />
+              </InputWrapper>
+            </InputGroup>
+
+            <InputGroup>
               <Label>Correo electrónico</Label>
               <InputWrapper>
                 <InputIcon>
@@ -293,7 +343,7 @@ export default function FlechazoLogin() {
               </InputWrapper>
             </InputGroup>
 
-            <Button type="submit" fullWidth size="lg" disabled={!email || !password || !confirmPassword || isVerifying}>
+            <Button type="submit" fullWidth size="lg" disabled={!email || !password || !confirmPassword || !firstName.trim() || !lastName.trim() || isVerifying}>
               {isVerifying ? 'Creando cuenta...' : 'Registrarse'}
             </Button>
           </form>

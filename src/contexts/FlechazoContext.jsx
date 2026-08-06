@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { signIn, signUp, signOut, onAuthStateChange } from '../services/authService';
+import { getProfile, upsertProfile } from '../services/profileService';
 import { supabase } from '../config/supabase';
 
 const FlechazoContext = createContext();
@@ -13,6 +14,8 @@ export const FlechazoProvider = ({ children }) => {
     const [instagramUsername, setInstagramUsername] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
     const [matchedByCount, setMatchedByCount] = useState(0);
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const hasLoadedData = useRef(false); // Track si ya cargamos la verificación de Instagram
 
     useEffect(() => {
@@ -30,6 +33,7 @@ export const FlechazoProvider = ({ children }) => {
                     // Solo cargar datos si el usuario cambió (login/registro nuevo)
                     if (!hasLoadedData.current) {
                         loadInstagramVerification(session.user);
+                        loadProfile(session.user.id);
                         hasLoadedData.current = true;
                     }
                 } else {
@@ -39,6 +43,8 @@ export const FlechazoProvider = ({ children }) => {
                     setIsVerified(false);
                     setInstagramUsername('');
                     setMatchedByCount(0);
+                    setFirstName('');
+                    setLastName('');
                     hasLoadedData.current = false;
                 }
                 setLoading(false);
@@ -62,6 +68,7 @@ export const FlechazoProvider = ({ children }) => {
                 // Solo cargar si no se ha cargado antes
                 if (!hasLoadedData.current) {
                     await loadInstagramVerification(session.user);
+                    await loadProfile(session.user.id);
                     hasLoadedData.current = true;
                 }
             }
@@ -134,6 +141,26 @@ export const FlechazoProvider = ({ children }) => {
         if (user?.id) {
             await loadInstagramVerification(user);
         }
+    };
+
+    const loadProfile = async (userId) => {
+        const result = await getProfile(userId);
+        setFirstName(result.profile?.first_name || '');
+        setLastName(result.profile?.last_name || '');
+    };
+
+    const saveProfile = async (newFirstName, newLastName) => {
+        if (!user) return { success: false, error: 'No user logged in' };
+        if (!newFirstName?.trim() || !newLastName?.trim()) {
+            return { success: false, error: 'Nombre y apellido son obligatorios' };
+        }
+
+        const result = await upsertProfile(user.id, newFirstName, newLastName);
+        if (result.success) {
+            setFirstName(newFirstName.trim());
+            setLastName(newLastName.trim());
+        }
+        return result;
     };
 
     const loadMatchedByCount = async (username, myFlechazos, eventId) => {
@@ -215,9 +242,16 @@ export const FlechazoProvider = ({ children }) => {
         }
     };
 
-    const register = async (email, password) => {
+    const register = async (email, password, firstName, lastName) => {
+        if (!firstName?.trim() || !lastName?.trim()) {
+            return { success: false, error: 'Nombre y apellido son obligatorios' };
+        }
+
         try {
-            const { data, error } = await signUp(email, password);
+            const { data, error } = await signUp(email, password, {
+                first_name: firstName.trim(),
+                last_name: lastName.trim(),
+            });
             if (error) {
                 return { success: false, error };
             }
@@ -325,6 +359,10 @@ export const FlechazoProvider = ({ children }) => {
                 instagramUsername,
                 verificationCode,
                 matchedByCount,
+                firstName,
+                lastName,
+                fullName: `${firstName} ${lastName}`.trim(),
+                hasProfile: Boolean(firstName && lastName),
                 login,
                 register,
                 logout,
@@ -332,7 +370,8 @@ export const FlechazoProvider = ({ children }) => {
                 addFlechazo,
                 removeFlechazo,
                 updateFlechazo,
-                refreshInstagramVerification
+                refreshInstagramVerification,
+                saveProfile
             }}
         >
             {children}

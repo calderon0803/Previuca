@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoKeyOutline, IoPersonCircleOutline } from 'react-icons/io5';
+import QRCode from 'qrcode';
+import { IoKeyOutline, IoPersonCircleOutline, IoRibbonOutline } from 'react-icons/io5';
 import { usePenas } from '../contexts/PenasContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { getPenaMembers } from '../services/penasService';
+import PenaStamp from '../components/PenaStamp';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -33,6 +35,17 @@ const Photo = styled.div`
     inset: 0;
     background: linear-gradient(to top, rgba(10, 11, 14, 0.75), transparent 60%);
   }
+`;
+
+const StampBadgeWrap = styled.div`
+  position: absolute;
+  top: ${({ theme }) => theme.spacing(5)};
+  right: ${({ theme }) => theme.spacing(5)};
+  z-index: 1;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.surface};
+  padding: ${({ theme }) => theme.spacing(1)};
+  box-shadow: ${({ theme }) => theme.shadows.md};
 `;
 
 const PenaName = styled.h1`
@@ -118,14 +131,44 @@ const ModalHint = styled.p`
   margin: 0;
 `;
 
+const StampModalBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(4)};
+`;
+
+const QrImage = styled.img`
+  width: 220px;
+  height: 220px;
+  border-radius: ${({ theme }) => theme.radii.md};
+  background: #fff;
+  padding: ${({ theme }) => theme.spacing(3)};
+`;
+
+const PayloadText = styled.code`
+  display: block;
+  font-family: monospace;
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  padding: ${({ theme }) => theme.spacing(2)} ${({ theme }) => theme.spacing(3)};
+  word-break: break-all;
+  text-align: center;
+`;
+
 export default function PenaDetail() {
     const navigate = useNavigate();
     const { eventId, penaId } = useParams();
-    const { penas, myPena, loadPenas } = usePenas();
+    const { penas, myPena, loading: penasLoading, loadPenas } = usePenas();
     const { user, loading: flechazoLoading } = useFlechazo();
     const [members, setMembers] = useState([]);
     const [loadingMembers, setLoadingMembers] = useState(true);
     const [showCodeModal, setShowCodeModal] = useState(false);
+    const [showStampModal, setShowStampModal] = useState(false);
+    const [qrDataUrl, setQrDataUrl] = useState(null);
+    const [stampPayload, setStampPayload] = useState('');
 
     const pena = penas.find((p) => p.id === penaId) || (myPena?.id === penaId ? myPena : null);
 
@@ -143,23 +186,52 @@ export default function PenaDetail() {
         });
     }, [penaId]);
 
-    if (!pena) {
+    useEffect(() => {
+        if (!pena) return;
+        // Payload propio de la app: inerte para cualquier lector de QR genérico,
+        // solo la pantalla de escaneo de Previuca hace algo con este prefijo.
+        const payload = `previuca:stamp:${eventId}:${pena.id}`;
+        setStampPayload(payload);
+        QRCode.toDataURL(payload, { margin: 1, width: 400 })
+            .then(setQrDataUrl)
+            .catch((error) => console.error('Error generating stamp QR:', error));
+    }, [pena?.id, eventId]);
+
+    const isOwnPena = myPena?.id === penaId;
+
+    if (flechazoLoading || penasLoading) {
         return (
             <Container>
                 <PageHeader title="Peña" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
                 <Content>
-                    <EmptyText>No se encontró esta peña.</EmptyText>
+                    <EmptyText>Cargando...</EmptyText>
                 </Content>
             </Container>
         );
     }
 
-    const isOwnPena = myPena?.id === penaId;
+    // Solo el perfil de tu propia peña es visible; el resto de peñas del
+    // evento solo aparecen como nombre en el listado, sin poder entrar.
+    if (!pena || !isOwnPena) {
+        return (
+            <Container>
+                <PageHeader title="Peña" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
+                <Content>
+                    <EmptyText>
+                        {!pena ? 'No se encontró esta peña.' : 'Solo puedes ver el perfil de tu propia peña.'}
+                    </EmptyText>
+                </Content>
+            </Container>
+        );
+    }
 
     return (
         <Container>
             <PageHeader title="" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
             <Photo $color={pena.color} $image={pena.image_url}>
+                <StampBadgeWrap>
+                    <PenaStamp pena={pena} size={56} locked={false} />
+                </StampBadgeWrap>
                 <PenaName>{pena.name}</PenaName>
             </Photo>
             <Content>
@@ -182,18 +254,36 @@ export default function PenaDetail() {
                     </MemberList>
                 )}
 
-                {isOwnPena && (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <Button variant="secondary" onClick={() => setShowStampModal(true)}>
+                        <IoRibbonOutline size={16} />
+                        Mostrar sello
+                    </Button>
                     <Button variant="secondary" onClick={() => setShowCodeModal(true)}>
                         <IoKeyOutline size={16} />
                         Ver código
                     </Button>
-                )}
+                </div>
             </Content>
 
             <Modal visible={showCodeModal} onClose={() => setShowCodeModal(false)}>
                 <ModalTitle>Código de la peña</ModalTitle>
                 <CodeValue>{pena.code}</CodeValue>
                 <ModalHint>Compártelo con quien quieras que se una a «{pena.name}».</ModalHint>
+            </Modal>
+
+            <Modal visible={showStampModal} onClose={() => setShowStampModal(false)}>
+                <ModalTitle>Sello de «{pena.name}»</ModalTitle>
+                <StampModalBody>
+                    <PenaStamp pena={pena} size={120} locked={false} />
+                    {qrDataUrl && <QrImage src={qrDataUrl} alt="Código para desbloquear este sello" />}
+                    <ModalHint>
+                        Que alguien de otra peña lo escanee desde Álbum de sellos → Escanear, para
+                        añadir el sello de «{pena.name}» a su álbum. Si su cámara no funciona, puede
+                        escribir este código a mano:
+                    </ModalHint>
+                    <PayloadText>{stampPayload}</PayloadText>
+                </StampModalBody>
             </Modal>
         </Container>
     );

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { IoAdd, IoClose, IoPerson } from 'react-icons/io5';
+import { Heart } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -85,8 +86,10 @@ const FlechazoName = styled.span`
 `;
 
 const MatchBadge = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
+  display: inline-flex;
+  align-items: center;
   margin-right: ${({ theme }) => theme.spacing(2)};
+  color: ${({ theme }) => theme.colors.accent};
 `;
 
 const EmptySlot = styled.div`
@@ -215,7 +218,7 @@ export default function FlechazoList() {
                 {flechazo ? (
                   <FlechazoCard $isMatch={isMatch}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      {isMatch && <MatchBadge>❤️</MatchBadge>}
+                      {isMatch && <MatchBadge><Heart size={16} fill="currentColor" /></MatchBadge>}
                       <FlechazoName $isMatch={isMatch}>@{flechazo}</FlechazoName>
                     </div>
                     <IconButton size="sm" variant="ghost" onClick={() => removeFlechazo(index, eventId)} aria-label="Eliminar">

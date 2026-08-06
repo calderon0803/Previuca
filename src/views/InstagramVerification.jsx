@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { IoLogoInstagram, IoCheckmarkCircle, IoCloseCircle, IoCopy } from 'react-icons/io5';
+import { CheckCircle2 } from 'lucide-react';
 import {
     createInstagramVerification,
     verifyInstagramCode,
@@ -304,7 +305,8 @@ export default function InstagramVerification() {
                                 />
                             </InputGroup>
                             <Description style={{ marginTop: '4px', textAlign: 'center' }}>
-                                ✓ Tu Instagram está verificado. Ya puedes usar la sección Flechazo.
+                                <CheckCircle2 size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                                Tu Instagram está verificado. Ya puedes usar la sección Flechazo.
                             </Description>
                             <Button fullWidth size="lg" onClick={() => navigate(backPath)}>
                                 Ir a Mis Flechazos

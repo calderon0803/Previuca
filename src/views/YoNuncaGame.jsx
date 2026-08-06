@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoSettingsOutline } from 'react-icons/io5';
+import { Beer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { yoNuncaQuestions as defaultQuestions } from '../data/yoNuncaQuestions';
 import OptionsEditor from '../components/OptionsEditor';
@@ -163,7 +164,9 @@ export default function YoNuncaGame() {
                 </AnimatePresence>
 
                 <Instruction>
-                    {isLastQuestion ? '¡Última pregunta!' : 'Si lo has hecho, ¡bebe! 🍺'}
+                    {isLastQuestion ? '¡Última pregunta!' : (
+                        <>Si lo has hecho, ¡bebe! <Beer size={16} style={{ verticalAlign: 'middle' }} /></>
+                    )}
                 </Instruction>
             </Content>
 

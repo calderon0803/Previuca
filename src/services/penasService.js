@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { unlockStamp } from './stampService';
 
 const generatePenaCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -62,6 +63,9 @@ export const createPena = async ({ eventId, userId, name, color, imageFile }) =>
 
         if (memberError) throw memberError;
 
+        // Nadie tiene que escanear su propia peña para tener su sello.
+        unlockStamp(userId, pena.id, eventId);
+
         return { success: true, pena };
     } catch (error) {
         console.error('Error creating pena:', error);
@@ -90,6 +94,9 @@ export const joinPenaByCode = async (eventId, userId, code) => {
             .insert([{ user_id: userId, pena_id: pena.id, event_id: eventId }]);
 
         if (memberError) throw memberError;
+
+        // Nadie tiene que escanear su propia peña para tener su sello.
+        unlockStamp(userId, pena.id, eventId);
 
         return { success: true, pena };
     } catch (error) {
@@ -140,8 +147,7 @@ export const getMyPena = async (userId, eventId) => {
     }
 };
 
-// Miembros de una peña concreta, con su nombre de Instagram si lo tienen (no hay
-// tabla de perfiles en la app; es el único nombre "público" que existe hoy)
+// Miembros de una peña concreta, con su nombre y apellido
 export const getPenaMembers = async (penaId) => {
     try {
         const { data: members, error } = await supabase
@@ -155,15 +161,17 @@ export const getPenaMembers = async (penaId) => {
 
         const userIds = members.map((m) => m.user_id);
         const { data: profiles } = await supabase
-            .from('instagram_verification')
-            .select('user_id, instagram_username')
+            .from('profiles')
+            .select('user_id, first_name, last_name')
             .in('user_id', userIds);
 
-        const usernameByUserId = new Map((profiles || []).map((p) => [p.user_id, p.instagram_username]));
+        const nameByUserId = new Map(
+            (profiles || []).map((p) => [p.user_id, `${p.first_name} ${p.last_name}`.trim()])
+        );
 
         const enrichedMembers = members.map((m) => ({
             ...m,
-            displayName: usernameByUserId.get(m.user_id) || 'Miembro',
+            displayName: nameByUserId.get(m.user_id) || 'Miembro',
         }));
 
         return { success: true, members: enrichedMembers };

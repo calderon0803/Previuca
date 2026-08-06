@@ -5,7 +5,7 @@ import { createPena as createPenaService, joinPenaByCode, getPenasByEvent, getMy
 const PenasContext = createContext();
 
 export const PenasProvider = ({ children }) => {
-    const { user } = useFlechazo();
+    const { user, hasProfile } = useFlechazo();
     const [penas, setPenas] = useState([]);
     const [myPena, setMyPena] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -30,6 +30,7 @@ export const PenasProvider = ({ children }) => {
 
     const createPena = async ({ eventId, name, color, imageFile }) => {
         if (!user || !eventId) return { success: false, error: 'Debes tener un evento activo' };
+        if (!hasProfile) return { success: false, error: 'Completa tu nombre y apellido en Ajustes antes de crear una peña' };
         if (myPena) return { success: false, error: 'Ya perteneces a una peña' };
 
         const result = await createPenaService({ eventId, userId: user.id, name, color, imageFile });
@@ -41,6 +42,7 @@ export const PenasProvider = ({ children }) => {
 
     const joinPena = async (eventId, code) => {
         if (!user || !eventId) return { success: false, error: 'Debes tener un evento activo' };
+        if (!hasProfile) return { success: false, error: 'Completa tu nombre y apellido en Ajustes antes de unirte a una peña' };
         if (myPena) return { success: false, error: 'Ya perteneces a una peña' };
 
         const result = await joinPenaByCode(eventId, user.id, code);

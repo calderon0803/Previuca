@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
+import { Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
 import { cardRules, generateDeck, shuffleDeck } from '../data/reyDeCopasRules';
@@ -114,6 +115,10 @@ const RuleContainer = styled.div`
 `;
 
 const RuleName = styled.h3`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${({ theme }) => theme.spacing(2)};
   font-size: ${({ theme }) => theme.typography.fontSize.xl};
   font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text.primary};
@@ -269,7 +274,8 @@ export default function ReyDeCopasGame() {
           </CounterText>
           {kingsDrawn > 0 && (
             <KingsText>
-              👑 Reyes: {kingsDrawn}/4
+              <Crown size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+              Reyes: {kingsDrawn}/4
             </KingsText>
           )}
         </Counter>
@@ -289,7 +295,10 @@ export default function ReyDeCopasGame() {
 
               {rule && (
                 <RuleContainer>
-                  <RuleName>{rule.rule}</RuleName>
+                  <RuleName>
+                    <rule.icon size={22} />
+                    {rule.rule}
+                  </RuleName>
                   <RuleDescription>{rule.description}</RuleDescription>
                 </RuleContainer>
               )}

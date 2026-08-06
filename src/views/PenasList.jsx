@@ -80,14 +80,6 @@ const PenaRow = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radii.md};
   padding: ${({ theme }) => theme.spacing(3)};
-  cursor: pointer;
-  transition: background ${({ theme }) => theme.transitions.fast},
-    border-color ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.surfaceHover};
-    border-color: ${({ theme }) => theme.colors.borderStrong};
-  }
 `;
 
 const Thumb = styled.div`
@@ -161,6 +153,8 @@ export default function PenasList() {
         loadPenas(eventId);
     }, [eventId, user?.id, flechazoLoading]);
 
+    const otherPenas = penas.filter((pena) => pena.id !== myPena?.id);
+
     const handleJoin = async () => {
         if (!joinCode.trim()) return;
         setJoining(true);
@@ -195,16 +189,16 @@ export default function PenasList() {
                     </ActionsRow>
                 )}
 
-                <SectionLabel>Peñas apuntadas</SectionLabel>
+                <SectionLabel>Resto de peñas</SectionLabel>
 
                 {loading ? (
                     <EmptyText>Cargando...</EmptyText>
-                ) : penas.length === 0 ? (
-                    <EmptyText>Todavía no hay ninguna peña en este evento.</EmptyText>
+                ) : otherPenas.length === 0 ? (
+                    <EmptyText>Todavía no hay ninguna otra peña en este evento.</EmptyText>
                 ) : (
                     <List>
-                        {penas.map((pena) => (
-                            <PenaRow key={pena.id} onClick={() => navigate(`/eventos/${eventId}/penas/${pena.id}`)}>
+                        {otherPenas.map((pena) => (
+                            <PenaRow key={pena.id}>
                                 <Thumb $color={pena.color} $image={pena.image_url} />
                                 <PenaInfo>
                                     <PenaName>{pena.name}</PenaName>

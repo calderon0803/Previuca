@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh, IoEye, IoEyeOff, IoPlay, IoTrashOutline, IoCheckmark } from 'react-icons/io5';
+import { Palette, Beer } from 'lucide-react';
 import { trazoTragoWords } from '../data/trazoTragoWords';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
@@ -351,7 +352,9 @@ export default function TrazoTragoGame() {
             <CanvasContainer>
                 {!isGameStarted && (
                     <StartOverlay>
-                        <StartTitle>Trazo & Trago 🎨</StartTitle>
+                        <StartTitle>
+                            Trazo & Trago <Palette size={26} style={{ verticalAlign: 'middle', marginLeft: 4 }} />
+                        </StartTitle>
                         <StartDescription>
                             Dibuja la palabra asignada y haz que tus amigos adivinen.
                             ¡El tiempo corre!
@@ -381,7 +384,8 @@ export default function TrazoTragoGame() {
                             Por tardar tanto, el dibujante bebe:
                         </StartDescription>
                         <ResultValue>
-                            {calculateSips()} {calculateSips() === 1 ? 'trago' : 'tragos'} 🍺
+                            {calculateSips()} {calculateSips() === 1 ? 'trago' : 'tragos'}{' '}
+                            <Beer size={28} style={{ verticalAlign: 'middle' }} />
                         </ResultValue>
                         <Button size="lg" onClick={() => setShowResult(false)}>
                             Aceptar
