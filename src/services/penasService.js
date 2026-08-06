@@ -20,7 +20,7 @@ const uploadPenaImage = async (userId, imageFile) => {
 };
 
 // Crea una peña nueva (sube imagen, genera código único, crea la membership del creador)
-export const createPena = async ({ fiestaId, userId, name, color, imageFile }) => {
+export const createPena = async ({ eventId, userId, name, color, imageFile }) => {
     try {
         const imageUrl = imageFile ? await uploadPenaImage(userId, imageFile) : null;
 
@@ -35,7 +35,7 @@ export const createPena = async ({ fiestaId, userId, name, color, imageFile }) =
             const { data, error } = await supabase
                 .from('penas')
                 .insert([{
-                    fiesta_id: fiestaId,
+                    event_id: eventId,
                     name: name.trim(),
                     color,
                     image_url: imageUrl,
@@ -70,14 +70,14 @@ export const createPena = async ({ fiestaId, userId, name, color, imageFile }) =
 };
 
 // Une al usuario a una peña existente usando su código
-export const joinPenaByCode = async (fiestaId, userId, code) => {
+export const joinPenaByCode = async (eventId, userId, code) => {
     try {
         const cleanCode = code.trim().toUpperCase();
 
         const { data: pena, error: penaError } = await supabase
             .from('penas')
             .select('*')
-            .eq('fiesta_id', fiestaId)
+            .eq('event_id', eventId)
             .eq('code', cleanCode)
             .single();
 
@@ -98,13 +98,13 @@ export const joinPenaByCode = async (fiestaId, userId, code) => {
     }
 };
 
-// Todas las peñas apuntadas a una fiesta, con su número de miembros
-export const getPenasByFiesta = async (fiestaId) => {
+// Todas las peñas apuntadas a un evento, con su número de miembros
+export const getPenasByEvent = async (eventId) => {
     try {
         const { data, error } = await supabase
             .from('penas')
             .select('*, pena_members(count)')
-            .eq('fiesta_id', fiestaId)
+            .eq('event_id', eventId)
             .order('created_at', { ascending: true });
 
         if (error) throw error;

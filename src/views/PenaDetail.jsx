@@ -139,7 +139,7 @@ export default function PenaDetail() {
     if (!pena) {
         return (
             <Container>
-                <PageHeader title="Peña" onBack={() => navigate('/fiestas/penas')} />
+                <PageHeader title="Peña" onBack={() => navigate('/eventos/penas')} />
                 <Content>
                     <EmptyText>No se encontró esta peña.</EmptyText>
                 </Content>
@@ -151,7 +151,7 @@ export default function PenaDetail() {
 
     return (
         <Container>
-            <PageHeader title="" onBack={() => navigate('/fiestas/penas')} />
+            <PageHeader title="" onBack={() => navigate('/eventos/penas')} />
             <Photo $color={pena.color} $image={pena.image_url}>
                 <PenaName>{pena.name}</PenaName>
             </Photo>

@@ -1,68 +1,83 @@
 -- ===================================================
--- Previuca — Sección "Fiestas" (Peñas + Crush enlazado)
+-- Previuca — Sección "Eventos" (Peñas + Crush enlazado)
 -- ===================================================
--- Ejecuta este script en el SQL Editor de tu proyecto de Supabase.
+-- Ejecuta este script en el SQL Editor de tu proyecto de Supabase
+-- (o vía `supabase db query --db-url ... -f supabase-setup-eventos.sql`).
 -- Requiere que supabase-setup.sql ya se haya ejecutado antes
 -- (usa la tabla users_crushes existente).
+--
+-- Este script sustituye a un intento anterior que usaba una tabla
+-- "penas" con una columna "event_id" suelta y sin relación a nada.
+-- Primero limpia esa estructura antigua y luego crea la nueva completa.
 
 -- -------------------------------------------------
--- Table: fiestas
--- Fiestas patronales de los municipios. Se dan de alta
+-- Limpieza de la estructura antigua/incompleta
+-- -------------------------------------------------
+DROP TABLE IF EXISTS penas CASCADE;
+ALTER TABLE users_crushes DROP COLUMN IF EXISTS event_id;
+
+-- -------------------------------------------------
+-- Table: eventos
+-- Eventos/fiestas patronales de los municipios. Se dan de alta
 -- a mano aquí (no hay flujo de creación en la app todavía).
 -- -------------------------------------------------
-CREATE TABLE IF NOT EXISTS fiestas (
+CREATE TABLE IF NOT EXISTS eventos (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
     code TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
-ALTER TABLE fiestas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE eventos ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Authenticated users can look up fiestas"
-    ON fiestas
+DROP POLICY IF EXISTS "Authenticated users can look up eventos" ON eventos;
+CREATE POLICY "Authenticated users can look up eventos"
+    ON eventos
     FOR SELECT
     USING (auth.role() = 'authenticated');
 
--- Ejemplo para dar de alta una fiesta de prueba (ajusta nombre/código):
--- INSERT INTO fiestas (name, code) VALUES ('Fiestas de Prueba', 'PRUEBA2026');
+-- Ejemplo para dar de alta un evento de prueba (ajusta nombre/código):
+-- INSERT INTO eventos (name, code) VALUES ('Fiestas de Prueba', 'PRUEBA2026');
 
 -- -------------------------------------------------
--- Table: user_fiestas
--- Fiesta activa de cada usuario (una a la vez).
+-- Table: user_eventos
+-- Evento activo de cada usuario (uno a la vez).
 -- -------------------------------------------------
-CREATE TABLE IF NOT EXISTS user_fiestas (
+CREATE TABLE IF NOT EXISTS user_eventos (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-    fiesta_id UUID REFERENCES fiestas(id) ON DELETE CASCADE NOT NULL,
+    event_id UUID REFERENCES eventos(id) ON DELETE CASCADE NOT NULL,
     joined_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_fiestas_fiesta_id ON user_fiestas(fiesta_id);
+CREATE INDEX IF NOT EXISTS idx_user_eventos_event_id ON user_eventos(event_id);
 
-ALTER TABLE user_fiestas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_eventos ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view their own fiesta"
-    ON user_fiestas
+DROP POLICY IF EXISTS "Users can view their own evento" ON user_eventos;
+CREATE POLICY "Users can view their own evento"
+    ON user_eventos
     FOR SELECT
     USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can join a fiesta"
-    ON user_fiestas
+DROP POLICY IF EXISTS "Users can join an evento" ON user_eventos;
+CREATE POLICY "Users can join an evento"
+    ON user_eventos
     FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can switch their fiesta"
-    ON user_fiestas
+DROP POLICY IF EXISTS "Users can switch their evento" ON user_eventos;
+CREATE POLICY "Users can switch their evento"
+    ON user_eventos
     FOR UPDATE
     USING (auth.uid() = user_id);
 
 -- -------------------------------------------------
 -- Table: penas
--- Peñas apuntadas a una fiesta concreta.
+-- Peñas apuntadas a un evento concreto.
 -- -------------------------------------------------
 CREATE TABLE IF NOT EXISTS penas (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    fiesta_id UUID REFERENCES fiestas(id) ON DELETE CASCADE NOT NULL,
+    event_id UUID REFERENCES eventos(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
     color TEXT NOT NULL,
     image_url TEXT,
@@ -71,15 +86,17 @@ CREATE TABLE IF NOT EXISTS penas (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_penas_fiesta_id ON penas(fiesta_id);
+CREATE INDEX IF NOT EXISTS idx_penas_event_id ON penas(event_id);
 
 ALTER TABLE penas ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Authenticated users can view penas" ON penas;
 CREATE POLICY "Authenticated users can view penas"
     ON penas
     FOR SELECT
     USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Users can create their own pena" ON penas;
 CREATE POLICY "Users can create their own pena"
     ON penas
     FOR INSERT
@@ -99,26 +116,29 @@ CREATE INDEX IF NOT EXISTS idx_pena_members_pena_id ON pena_members(pena_id);
 
 ALTER TABLE pena_members ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Authenticated users can view pena members" ON pena_members;
 CREATE POLICY "Authenticated users can view pena members"
     ON pena_members
     FOR SELECT
     USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Users can join a pena" ON pena_members;
 CREATE POLICY "Users can join a pena"
     ON pena_members
     FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can leave their pena" ON pena_members;
 CREATE POLICY "Users can leave their pena"
     ON pena_members
     FOR DELETE
     USING (auth.uid() = user_id);
 
 -- -------------------------------------------------
--- users_crushes: enlazar cada crush a la fiesta activa
+-- users_crushes: enlazar cada crush al evento activo
 -- -------------------------------------------------
-ALTER TABLE users_crushes ADD COLUMN IF NOT EXISTS fiesta_id UUID REFERENCES fiestas(id);
-CREATE INDEX IF NOT EXISTS idx_users_crushes_fiesta_id ON users_crushes(fiesta_id);
+ALTER TABLE users_crushes ADD COLUMN IF NOT EXISTS event_id UUID REFERENCES eventos(id);
+CREATE INDEX IF NOT EXISTS idx_users_crushes_event_id ON users_crushes(event_id);
 
 -- -------------------------------------------------
 -- Storage: bucket para las fotos de las peñas
@@ -127,11 +147,13 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('pena-images', 'pena-images', true)
 ON CONFLICT (id) DO NOTHING;
 
+DROP POLICY IF EXISTS "Anyone can view pena images" ON storage.objects;
 CREATE POLICY "Anyone can view pena images"
     ON storage.objects
     FOR SELECT
     USING (bucket_id = 'pena-images');
 
+DROP POLICY IF EXISTS "Authenticated users can upload their pena image" ON storage.objects;
 CREATE POLICY "Authenticated users can upload their pena image"
     ON storage.objects
     FOR INSERT
@@ -146,9 +168,9 @@ CREATE POLICY "Authenticated users can upload their pena image"
 -- -------------------------------------------------
 DO $$
 BEGIN
-    RAISE NOTICE 'Tablas de Fiestas creadas correctamente!';
-    RAISE NOTICE '1. fiestas - da de alta al menos una fila para poder canjear un codigo';
-    RAISE NOTICE '2. user_fiestas, penas, pena_members - listas';
-    RAISE NOTICE '3. users_crushes.fiesta_id - columna añadida';
+    RAISE NOTICE 'Tablas de Eventos creadas correctamente!';
+    RAISE NOTICE '1. eventos - da de alta al menos una fila para poder canjear un codigo';
+    RAISE NOTICE '2. user_eventos, penas, pena_members - listas';
+    RAISE NOTICE '3. users_crushes.event_id - columna añadida';
     RAISE NOTICE '4. bucket pena-images - creado (publico en lectura)';
 END $$;

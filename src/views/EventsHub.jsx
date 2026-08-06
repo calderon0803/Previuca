@@ -1,13 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { useFiesta } from '../contexts/FiestaContext';
+import { useEvent } from '../contexts/EventContext';
 import GameModeCard from '../components/GameModeCard';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 
 const subsections = [
-    { id: 'penas', name: 'Peñas', icon: '🎪', route: '/fiestas/penas' },
+    { id: 'penas', name: 'Peñas', icon: '🎪', route: '/eventos/penas' },
     { id: 'crush', name: 'Crush', icon: '💕', route: '/crush' },
 ];
 
@@ -79,21 +79,21 @@ const LockedText = styled.p`
   margin-bottom: ${({ theme }) => theme.spacing(6)};
 `;
 
-export default function FiestasHub() {
+export default function EventsHub() {
     const navigate = useNavigate();
-    const { hasFiesta, fiestaName, loading } = useFiesta();
+    const { hasEvent, eventName, loading } = useEvent();
 
     if (loading) return null;
 
-    if (!hasFiesta) {
+    if (!hasEvent) {
         return (
             <Container>
-                <PageHeader title="Fiestas" onBack={() => navigate('/')} />
+                <PageHeader title="Eventos" onBack={() => navigate('/')} />
                 <Content>
                     <LockedState>
-                        <LockedTitle>Necesitas un código de fiesta</LockedTitle>
+                        <LockedTitle>Necesitas un código de evento</LockedTitle>
                         <LockedText>
-                            Introduce el código de tu fiesta en Ajustes para desbloquear esta sección.
+                            Introduce el código de tu evento en Ajustes para desbloquear esta sección.
                         </LockedText>
                         <Button size="lg" onClick={() => navigate('/ajustes')}>
                             Ir a Ajustes
@@ -106,7 +106,7 @@ export default function FiestasHub() {
 
     return (
         <Container>
-            <PageHeader title={fiestaName || 'Fiestas'} onBack={() => navigate('/')} />
+            <PageHeader title={eventName || 'Eventos'} onBack={() => navigate('/')} />
             <Content>
                 <SectionLabel>
                     <SectionEyebrow>Subsecciones</SectionEyebrow>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoPersonCircle, IoLogOut } from 'react-icons/io5';
 import { useCrush } from '../contexts/CrushContext';
-import { useFiesta } from '../contexts/FiestaContext';
+import { useEvent } from '../contexts/EventContext';
 import { deleteInstagramVerification } from '../services/instagramService';
 import { supabase } from '../config/supabase';
 import PageHeader from '../components/ui/PageHeader';
@@ -104,9 +104,9 @@ const Settings = () => {
         refreshInstagramVerification,
         loading: contextLoading
     } = useCrush();
-    const { hasFiesta, fiestaName, redeemCode } = useFiesta();
-    const [fiestaCode, setFiestaCode] = useState('');
-    const [fiestaStatus, setFiestaStatus] = useState('');
+    const { hasEvent, eventName, redeemCode } = useEvent();
+    const [eventCode, setEventCode] = useState('');
+    const [eventStatus, setEventStatus] = useState('');
     const [redeeming, setRedeeming] = useState(false);
 
     // Construir objeto de datos de Instagram desde el contexto
@@ -173,20 +173,20 @@ const Settings = () => {
         }
     };
 
-    const handleRedeemFiestaCode = async () => {
-        if (!fiestaCode.trim()) return;
+    const handleRedeemEventCode = async () => {
+        if (!eventCode.trim()) return;
 
         setRedeeming(true);
-        setFiestaStatus('');
+        setEventStatus('');
 
-        const result = await redeemCode(fiestaCode);
+        const result = await redeemCode(eventCode);
 
         setRedeeming(false);
         if (result.success) {
-            setFiestaStatus(`¡Apuntado a ${result.fiesta.name}!`);
-            setFiestaCode('');
+            setEventStatus(`¡Apuntado a ${result.evento.name}!`);
+            setEventCode('');
         } else {
-            setFiestaStatus(result.error || 'Código no válido');
+            setEventStatus(result.error || 'Código no válido');
         }
     };
 
@@ -264,35 +264,35 @@ const Settings = () => {
                 </Section>
 
                 <Section>
-                    <SectionTitle>Fiesta</SectionTitle>
+                    <SectionTitle>Evento</SectionTitle>
 
-                    {hasFiesta ? (
+                    {hasEvent ? (
                         <SettingItem>
                             <SettingInfo>
-                                <SettingLabel>Fiesta activa</SettingLabel>
-                                <SettingValue>{fiestaName}</SettingValue>
+                                <SettingLabel>Evento activo</SettingLabel>
+                                <SettingValue>{eventName}</SettingValue>
                             </SettingInfo>
                         </SettingItem>
                     ) : (
                         <SettingItem>
                             <SettingInfo>
-                                <SettingLabel>Código de fiesta</SettingLabel>
+                                <SettingLabel>Código de evento</SettingLabel>
                                 <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                                     <Input
                                         placeholder="CÓDIGO"
-                                        value={fiestaCode}
-                                        onChange={(e) => setFiestaCode(e.target.value.toUpperCase())}
+                                        value={eventCode}
+                                        onChange={(e) => setEventCode(e.target.value.toUpperCase())}
                                         disabled={redeeming}
                                     />
                                     <Button
                                         variant="secondary"
-                                        onClick={handleRedeemFiestaCode}
-                                        disabled={!fiestaCode.trim() || redeeming}
+                                        onClick={handleRedeemEventCode}
+                                        disabled={!eventCode.trim() || redeeming}
                                     >
                                         {redeeming ? '...' : 'Unirme'}
                                     </Button>
                                 </div>
-                                {fiestaStatus && <SettingValue style={{ marginTop: '8px' }}>{fiestaStatus}</SettingValue>}
+                                {eventStatus && <SettingValue style={{ marginTop: '8px' }}>{eventStatus}</SettingValue>}
                             </SettingInfo>
                         </SettingItem>
                     )}

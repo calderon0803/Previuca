@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoLockClosed } from 'react-icons/io5';
-import { useFiesta } from '../contexts/FiestaContext';
+import { useEvent } from '../contexts/EventContext';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -177,10 +177,10 @@ const SecondaryLabel = styled.span`
 
 export default function MainMenu() {
   const navigate = useNavigate();
-  const { hasFiesta } = useFiesta();
+  const { hasEvent } = useEvent();
 
-  const handleFiestasClick = () => {
-    navigate(hasFiesta ? '/fiestas' : '/ajustes');
+  const handleEventClick = () => {
+    navigate(hasEvent ? '/eventos' : '/ajustes');
   };
 
   return (
@@ -200,17 +200,17 @@ export default function MainMenu() {
           <HeroSubtitle>Diversión sin límites</HeroSubtitle>
         </HeroCard>
 
-        <HeroCard onClick={handleFiestasClick} $locked={!hasFiesta}>
+        <HeroCard onClick={handleEventClick} $locked={!hasEvent}>
           <HeroWatermark aria-hidden="true">🎉</HeroWatermark>
-          {!hasFiesta && (
+          {!hasEvent && (
             <LockBadge>
               <IoLockClosed size={16} />
             </LockBadge>
           )}
-          <HeroLabel>{hasFiesta ? 'Empezar' : 'Bloqueado'}</HeroLabel>
-          <HeroTitle>Fiestas</HeroTitle>
+          <HeroLabel>{hasEvent ? 'Empezar' : 'Bloqueado'}</HeroLabel>
+          <HeroTitle>Eventos</HeroTitle>
           <HeroSubtitle>
-            {hasFiesta ? 'Peñas y Crush de tu fiesta' : 'Introduce un código en Ajustes'}
+            {hasEvent ? 'Peñas y Crush de tu evento' : 'Introduce un código en Ajustes'}
           </HeroSubtitle>
         </HeroCard>
 

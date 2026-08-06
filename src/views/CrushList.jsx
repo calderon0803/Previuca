@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useCrush } from '../contexts/CrushContext';
-import { useFiesta } from '../contexts/FiestaContext';
+import { useEvent } from '../contexts/EventContext';
 import { IoAdd, IoClose, IoPerson } from 'react-icons/io5';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
@@ -136,18 +136,18 @@ export default function CrushList() {
     instagramUsername,
     matchedByCount
   } = useCrush();
-  const { fiestaId } = useFiesta();
+  const { eventId } = useEvent();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCrushName, setNewCrushName] = useState('');
 
   useEffect(() => {
-    if (fiestaId) {
-      loadCrushes(fiestaId);
+    if (eventId) {
+      loadCrushes(eventId);
     }
-  }, [fiestaId]);
+  }, [eventId]);
 
   const handleBack = () => {
-    navigate('/fiestas');
+    navigate('/eventos');
   };
 
   const handleAddClick = () => {
@@ -167,7 +167,7 @@ export default function CrushList() {
 
   const handleConfirmAdd = () => {
     if (newCrushName.trim()) {
-      addCrush(newCrushName, fiestaId);
+      addCrush(newCrushName, eventId);
       setIsModalOpen(false);
     }
   };
@@ -219,7 +219,7 @@ export default function CrushList() {
                       {isMatch && <MatchBadge>❤️</MatchBadge>}
                       <CrushName $isMatch={isMatch}>@{crush}</CrushName>
                     </div>
-                    <IconButton size="sm" variant="ghost" onClick={() => removeCrush(index, fiestaId)} aria-label="Eliminar">
+                    <IconButton size="sm" variant="ghost" onClick={() => removeCrush(index, eventId)} aria-label="Eliminar">
                       <IoClose color="#E5484D" />
                     </IconButton>
                   </CrushCard>

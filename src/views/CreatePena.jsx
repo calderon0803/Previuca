@@ -115,7 +115,7 @@ export default function CreatePena() {
 
         setSubmitting(false);
         if (result.success) {
-            navigate(`/fiestas/penas/${result.pena.id}`, { replace: true });
+            navigate(`/eventos/penas/${result.pena.id}`, { replace: true });
         } else {
             setError(result.error || 'No se pudo crear la peña');
         }
@@ -123,7 +123,7 @@ export default function CreatePena() {
 
     return (
         <Container>
-            <PageHeader title="Crear peña" onBack={() => navigate('/fiestas/penas')} />
+            <PageHeader title="Crear peña" onBack={() => navigate('/eventos/penas')} />
             <Content>
                 <Field>
                     <Label>Nombre</Label>

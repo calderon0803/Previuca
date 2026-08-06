@@ -167,16 +167,16 @@ export default function PenasList() {
 
     return (
         <Container>
-            <PageHeader title="Peñas" onBack={() => navigate('/fiestas')} />
+            <PageHeader title="Peñas" onBack={() => navigate('/eventos')} />
             <Content>
                 {myPena ? (
-                    <OwnPenaBanner onClick={() => navigate(`/fiestas/penas/${myPena.id}`)}>
+                    <OwnPenaBanner onClick={() => navigate(`/eventos/penas/${myPena.id}`)}>
                         <OwnPenaLabel>Tu peña</OwnPenaLabel>
                         <OwnPenaName>{myPena.name}</OwnPenaName>
                     </OwnPenaBanner>
                 ) : (
                     <ActionsRow>
-                        <Button fullWidth onClick={() => navigate('/fiestas/penas/nueva')}>
+                        <Button fullWidth onClick={() => navigate('/eventos/penas/nueva')}>
                             Crear peña
                         </Button>
                         <Button variant="secondary" fullWidth onClick={() => setShowJoinModal(true)}>
@@ -190,11 +190,11 @@ export default function PenasList() {
                 {loading ? (
                     <EmptyText>Cargando...</EmptyText>
                 ) : penas.length === 0 ? (
-                    <EmptyText>Todavía no hay ninguna peña en esta fiesta.</EmptyText>
+                    <EmptyText>Todavía no hay ninguna peña en este evento.</EmptyText>
                 ) : (
                     <List>
                         {penas.map((pena) => (
-                            <PenaRow key={pena.id} onClick={() => navigate(`/fiestas/penas/${pena.id}`)}>
+                            <PenaRow key={pena.id} onClick={() => navigate(`/eventos/penas/${pena.id}`)}>
                                 <Thumb $color={pena.color} $image={pena.image_url} />
                                 <PenaInfo>
                                     <PenaName>{pena.name}</PenaName>

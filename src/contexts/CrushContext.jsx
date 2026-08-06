@@ -7,7 +7,7 @@ const CrushContext = createContext();
 export const CrushProvider = ({ children }) => {
     const [user, setUser] = useState(null); // Ahora será el usuario de Supabase
     const [loading, setLoading] = useState(true);
-    const [crushes, setCrushes] = useState([]); // Lista de crushes del usuario (de la fiesta activa)
+    const [crushes, setCrushes] = useState([]); // Lista de crushes del usuario (del evento activo)
     const [matches, setMatches] = useState([]); // Crushes con match mutuo
     const [isVerified, setIsVerified] = useState(false);
     const [instagramUsername, setInstagramUsername] = useState('');
@@ -72,17 +72,17 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    // Los crushes están enlazados a la fiesta activa: se cargan explícitamente
-    // desde la pantalla (que conoce el fiestaId via useFiesta), no en el login.
-    const loadCrushes = async (fiestaId) => {
-        if (!user || !fiestaId) return [];
+    // Los crushes están enlazados al evento activo: se cargan explícitamente
+    // desde la pantalla (que conoce el eventId via useEvent), no en el login.
+    const loadCrushes = async (eventId) => {
+        if (!user || !eventId) return [];
 
         try {
             const { data, error } = await supabase
                 .from('users_crushes')
                 .select('match_name')
                 .eq('user_id', user.id)
-                .eq('fiesta_id', fiestaId)
+                .eq('event_id', eventId)
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
@@ -90,7 +90,7 @@ export const CrushProvider = ({ children }) => {
             setCrushes(crushList);
 
             if (instagramUsername) {
-                await loadMatchedByCount(instagramUsername, crushList, fiestaId);
+                await loadMatchedByCount(instagramUsername, crushList, eventId);
             }
 
             return crushList;
@@ -136,13 +136,13 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const loadMatchedByCount = async (username, myCrushes, fiestaId) => {
+    const loadMatchedByCount = async (username, myCrushes, eventId) => {
         try {
             const { data, error } = await supabase
                 .from('users_crushes')
                 .select('user_id')
                 .eq('match_name', username)
-                .eq('fiesta_id', fiestaId);
+                .eq('event_id', eventId);
 
             if (error) throw error;
 
@@ -238,9 +238,9 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const addCrush = async (crushName, fiestaId) => {
+    const addCrush = async (crushName, eventId) => {
         if (!user) return { success: false, error: 'No user logged in' };
-        if (!fiestaId) return { success: false, error: 'No hay fiesta activa' };
+        if (!eventId) return { success: false, error: 'No hay evento activo' };
         if (crushes.length >= 5) return { success: false, error: 'Max 5 crushes allowed' };
 
         try {
@@ -249,7 +249,7 @@ export const CrushProvider = ({ children }) => {
             const { data, error } = await supabase
                 .from('users_crushes')
                 .insert([
-                    { user_id: user.id, match_name: formattedName, fiesta_id: fiestaId }
+                    { user_id: user.id, match_name: formattedName, event_id: eventId }
                 ])
                 .select();
 
@@ -263,7 +263,7 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const removeCrush = async (index, fiestaId) => {
+    const removeCrush = async (index, eventId) => {
         if (!user) return { success: false, error: 'No user logged in' };
 
         try {
@@ -274,7 +274,7 @@ export const CrushProvider = ({ children }) => {
                 .delete()
                 .eq('user_id', user.id)
                 .eq('match_name', crushToRemove)
-                .eq('fiesta_id', fiestaId);
+                .eq('event_id', eventId);
 
             if (error) throw error;
 
@@ -288,7 +288,7 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const updateCrush = async (index, newName, fiestaId) => {
+    const updateCrush = async (index, newName, eventId) => {
         if (!user) return { success: false, error: 'No user logged in' };
 
         try {
@@ -300,7 +300,7 @@ export const CrushProvider = ({ children }) => {
                 .update({ match_name: formattedName })
                 .eq('user_id', user.id)
                 .eq('match_name', oldCrushName)
-                .eq('fiesta_id', fiestaId);
+                .eq('event_id', eventId);
 
             if (error) throw error;
 
