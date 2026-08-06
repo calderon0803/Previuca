@@ -1,27 +1,31 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { useCrush } from './CrushContext';
-import { redeemEventCode, getUserEvent } from '../services/eventsService';
+import { useFlechazo } from './FlechazoContext';
+import { redeemEventCode, getUserEvents, createEvent as createEventService } from '../services/eventsService';
 
 const EventContext = createContext();
 
 export const EventProvider = ({ children }) => {
-    const { user } = useCrush();
-    const [evento, setEvento] = useState(null);
+    const { user, loading: flechazoLoading } = useFlechazo();
+    const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Esperar a que FlechazoContext resuelva la sesión antes de decidir
+        // "sin eventos" — si no, en una carga en frío se evalúa con user=null.
+        if (flechazoLoading) return;
+
         if (user?.id) {
-            loadEvent(user.id);
+            loadEvents(user.id);
         } else {
-            setEvento(null);
+            setEvents([]);
             setLoading(false);
         }
-    }, [user?.id]);
+    }, [user?.id, flechazoLoading]);
 
-    const loadEvent = async (userId) => {
+    const loadEvents = async (userId) => {
         setLoading(true);
-        const result = await getUserEvent(userId);
-        setEvento(result.evento || null);
+        const result = await getUserEvents(userId);
+        setEvents(result.eventos);
         setLoading(false);
     };
 
@@ -30,7 +34,17 @@ export const EventProvider = ({ children }) => {
 
         const result = await redeemEventCode(user.id, code);
         if (result.success) {
-            setEvento(result.evento);
+            await loadEvents(user.id);
+        }
+        return result;
+    };
+
+    const createEvent = async ({ name, description, startDate, endDate, colors }) => {
+        if (!user) return { success: false, error: 'No has iniciado sesión' };
+
+        const result = await createEventService({ userId: user.id, name, description, startDate, endDate, colors });
+        if (result.success) {
+            await loadEvents(user.id);
         }
         return result;
     };
@@ -38,12 +52,11 @@ export const EventProvider = ({ children }) => {
     return (
         <EventContext.Provider
             value={{
-                evento,
-                hasEvent: !!evento,
-                eventId: evento?.id || null,
-                eventName: evento?.name || '',
+                events,
+                hasEvents: events.length > 0,
                 loading,
                 redeemCode,
+                createEvent,
             }}
         >
             {children}

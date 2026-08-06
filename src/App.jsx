@@ -29,37 +29,49 @@ const Placeholder = ({ title }) => (
 
 import SplashScreen from './components/SplashScreen';
 
-import { CrushProvider, useCrush } from './contexts/CrushContext';
+import { FlechazoProvider, useFlechazo } from './contexts/FlechazoContext';
 import { EventProvider } from './contexts/EventContext';
+import { AdminProvider, useAdmin } from './contexts/AdminContext';
 import { PenasProvider } from './contexts/PenasContext';
-import CrushLogin from './views/CrushLogin';
-import CrushList from './views/CrushList';
+import FlechazoLogin from './views/FlechazoLogin';
+import FlechazoList from './views/FlechazoList';
 import InstagramVerification from './views/InstagramVerification';
 import Settings from './views/Settings';
 import EventsHub from './views/EventsHub';
 import PenasList from './views/PenasList';
 import CreatePena from './views/CreatePena';
 import PenaDetail from './views/PenaDetail';
+import CreateEvent from './views/CreateEvent';
 
-// Protected Route specific for Crush
-const CrushRoute = ({ children }) => {
-    const { user, loading } = useCrush();
+const LoadingScreen = () => (
+    <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        color: '#fff'
+    }}>
+        Cargando...
+    </div>
+);
 
-    if (loading) {
-        return (
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '100vh',
-                color: '#fff'
-            }}>
-                Cargando...
-            </div>
-        );
-    }
+// Protected Route specific for Flechazo
+const FlechazoRoute = ({ children }) => {
+    const { user, loading } = useFlechazo();
 
-    return user ? children : <Navigate to="/crush" replace />;
+    if (loading) return <LoadingScreen />;
+
+    return user ? children : <Navigate to="/flechazo" replace />;
+};
+
+// Protected Route specific for admin-only screens
+const AdminRoute = ({ children }) => {
+    const { user, loading: userLoading } = useFlechazo();
+    const { isAdmin, loading: adminLoading } = useAdmin();
+
+    if (userLoading || adminLoading) return <LoadingScreen />;
+
+    return user && isAdmin ? children : <Navigate to="/" replace />;
 };
 
 function App() {
@@ -69,38 +81,57 @@ function App() {
         <ThemeProvider theme={theme}>
             <GlobalStyles />
             {loading && <SplashScreen onFinish={() => setLoading(false)} />}
-            <CrushProvider>
+            <FlechazoProvider>
                 <EventProvider>
+                <AdminProvider>
                 <PenasProvider>
                 <PlayersProvider>
                     <BrowserRouter>
                         <Routes>
                             <Route path="/" element={<MainMenu />} />
 
-                            {/* Crush Feature Routes (nested under Eventos) */}
-                            <Route path="/crush" element={<CrushLogin />} />
+                            {/* Flechazo Feature Routes — login/verificación son globales (no dependen
+                                de un evento), la lista de flechazos sí está enlazada a uno concreto */}
+                            <Route path="/flechazo" element={<FlechazoLogin />} />
+                            <Route path="/eventos/:eventId/flechazo" element={<FlechazoLogin />} />
                             <Route
-                                path="/my-crushes"
+                                path="/eventos/:eventId/mis-flechazos"
                                 element={
-                                    <CrushRoute>
-                                        <CrushList />
-                                    </CrushRoute>
+                                    <FlechazoRoute>
+                                        <FlechazoList />
+                                    </FlechazoRoute>
                                 }
                             />
                             <Route
                                 path="/instagram-verification"
                                 element={
-                                    <CrushRoute>
+                                    <FlechazoRoute>
                                         <InstagramVerification />
-                                    </CrushRoute>
+                                    </FlechazoRoute>
+                                }
+                            />
+                            <Route
+                                path="/eventos/:eventId/instagram-verification"
+                                element={
+                                    <FlechazoRoute>
+                                        <InstagramVerification />
+                                    </FlechazoRoute>
                                 }
                             />
 
                             {/* Eventos Feature Routes */}
-                            <Route path="/eventos" element={<EventsHub />} />
-                            <Route path="/eventos/penas" element={<PenasList />} />
-                            <Route path="/eventos/penas/nueva" element={<CreatePena />} />
-                            <Route path="/eventos/penas/:id" element={<PenaDetail />} />
+                            <Route
+                                path="/eventos/nuevo"
+                                element={
+                                    <AdminRoute>
+                                        <CreateEvent />
+                                    </AdminRoute>
+                                }
+                            />
+                            <Route path="/eventos/:eventId" element={<EventsHub />} />
+                            <Route path="/eventos/:eventId/penas" element={<PenasList />} />
+                            <Route path="/eventos/:eventId/penas/nueva" element={<CreatePena />} />
+                            <Route path="/eventos/:eventId/penas/:penaId" element={<PenaDetail />} />
 
                             <Route path="/games" element={<GameModesList />} />
                             <Route path="/ajustes" element={<Settings />} />
@@ -132,8 +163,9 @@ function App() {
                     </BrowserRouter>
                 </PlayersProvider>
                 </PenasProvider>
+                </AdminProvider>
                 </EventProvider>
-            </CrushProvider>
+            </FlechazoProvider>
         </ThemeProvider>
     );
 }

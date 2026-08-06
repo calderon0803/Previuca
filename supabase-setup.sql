@@ -5,10 +5,10 @@
 -- to create the necessary tables and policies
 
 -- -------------------------------------------------
--- Table: users_crushes
+-- Table: users_flechazos
 -- Stores user's matches (max 5 per user)
 -- -------------------------------------------------
-CREATE TABLE IF NOT EXISTS users_crushes (
+CREATE TABLE IF NOT EXISTS users_flechazos (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     match_name TEXT NOT NULL,
@@ -16,32 +16,32 @@ CREATE TABLE IF NOT EXISTS users_crushes (
 );
 
 -- Create index for faster queries
-CREATE INDEX IF NOT EXISTS idx_users_crushes_user_id ON users_crushes(user_id);
+CREATE INDEX IF NOT EXISTS idx_users_flechazos_user_id ON users_flechazos(user_id);
 
 -- Enable Row Level Security
-ALTER TABLE users_crushes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users_flechazos ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Users can read their own matches
 CREATE POLICY "Users can view their own matches"
-    ON users_crushes
+    ON users_flechazos
     FOR SELECT
     USING (auth.uid() = user_id);
 
 -- RLS Policy: Users can insert their own matches
 CREATE POLICY "Users can insert their own matches"
-    ON users_crushes
+    ON users_flechazos
     FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
 -- RLS Policy: Users can update their own matches
 CREATE POLICY "Users can update their own matches"
-    ON users_crushes
+    ON users_flechazos
     FOR UPDATE
     USING (auth.uid() = user_id);
 
 -- RLS Policy: Users can delete their own matches
 CREATE POLICY "Users can delete their own matches"
-    ON users_crushes
+    ON users_flechazos
     FOR DELETE
     USING (auth.uid() = user_id);
 
@@ -102,7 +102,7 @@ CREATE POLICY "Users can delete their own verification"
 DO $$
 BEGIN
     RAISE NOTICE 'Tables created successfully!';
-    RAISE NOTICE '1. users_crushes - Ready to store user matches';
+    RAISE NOTICE '1. users_flechazos - Ready to store user matches';
     RAISE NOTICE '2. instagram_verification - Ready to store Instagram verification data';
     RAISE NOTICE '';
     RAISE NOTICE 'All Row Level Security policies have been applied.';

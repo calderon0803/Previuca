@@ -58,7 +58,7 @@ export const createPena = async ({ eventId, userId, name, color, imageFile }) =>
 
         const { error: memberError } = await supabase
             .from('pena_members')
-            .insert([{ user_id: userId, pena_id: pena.id }]);
+            .insert([{ user_id: userId, pena_id: pena.id, event_id: eventId }]);
 
         if (memberError) throw memberError;
 
@@ -87,7 +87,7 @@ export const joinPenaByCode = async (eventId, userId, code) => {
 
         const { error: memberError } = await supabase
             .from('pena_members')
-            .insert([{ user_id: userId, pena_id: pena.id }]);
+            .insert([{ user_id: userId, pena_id: pena.id, event_id: eventId }]);
 
         if (memberError) throw memberError;
 
@@ -121,13 +121,14 @@ export const getPenasByEvent = async (eventId) => {
     }
 };
 
-// Peña a la que pertenece el usuario (o null)
-export const getMyPena = async (userId) => {
+// Peña a la que pertenece el usuario dentro de un evento concreto (o null)
+export const getMyPena = async (userId, eventId) => {
     try {
         const { data, error } = await supabase
             .from('pena_members')
             .select('pena_id, penas(*)')
             .eq('user_id', userId)
+            .eq('event_id', eventId)
             .single();
 
         if (error && error.code !== 'PGRST116') throw error;

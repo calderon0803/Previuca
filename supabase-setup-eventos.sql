@@ -1,10 +1,10 @@
 -- ===================================================
--- Previuca — Sección "Eventos" (Peñas + Crush enlazado)
+-- Previuca — Sección "Eventos" (Peñas + Flechazo enlazado)
 -- ===================================================
 -- Ejecuta este script en el SQL Editor de tu proyecto de Supabase
 -- (o vía `supabase db query --db-url ... -f supabase-setup-eventos.sql`).
 -- Requiere que supabase-setup.sql ya se haya ejecutado antes
--- (usa la tabla users_crushes existente).
+-- (usa la tabla users_flechazos existente).
 --
 -- Este script sustituye a un intento anterior que usaba una tabla
 -- "penas" con una columna "event_id" suelta y sin relación a nada.
@@ -14,7 +14,7 @@
 -- Limpieza de la estructura antigua/incompleta
 -- -------------------------------------------------
 DROP TABLE IF EXISTS penas CASCADE;
-ALTER TABLE users_crushes DROP COLUMN IF EXISTS event_id;
+ALTER TABLE users_flechazos DROP COLUMN IF EXISTS event_id;
 
 -- -------------------------------------------------
 -- Table: eventos
@@ -135,10 +135,10 @@ CREATE POLICY "Users can leave their pena"
     USING (auth.uid() = user_id);
 
 -- -------------------------------------------------
--- users_crushes: enlazar cada crush al evento activo
+-- users_flechazos: enlazar cada flechazo al evento activo
 -- -------------------------------------------------
-ALTER TABLE users_crushes ADD COLUMN IF NOT EXISTS event_id UUID REFERENCES eventos(id);
-CREATE INDEX IF NOT EXISTS idx_users_crushes_event_id ON users_crushes(event_id);
+ALTER TABLE users_flechazos ADD COLUMN IF NOT EXISTS event_id UUID REFERENCES eventos(id);
+CREATE INDEX IF NOT EXISTS idx_users_flechazos_event_id ON users_flechazos(event_id);
 
 -- -------------------------------------------------
 -- Storage: bucket para las fotos de las peñas
@@ -171,6 +171,6 @@ BEGIN
     RAISE NOTICE 'Tablas de Eventos creadas correctamente!';
     RAISE NOTICE '1. eventos - da de alta al menos una fila para poder canjear un codigo';
     RAISE NOTICE '2. user_eventos, penas, pena_members - listas';
-    RAISE NOTICE '3. users_crushes.event_id - columna añadida';
+    RAISE NOTICE '3. users_flechazos.event_id - columna añadida';
     RAISE NOTICE '4. bucket pena-images - creado (publico en lectura)';
 END $$;

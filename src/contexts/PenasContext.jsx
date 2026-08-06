@@ -1,56 +1,51 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { useCrush } from './CrushContext';
-import { useEvent } from './EventContext';
+import React, { createContext, useState, useContext } from 'react';
+import { useFlechazo } from './FlechazoContext';
 import { createPena as createPenaService, joinPenaByCode, getPenasByEvent, getMyPena } from '../services/penasService';
 
 const PenasContext = createContext();
 
 export const PenasProvider = ({ children }) => {
-    const { user } = useCrush();
-    const { eventId } = useEvent();
+    const { user } = useFlechazo();
     const [penas, setPenas] = useState([]);
     const [myPena, setMyPena] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (user?.id && eventId) {
-            loadPenas();
-        } else {
+    const loadPenas = async (eventId) => {
+        if (!user?.id || !eventId) {
             setPenas([]);
             setMyPena(null);
             setLoading(false);
+            return;
         }
-    }, [user?.id, eventId]);
 
-    const loadPenas = async () => {
         setLoading(true);
         const [penasResult, myPenaResult] = await Promise.all([
             getPenasByEvent(eventId),
-            getMyPena(user.id),
+            getMyPena(user.id, eventId),
         ]);
         setPenas(penasResult.penas);
         setMyPena(myPenaResult.pena);
         setLoading(false);
     };
 
-    const createPena = async ({ name, color, imageFile }) => {
+    const createPena = async ({ eventId, name, color, imageFile }) => {
         if (!user || !eventId) return { success: false, error: 'Debes tener un evento activo' };
         if (myPena) return { success: false, error: 'Ya perteneces a una peña' };
 
         const result = await createPenaService({ eventId, userId: user.id, name, color, imageFile });
         if (result.success) {
-            await loadPenas();
+            await loadPenas(eventId);
         }
         return result;
     };
 
-    const joinPena = async (code) => {
+    const joinPena = async (eventId, code) => {
         if (!user || !eventId) return { success: false, error: 'Debes tener un evento activo' };
         if (myPena) return { success: false, error: 'Ya perteneces a una peña' };
 
         const result = await joinPenaByCode(eventId, user.id, code);
         if (result.success) {
-            await loadPenas();
+            await loadPenas(eventId);
         }
         return result;
     };
@@ -61,9 +56,9 @@ export const PenasProvider = ({ children }) => {
                 penas,
                 myPena,
                 loading,
+                loadPenas,
                 createPena,
                 joinPena,
-                refreshPenas: loadPenas,
             }}
         >
             {children}

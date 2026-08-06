@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
-import { useCrush } from '../contexts/CrushContext';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useFlechazo } from '../contexts/FlechazoContext';
 import { IoLogoInstagram, IoCheckmarkCircle, IoCloseCircle, IoCopy } from 'react-icons/io5';
 import {
     createInstagramVerification,
@@ -118,6 +118,8 @@ const ButtonStack = styled.div`
 
 export default function InstagramVerification() {
     const navigate = useNavigate();
+    const { eventId } = useParams();
+    const backPath = eventId ? `/eventos/${eventId}/mis-flechazos` : '/ajustes';
     const {
         user,
         isVerified,
@@ -125,7 +127,7 @@ export default function InstagramVerification() {
         verificationCode,
         loading: contextLoading,
         refreshInstagramVerification
-    } = useCrush();
+    } = useFlechazo();
     const [username, setUsername] = useState(instagramUsername || '');
     const [submitting, setSubmitting] = useState(false);
     const [status, setStatus] = useState('');
@@ -191,7 +193,7 @@ export default function InstagramVerification() {
     if (contextLoading) {
         return (
             <Container>
-                <PageHeader title="Verificación Instagram" onBack={() => navigate('/my-crushes')} />
+                <PageHeader title="Verificación Instagram" onBack={() => navigate(backPath)} />
                 <Content>
                     <Card>
                         <p style={{ textAlign: 'center', color: '#7C818C', margin: 0 }}>Cargando...</p>
@@ -203,7 +205,7 @@ export default function InstagramVerification() {
 
     return (
         <Container>
-            <PageHeader title="Verificación Instagram" onBack={() => navigate('/my-crushes')} />
+            <PageHeader title="Verificación Instagram" onBack={() => navigate(backPath)} />
             <Content>
                 <Card>
                     <Title>
@@ -302,10 +304,10 @@ export default function InstagramVerification() {
                                 />
                             </InputGroup>
                             <Description style={{ marginTop: '4px', textAlign: 'center' }}>
-                                ✓ Tu Instagram está verificado. Ya puedes usar la sección Crush.
+                                ✓ Tu Instagram está verificado. Ya puedes usar la sección Flechazo.
                             </Description>
-                            <Button fullWidth size="lg" onClick={() => navigate('/my-crushes')}>
-                                Ir a Mis Crushes
+                            <Button fullWidth size="lg" onClick={() => navigate(backPath)}>
+                                Ir a Mis Flechazos
                             </Button>
                         </>
                     )}

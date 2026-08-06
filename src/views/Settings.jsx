@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoPersonCircle, IoLogOut } from 'react-icons/io5';
-import { useCrush } from '../contexts/CrushContext';
+import { useFlechazo } from '../contexts/FlechazoContext';
 import { useEvent } from '../contexts/EventContext';
 import { deleteInstagramVerification } from '../services/instagramService';
 import { supabase } from '../config/supabase';
@@ -103,8 +103,8 @@ const Settings = () => {
         verificationCode,
         refreshInstagramVerification,
         loading: contextLoading
-    } = useCrush();
-    const { hasEvent, eventName, redeemCode } = useEvent();
+    } = useFlechazo();
+    const { events, redeemCode } = useEvent();
     const [eventCode, setEventCode] = useState('');
     const [eventStatus, setEventStatus] = useState('');
     const [redeeming, setRedeeming] = useState(false);
@@ -144,7 +144,7 @@ const Settings = () => {
                         <EmptyText>
                             Inicia sesión para acceder a la configuración de tu cuenta
                         </EmptyText>
-                        <Button onClick={() => navigate('/crush')}>
+                        <Button onClick={() => navigate('/flechazo')}>
                             Iniciar sesión
                         </Button>
                     </EmptyState>
@@ -220,12 +220,12 @@ const Settings = () => {
 
         try {
             // Eliminar datos del usuario
-            const { error: crushError } = await supabase
-                .from('users_crushes')
+            const { error: flechazoError } = await supabase
+                .from('users_flechazos')
                 .delete()
                 .eq('user_id', user.id);
 
-            if (crushError) throw crushError;
+            if (flechazoError) throw flechazoError;
 
             // Eliminar verificación de Instagram
             await deleteInstagramVerification(user.id);
@@ -264,38 +264,38 @@ const Settings = () => {
                 </Section>
 
                 <Section>
-                    <SectionTitle>Evento</SectionTitle>
+                    <SectionTitle>Eventos</SectionTitle>
 
-                    {hasEvent ? (
-                        <SettingItem>
+                    {events.map((evento) => (
+                        <SettingItem key={evento.id}>
                             <SettingInfo>
-                                <SettingLabel>Evento activo</SettingLabel>
-                                <SettingValue>{eventName}</SettingValue>
+                                <SettingLabel>{evento.name}</SettingLabel>
+                                {evento.description && <SettingValue>{evento.description}</SettingValue>}
                             </SettingInfo>
                         </SettingItem>
-                    ) : (
-                        <SettingItem>
-                            <SettingInfo>
-                                <SettingLabel>Código de evento</SettingLabel>
-                                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                                    <Input
-                                        placeholder="CÓDIGO"
-                                        value={eventCode}
-                                        onChange={(e) => setEventCode(e.target.value.toUpperCase())}
-                                        disabled={redeeming}
-                                    />
-                                    <Button
-                                        variant="secondary"
-                                        onClick={handleRedeemEventCode}
-                                        disabled={!eventCode.trim() || redeeming}
-                                    >
-                                        {redeeming ? '...' : 'Unirme'}
-                                    </Button>
-                                </div>
-                                {eventStatus && <SettingValue style={{ marginTop: '8px' }}>{eventStatus}</SettingValue>}
-                            </SettingInfo>
-                        </SettingItem>
-                    )}
+                    ))}
+
+                    <SettingItem>
+                        <SettingInfo>
+                            <SettingLabel>Apuntarse a otro evento</SettingLabel>
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                <Input
+                                    placeholder="CÓDIGO"
+                                    value={eventCode}
+                                    onChange={(e) => setEventCode(e.target.value.toUpperCase())}
+                                    disabled={redeeming}
+                                />
+                                <Button
+                                    variant="secondary"
+                                    onClick={handleRedeemEventCode}
+                                    disabled={!eventCode.trim() || redeeming}
+                                >
+                                    {redeeming ? '...' : 'Unirme'}
+                                </Button>
+                            </div>
+                            {eventStatus && <SettingValue style={{ marginTop: '8px' }}>{eventStatus}</SettingValue>}
+                        </SettingInfo>
+                    </SettingItem>
                 </Section>
 
                 <Section>

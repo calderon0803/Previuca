@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
-import { useCrush } from '../contexts/CrushContext';
-import { useEvent } from '../contexts/EventContext';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useFlechazo } from '../contexts/FlechazoContext';
 import { IoAdd, IoClose, IoPerson } from 'react-icons/io5';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
@@ -69,7 +68,7 @@ const ListContainer = styled.div`
   gap: ${({ theme }) => theme.spacing(3)};
 `;
 
-const CrushCard = styled.div`
+const FlechazoCard = styled.div`
   background: ${({ theme, $isMatch }) => ($isMatch ? theme.colors.accentMuted : theme.colors.surface)};
   border-radius: ${({ theme }) => theme.radii.md};
   padding: ${({ theme }) => theme.spacing(5)};
@@ -79,7 +78,7 @@ const CrushCard = styled.div`
   justify-content: space-between;
 `;
 
-const CrushName = styled.span`
+const FlechazoName = styled.span`
   font-size: ${({ theme }) => theme.typography.fontSize.md};
   font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   color: ${({ theme, $isMatch }) => ($isMatch ? theme.colors.accent : theme.colors.text.primary)};
@@ -121,53 +120,53 @@ const ButtonGroup = styled.div`
   gap: ${({ theme }) => theme.spacing(3)};
 `;
 
-export default function CrushList() {
+export default function FlechazoList() {
   const navigate = useNavigate();
   const {
     user,
-    crushes,
+    flechazos,
     matches,
     logout,
-    loadCrushes,
-    addCrush,
-    removeCrush,
+    loadFlechazos,
+    addFlechazo,
+    removeFlechazo,
     loading,
     isVerified,
     instagramUsername,
     matchedByCount
-  } = useCrush();
-  const { eventId } = useEvent();
+  } = useFlechazo();
+  const { eventId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newCrushName, setNewCrushName] = useState('');
+  const [newFlechazoName, setNewFlechazoName] = useState('');
 
   useEffect(() => {
     if (eventId) {
-      loadCrushes(eventId);
+      loadFlechazos(eventId);
     }
   }, [eventId]);
 
   const handleBack = () => {
-    navigate('/eventos');
+    navigate(`/eventos/${eventId}`);
   };
 
   const handleAddClick = () => {
     if (!isVerified) {
-      navigate('/instagram-verification');
+      navigate(`/eventos/${eventId}/instagram-verification`);
       return;
     }
 
-    if (crushes.length >= 5) {
-      alert('Has alcanzado el límite de 5 crushes.');
+    if (flechazos.length >= 5) {
+      alert('Has alcanzado el límite de 5 flechazos.');
       return;
     }
 
-    setNewCrushName('');
+    setNewFlechazoName('');
     setIsModalOpen(true);
   };
 
   const handleConfirmAdd = () => {
-    if (newCrushName.trim()) {
-      addCrush(newCrushName, eventId);
+    if (newFlechazoName.trim()) {
+      addFlechazo(newFlechazoName, eventId);
       setIsModalOpen(false);
     }
   };
@@ -175,20 +174,20 @@ export default function CrushList() {
   const handleLogout = () => {
     if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
       logout();
-      navigate('/crush');
+      navigate(`/eventos/${eventId}/flechazo`);
     }
   }
 
   // Generate 5 slots
-  const slots = Array(5).fill(null).map((_, i) => crushes?.[i] || null);
+  const slots = Array(5).fill(null).map((_, i) => flechazos?.[i] || null);
 
   return (
     <Container>
-      <PageHeader title="Mis Crushes" onBack={handleBack} />
+      <PageHeader title="Mis Flechazos" onBack={handleBack} />
       <Content>
         {!isVerified && (
           <div style={{ marginBottom: '20px' }}>
-            <Button variant="secondary" fullWidth size="lg" onClick={() => navigate('/instagram-verification')}>
+            <Button variant="secondary" fullWidth size="lg" onClick={() => navigate(`/eventos/${eventId}/instagram-verification`)}>
               Verificar Instagram
             </Button>
           </div>
@@ -209,24 +208,24 @@ export default function CrushList() {
         )}
 
         <ListContainer>
-          {slots.map((crush, index) => {
-            const isMatch = crush && matches.includes(crush);
+          {slots.map((flechazo, index) => {
+            const isMatch = flechazo && matches.includes(flechazo);
             return (
               <React.Fragment key={index}>
-                {crush ? (
-                  <CrushCard $isMatch={isMatch}>
+                {flechazo ? (
+                  <FlechazoCard $isMatch={isMatch}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       {isMatch && <MatchBadge>❤️</MatchBadge>}
-                      <CrushName $isMatch={isMatch}>@{crush}</CrushName>
+                      <FlechazoName $isMatch={isMatch}>@{flechazo}</FlechazoName>
                     </div>
-                    <IconButton size="sm" variant="ghost" onClick={() => removeCrush(index, eventId)} aria-label="Eliminar">
+                    <IconButton size="sm" variant="ghost" onClick={() => removeFlechazo(index, eventId)} aria-label="Eliminar">
                       <IoClose color="#E5484D" />
                     </IconButton>
-                  </CrushCard>
+                  </FlechazoCard>
                 ) : (
                   <EmptySlot onClick={handleAddClick}>
                     <IoAdd size={20} />
-                    <span style={{ marginLeft: 8 }}>Añadir Crush</span>
+                    <span style={{ marginLeft: 8 }}>Añadir Flechazo</span>
                   </EmptySlot>
                 )}
               </React.Fragment>
@@ -236,12 +235,12 @@ export default function CrushList() {
       </Content>
 
       <Modal visible={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <ModalTitle>Nuevo Crush</ModalTitle>
+        <ModalTitle>Nuevo Flechazo</ModalTitle>
         <div style={{ marginBottom: '20px' }}>
           <Input
             placeholder="Usuario (sin espacios)"
-            value={newCrushName}
-            onChange={e => setNewCrushName(e.target.value.replace(/\s/g, ''))}
+            value={newFlechazoName}
+            onChange={e => setNewFlechazoName(e.target.value.replace(/\s/g, ''))}
             autoFocus
           />
         </div>

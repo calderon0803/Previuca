@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
-import { useCrush } from '../contexts/CrushContext';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useFlechazo } from '../contexts/FlechazoContext';
 import { IoArrowBack, IoLockClosed, IoMail } from 'react-icons/io5';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -79,7 +79,7 @@ const StatusMessage = styled.p`
   text-align: center;
 `;
 
-export default function CrushLogin() {
+export default function FlechazoLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -87,14 +87,17 @@ export default function CrushLogin() {
   const [status, setStatus] = useState('');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const navigate = useNavigate();
-  const { user, login, register, loading } = useCrush();
+  const { eventId } = useParams();
+  const { user, login, register, loading } = useFlechazo();
+  const flechazoListPath = eventId ? `/eventos/${eventId}/mis-flechazos` : '/ajustes';
+  const backPath = eventId ? `/eventos/${eventId}` : '/ajustes';
 
   // Redirigir si ya está autenticado
   React.useEffect(() => {
     if (!loading && user?.id) {
-      navigate('/my-crushes', { replace: true });
+      navigate(flechazoListPath, { replace: true });
     }
-  }, [user?.id, loading, navigate]);
+  }, [user?.id, loading, navigate, flechazoListPath]);
 
   // Mostrar loading mientras verifica sesión
   if (loading) {
@@ -124,7 +127,7 @@ export default function CrushLogin() {
       if (result?.success) {
         setStatus('¡Bienvenido!');
         setTimeout(() => {
-          navigate('/my-crushes');
+          navigate(flechazoListPath);
         }, 500);
       } else {
         const errorMsg = typeof result?.error === 'string'
@@ -188,7 +191,7 @@ export default function CrushLogin() {
   return (
     <Container>
       <BackButtonWrap>
-        <IconButton onClick={() => navigate('/eventos')} aria-label="Volver">
+        <IconButton onClick={() => navigate(backPath)} aria-label="Volver">
           <IoArrowBack size={20} />
         </IconButton>
       </BackButtonWrap>

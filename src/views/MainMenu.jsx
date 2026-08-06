@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
-import { IoLockClosed } from 'react-icons/io5';
+import styled, { css } from 'styled-components';
 import { useEvent } from '../contexts/EventContext';
+import { useAdmin } from '../contexts/AdminContext';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -62,58 +62,84 @@ const Headline = styled.h1`
   }
 `;
 
+// Un color -> borde sólido de ese color. Varios -> degradado.
+// No se usa border-image: ignora border-radius y deja las esquinas cuadradas.
+// En su lugar, dos fondos apilados (uno en el padding-box, otro en el
+// border-box) simulan el borde degradado respetando el radio de la tarjeta.
+const coloredBorder = ($colors, theme) => {
+  if (!$colors || $colors.length === 0) return '';
+  if ($colors.length === 1) {
+    return css`
+      border-color: ${$colors[0]};
+    `;
+  }
+  return css`
+    border-color: transparent;
+    background: linear-gradient(${theme.colors.surface}, ${theme.colors.surface}) padding-box,
+      linear-gradient(90deg, ${$colors.join(', ')}) border-box;
+  `;
+};
+
 const HeroCard = styled.div`
   position: relative;
   overflow: hidden;
-  background: ${({ theme }) => theme.colors.primaryMuted};
-  border: 1px solid ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radii.md};
-  padding: ${({ theme }) => theme.spacing(6)};
-  min-height: 148px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  padding: ${({ theme }) => theme.spacing(5)};
   cursor: pointer;
-  transition: transform ${({ theme }) => theme.transitions.base},
-    border-color ${({ theme }) => theme.transitions.base};
+  transition: transform ${({ theme }) => theme.transitions.base};
   margin-bottom: ${({ theme }) => theme.spacing(3)};
   opacity: ${({ $locked }) => ($locked ? 0.6 : 1)};
-
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.primaryHover};
-  }
+  ${({ $colors, theme }) => coloredBorder($colors, theme)}
 
   &:active {
     transform: scale(0.99);
   }
 `;
 
+const PrimaryHeroCard = styled(HeroCard)`
+  background: ${({ theme }) => theme.colors.primaryMuted};
+  border-color: ${({ theme }) => theme.colors.primary};
+  transition: transform ${({ theme }) => theme.transitions.base},
+    border-color ${({ theme }) => theme.transitions.base};
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primaryHover};
+  }
+`;
+
 const HeroWatermark = styled.span`
   position: absolute;
-  bottom: -18px;
-  right: -6px;
-  font-size: 96px;
-  opacity: 0.16;
+  bottom: -16px;
+  right: -4px;
+  font-size: 72px;
+  opacity: 0.14;
   transform: rotate(-8deg);
   pointer-events: none;
 `;
 
-const LockBadge = styled.div`
-  position: absolute;
-  top: ${({ theme }) => theme.spacing(4)};
-  right: ${({ theme }) => theme.spacing(4)};
-  color: ${({ theme }) => theme.colors.text.secondary};
+const HeroTop = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing(3)};
+  margin-bottom: 4px;
+  position: relative;
   z-index: 1;
 `;
 
-const HeroLabel = styled.span`
+const LockPill = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(1)};
+  padding: ${({ theme }) => theme.spacing(1)} ${({ theme }) => theme.spacing(2.5)};
+  border-radius: ${({ theme }) => theme.radii.pill};
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  color: ${({ theme }) => theme.colors.text.secondary};
   font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ theme }) => theme.colors.primary};
-  text-transform: uppercase;
-  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
-  margin-bottom: ${({ theme }) => theme.spacing(2)};
-  z-index: 1;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  flex-shrink: 0;
 `;
 
 const HeroTitle = styled.h2`
@@ -121,7 +147,11 @@ const HeroTitle = styled.h2`
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
   letter-spacing: ${({ theme }) => theme.typography.letterSpacing.tight};
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 4px 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  position: relative;
   z-index: 1;
 `;
 
@@ -129,12 +159,16 @@ const HeroSubtitle = styled.p`
   font-size: ${({ theme }) => theme.typography.fontSize.sm};
   color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  position: relative;
   z-index: 1;
 `;
 
 const SecondaryRow = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: ${({ $columns }) => ($columns === 2 ? '1fr 1fr' : '1fr')};
   gap: ${({ theme }) => theme.spacing(3)};
   margin-top: ${({ theme }) => theme.spacing(3)};
 `;
@@ -177,11 +211,8 @@ const SecondaryLabel = styled.span`
 
 export default function MainMenu() {
   const navigate = useNavigate();
-  const { hasEvent } = useEvent();
-
-  const handleEventClick = () => {
-    navigate(hasEvent ? '/eventos' : '/ajustes');
-  };
+  const { events, hasEvents } = useEvent();
+  const { isAdmin } = useAdmin();
 
   return (
     <Container>
@@ -193,32 +224,50 @@ export default function MainMenu() {
 
         <Headline>¿A qué jugamos hoy?</Headline>
 
-        <HeroCard onClick={() => navigate('/games')}>
+        <PrimaryHeroCard onClick={() => navigate('/games')}>
           <HeroWatermark aria-hidden="true">🎮</HeroWatermark>
-          <HeroLabel>Empezar</HeroLabel>
-          <HeroTitle>Juegos</HeroTitle>
+          <HeroTop>
+            <HeroTitle>Juegos</HeroTitle>
+          </HeroTop>
           <HeroSubtitle>Diversión sin límites</HeroSubtitle>
-        </HeroCard>
+        </PrimaryHeroCard>
 
-        <HeroCard onClick={handleEventClick} $locked={!hasEvent}>
-          <HeroWatermark aria-hidden="true">🎉</HeroWatermark>
-          {!hasEvent && (
-            <LockBadge>
-              <IoLockClosed size={16} />
-            </LockBadge>
-          )}
-          <HeroLabel>{hasEvent ? 'Empezar' : 'Bloqueado'}</HeroLabel>
-          <HeroTitle>Eventos</HeroTitle>
-          <HeroSubtitle>
-            {hasEvent ? 'Peñas y Crush de tu evento' : 'Introduce un código en Ajustes'}
-          </HeroSubtitle>
-        </HeroCard>
+        {hasEvents ? (
+          events.map((evento) => (
+            <HeroCard
+              key={evento.id}
+              onClick={() => navigate(`/eventos/${evento.id}`)}
+              $colors={evento.colors}
+            >
+              <HeroWatermark aria-hidden="true">🎉</HeroWatermark>
+              <HeroTop>
+                <HeroTitle>{evento.name}</HeroTitle>
+              </HeroTop>
+              <HeroSubtitle>{evento.description || 'Peñas y Flechazo de este evento'}</HeroSubtitle>
+            </HeroCard>
+          ))
+        ) : (
+          <HeroCard onClick={() => navigate('/ajustes')} $locked>
+            <HeroWatermark aria-hidden="true">🎉</HeroWatermark>
+            <HeroTop>
+              <HeroTitle>Eventos</HeroTitle>
+              <LockPill>Bloqueado</LockPill>
+            </HeroTop>
+            <HeroSubtitle>Introduce un código en Ajustes</HeroSubtitle>
+          </HeroCard>
+        )}
 
-        <SecondaryRow>
+        <SecondaryRow $columns={isAdmin ? 2 : 1}>
           <SecondaryTile onClick={() => navigate('/ajustes')}>
             <SecondaryIcon>⚙️</SecondaryIcon>
             <SecondaryLabel>Ajustes</SecondaryLabel>
           </SecondaryTile>
+          {isAdmin && (
+            <SecondaryTile onClick={() => navigate('/eventos/nuevo')}>
+              <SecondaryIcon>➕</SecondaryIcon>
+              <SecondaryLabel>Crear evento</SecondaryLabel>
+            </SecondaryTile>
+          )}
         </SecondaryRow>
       </Content>
     </Container>

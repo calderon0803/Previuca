@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoKeyOutline, IoPersonCircleOutline } from 'react-icons/io5';
 import { usePenas } from '../contexts/PenasContext';
+import { useFlechazo } from '../contexts/FlechazoContext';
 import { getPenaMembers } from '../services/penasService';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
@@ -119,27 +120,33 @@ const ModalHint = styled.p`
 
 export default function PenaDetail() {
     const navigate = useNavigate();
-    const { id } = useParams();
-    const { penas, myPena } = usePenas();
+    const { eventId, penaId } = useParams();
+    const { penas, myPena, loadPenas } = usePenas();
+    const { user, loading: flechazoLoading } = useFlechazo();
     const [members, setMembers] = useState([]);
     const [loadingMembers, setLoadingMembers] = useState(true);
     const [showCodeModal, setShowCodeModal] = useState(false);
 
-    const pena = penas.find((p) => p.id === id) || (myPena?.id === id ? myPena : null);
+    const pena = penas.find((p) => p.id === penaId) || (myPena?.id === penaId ? myPena : null);
 
     useEffect(() => {
-        if (!id) return;
+        if (flechazoLoading) return;
+        loadPenas(eventId);
+    }, [eventId, user?.id, flechazoLoading]);
+
+    useEffect(() => {
+        if (!penaId) return;
         setLoadingMembers(true);
-        getPenaMembers(id).then((result) => {
+        getPenaMembers(penaId).then((result) => {
             setMembers(result.members);
             setLoadingMembers(false);
         });
-    }, [id]);
+    }, [penaId]);
 
     if (!pena) {
         return (
             <Container>
-                <PageHeader title="Peña" onBack={() => navigate('/eventos/penas')} />
+                <PageHeader title="Peña" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
                 <Content>
                     <EmptyText>No se encontró esta peña.</EmptyText>
                 </Content>
@@ -147,11 +154,11 @@ export default function PenaDetail() {
         );
     }
 
-    const isOwnPena = myPena?.id === id;
+    const isOwnPena = myPena?.id === penaId;
 
     return (
         <Container>
-            <PageHeader title="" onBack={() => navigate('/eventos/penas')} />
+            <PageHeader title="" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
             <Photo $color={pena.color} $image={pena.image_url}>
                 <PenaName>{pena.name}</PenaName>
             </Photo>

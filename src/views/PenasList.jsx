@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoPeopleOutline } from 'react-icons/io5';
 import { usePenas } from '../contexts/PenasContext';
+import { useFlechazo } from '../contexts/FlechazoContext';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -145,17 +146,26 @@ const ErrorText = styled.p`
 
 export default function PenasList() {
     const navigate = useNavigate();
-    const { penas, myPena, loading, joinPena } = usePenas();
+    const { eventId } = useParams();
+    const { penas, myPena, loading, loadPenas, joinPena } = usePenas();
+    const { user, loading: flechazoLoading } = useFlechazo();
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [joinCode, setJoinCode] = useState('');
     const [joinError, setJoinError] = useState('');
     const [joining, setJoining] = useState(false);
 
+    useEffect(() => {
+        // Esperar a que FlechazoContext resuelva la sesión — si no, en una carga
+        // en frío loadPenas se ejecuta con user aún sin cargar y no se repite.
+        if (flechazoLoading) return;
+        loadPenas(eventId);
+    }, [eventId, user?.id, flechazoLoading]);
+
     const handleJoin = async () => {
         if (!joinCode.trim()) return;
         setJoining(true);
         setJoinError('');
-        const result = await joinPena(joinCode);
+        const result = await joinPena(eventId, joinCode);
         setJoining(false);
         if (result.success) {
             setShowJoinModal(false);
@@ -167,16 +177,16 @@ export default function PenasList() {
 
     return (
         <Container>
-            <PageHeader title="Peñas" onBack={() => navigate('/eventos')} />
+            <PageHeader title="Peñas" onBack={() => navigate(`/eventos/${eventId}`)} />
             <Content>
                 {myPena ? (
-                    <OwnPenaBanner onClick={() => navigate(`/eventos/penas/${myPena.id}`)}>
+                    <OwnPenaBanner onClick={() => navigate(`/eventos/${eventId}/penas/${myPena.id}`)}>
                         <OwnPenaLabel>Tu peña</OwnPenaLabel>
                         <OwnPenaName>{myPena.name}</OwnPenaName>
                     </OwnPenaBanner>
                 ) : (
                     <ActionsRow>
-                        <Button fullWidth onClick={() => navigate('/eventos/penas/nueva')}>
+                        <Button fullWidth onClick={() => navigate(`/eventos/${eventId}/penas/nueva`)}>
                             Crear peña
                         </Button>
                         <Button variant="secondary" fullWidth onClick={() => setShowJoinModal(true)}>
@@ -194,7 +204,7 @@ export default function PenasList() {
                 ) : (
                     <List>
                         {penas.map((pena) => (
-                            <PenaRow key={pena.id} onClick={() => navigate(`/eventos/penas/${pena.id}`)}>
+                            <PenaRow key={pena.id} onClick={() => navigate(`/eventos/${eventId}/penas/${pena.id}`)}>
                                 <Thumb $color={pena.color} $image={pena.image_url} />
                                 <PenaInfo>
                                     <PenaName>{pena.name}</PenaName>

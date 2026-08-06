@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoImageOutline } from 'react-icons/io5';
 import { usePenas } from '../contexts/PenasContext';
@@ -91,6 +91,7 @@ const ErrorText = styled.p`
 
 export default function CreatePena() {
     const navigate = useNavigate();
+    const { eventId } = useParams();
     const { createPena } = usePenas();
     const [name, setName] = useState('');
     const [color, setColor] = useState(COLORS[0]);
@@ -111,11 +112,11 @@ export default function CreatePena() {
         setSubmitting(true);
         setError('');
 
-        const result = await createPena({ name, color, imageFile });
+        const result = await createPena({ eventId, name, color, imageFile });
 
         setSubmitting(false);
         if (result.success) {
-            navigate(`/eventos/penas/${result.pena.id}`, { replace: true });
+            navigate(`/eventos/${eventId}/penas/${result.pena.id}`, { replace: true });
         } else {
             setError(result.error || 'No se pudo crear la peña');
         }
@@ -123,7 +124,7 @@ export default function CreatePena() {
 
     return (
         <Container>
-            <PageHeader title="Crear peña" onBack={() => navigate('/eventos/penas')} />
+            <PageHeader title="Crear peña" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
             <Content>
                 <Field>
                     <Label>Nombre</Label>

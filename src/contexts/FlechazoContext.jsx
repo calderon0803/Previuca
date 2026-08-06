@@ -2,13 +2,13 @@ import React, { createContext, useState, useEffect, useContext, useRef } from 'r
 import { signIn, signUp, signOut, onAuthStateChange } from '../services/authService';
 import { supabase } from '../config/supabase';
 
-const CrushContext = createContext();
+const FlechazoContext = createContext();
 
-export const CrushProvider = ({ children }) => {
+export const FlechazoProvider = ({ children }) => {
     const [user, setUser] = useState(null); // Ahora será el usuario de Supabase
     const [loading, setLoading] = useState(true);
-    const [crushes, setCrushes] = useState([]); // Lista de crushes del usuario (del evento activo)
-    const [matches, setMatches] = useState([]); // Crushes con match mutuo
+    const [flechazos, setFlechazos] = useState([]); // Lista de flechazos del usuario (del evento activo)
+    const [matches, setMatches] = useState([]); // Flechazos con match mutuo
     const [isVerified, setIsVerified] = useState(false);
     const [instagramUsername, setInstagramUsername] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
@@ -34,7 +34,7 @@ export const CrushProvider = ({ children }) => {
                     }
                 } else {
                     setUser(null);
-                    setCrushes([]);
+                    setFlechazos([]);
                     setMatches([]);
                     setIsVerified(false);
                     setInstagramUsername('');
@@ -72,31 +72,31 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    // Los crushes están enlazados al evento activo: se cargan explícitamente
+    // Los flechazos están enlazados al evento activo: se cargan explícitamente
     // desde la pantalla (que conoce el eventId via useEvent), no en el login.
-    const loadCrushes = async (eventId) => {
+    const loadFlechazos = async (eventId) => {
         if (!user || !eventId) return [];
 
         try {
             const { data, error } = await supabase
-                .from('users_crushes')
+                .from('users_flechazos')
                 .select('match_name')
                 .eq('user_id', user.id)
                 .eq('event_id', eventId)
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
-            const crushList = data?.map(d => d.match_name) || [];
-            setCrushes(crushList);
+            const flechazoList = data?.map(d => d.match_name) || [];
+            setFlechazos(flechazoList);
 
             if (instagramUsername) {
-                await loadMatchedByCount(instagramUsername, crushList, eventId);
+                await loadMatchedByCount(instagramUsername, flechazoList, eventId);
             }
 
-            return crushList;
+            return flechazoList;
         } catch (error) {
-            console.error('Error loading crushes:', error);
-            setCrushes([]);
+            console.error('Error loading flechazos:', error);
+            setFlechazos([]);
             return [];
         }
     };
@@ -136,10 +136,10 @@ export const CrushProvider = ({ children }) => {
         }
     };
 
-    const loadMatchedByCount = async (username, myCrushes, eventId) => {
+    const loadMatchedByCount = async (username, myFlechazos, eventId) => {
         try {
             const { data, error } = await supabase
-                .from('users_crushes')
+                .from('users_flechazos')
                 .select('user_id')
                 .eq('match_name', username)
                 .eq('event_id', eventId);
@@ -149,8 +149,8 @@ export const CrushProvider = ({ children }) => {
             const count = data?.length || 0;
             setMatchedByCount(count);
 
-            // Si hay gente que me tiene Y yo tengo crushes, verificar matches mutuos
-            if (count > 0 && myCrushes && myCrushes.length > 0) {
+            // Si hay gente que me tiene Y yo tengo flechazos, verificar matches mutuos
+            if (count > 0 && myFlechazos && myFlechazos.length > 0) {
                 const userIds = data.map(d => d.user_id);
                 console.log('UserIds que me tienen:', userIds);
 
@@ -172,9 +172,9 @@ export const CrushProvider = ({ children }) => {
 
                 const theirUsernames = igData?.map(u => u.instagram_username) || [];
 
-                // Encontrar matches mutuos: crushes míos que también me tienen
-                const mutualMatches = myCrushes.filter(crush =>
-                    theirUsernames.includes(crush)
+                // Encontrar matches mutuos: flechazos míos que también me tienen
+                const mutualMatches = myFlechazos.filter(flechazo =>
+                    theirUsernames.includes(flechazo)
                 );
 
                 setMatches(mutualMatches);
@@ -189,28 +189,28 @@ export const CrushProvider = ({ children }) => {
     };
 
     const login = async (email, password) => {
-        console.log('[CrushContext] login called with:', email);
+        console.log('[FlechazoContext] login called with:', email);
         try {
-            console.log('[CrushContext] calling signIn...');
+            console.log('[FlechazoContext] calling signIn...');
             const result = await signIn(email, password);
-            console.log('[CrushContext] signIn returned:', result);
+            console.log('[FlechazoContext] signIn returned:', result);
 
             const { data, error } = result;
-            console.log('[CrushContext] extracted data:', data);
-            console.log('[CrushContext] extracted error:', error);
+            console.log('[FlechazoContext] extracted data:', data);
+            console.log('[FlechazoContext] extracted error:', error);
 
             if (error) {
-                console.log('[CrushContext] returning error');
+                console.log('[FlechazoContext] returning error');
                 return { success: false, error: error };
             }
             if (data?.session) {
-                console.log('[CrushContext] returning success');
+                console.log('[FlechazoContext] returning success');
                 return { success: true, data };
             }
-            console.log('[CrushContext] no session, returning error');
+            console.log('[FlechazoContext] no session, returning error');
             return { success: false, error: 'No se pudo iniciar sesión' };
         } catch (error) {
-            console.error('[CrushContext] Login exception:', error);
+            console.error('[FlechazoContext] Login exception:', error);
             return { success: false, error: error.message };
         }
     };
@@ -232,22 +232,22 @@ export const CrushProvider = ({ children }) => {
         try {
             await signOut();
             setUser(null);
-            setCrushes([]);
+            setFlechazos([]);
         } catch (error) {
             console.error('Logout error:', error);
         }
     };
 
-    const addCrush = async (crushName, eventId) => {
+    const addFlechazo = async (flechazoName, eventId) => {
         if (!user) return { success: false, error: 'No user logged in' };
         if (!eventId) return { success: false, error: 'No hay evento activo' };
-        if (crushes.length >= 5) return { success: false, error: 'Max 5 crushes allowed' };
+        if (flechazos.length >= 5) return { success: false, error: 'Max 5 flechazos allowed' };
 
         try {
-            const formattedName = crushName.replace(/\s+/g, '').toLowerCase();
+            const formattedName = flechazoName.replace(/\s+/g, '').toLowerCase();
 
             const { data, error } = await supabase
-                .from('users_crushes')
+                .from('users_flechazos')
                 .insert([
                     { user_id: user.id, match_name: formattedName, event_id: eventId }
                 ])
@@ -255,70 +255,70 @@ export const CrushProvider = ({ children }) => {
 
             if (error) throw error;
 
-            setCrushes([...crushes, formattedName]);
+            setFlechazos([...flechazos, formattedName]);
             return { success: true, data };
         } catch (error) {
-            console.error('Error adding crush:', error);
+            console.error('Error adding flechazo:', error);
             return { success: false, error: error.message };
         }
     };
 
-    const removeCrush = async (index, eventId) => {
+    const removeFlechazo = async (index, eventId) => {
         if (!user) return { success: false, error: 'No user logged in' };
 
         try {
-            const crushToRemove = crushes[index];
+            const flechazoToRemove = flechazos[index];
 
             const { error } = await supabase
-                .from('users_crushes')
+                .from('users_flechazos')
                 .delete()
                 .eq('user_id', user.id)
-                .eq('match_name', crushToRemove)
+                .eq('match_name', flechazoToRemove)
                 .eq('event_id', eventId);
 
             if (error) throw error;
 
-            const updatedCrushes = [...crushes];
-            updatedCrushes.splice(index, 1);
-            setCrushes(updatedCrushes);
+            const updatedFlechazos = [...flechazos];
+            updatedFlechazos.splice(index, 1);
+            setFlechazos(updatedFlechazos);
             return { success: true };
         } catch (error) {
-            console.error('Error removing crush:', error);
+            console.error('Error removing flechazo:', error);
             return { success: false, error: error.message };
         }
     };
 
-    const updateCrush = async (index, newName, eventId) => {
+    const updateFlechazo = async (index, newName, eventId) => {
         if (!user) return { success: false, error: 'No user logged in' };
 
         try {
             const formattedName = newName.replace(/\s+/g, '').toLowerCase();
-            const oldCrushName = crushes[index];
+            const oldFlechazoName = flechazos[index];
 
             const { error } = await supabase
-                .from('users_crushes')
+                .from('users_flechazos')
                 .update({ match_name: formattedName })
                 .eq('user_id', user.id)
-                .eq('match_name', oldCrushName)
+                .eq('match_name', oldFlechazoName)
                 .eq('event_id', eventId);
 
             if (error) throw error;
 
-            const updatedCrushes = [...crushes];
-            updatedCrushes[index] = formattedName;
-            setCrushes(updatedCrushes);
+            const updatedFlechazos = [...flechazos];
+            updatedFlechazos[index] = formattedName;
+            setFlechazos(updatedFlechazos);
             return { success: true };
         } catch (error) {
-            console.error('Error updating crush:', error);
+            console.error('Error updating flechazo:', error);
             return { success: false, error: error.message };
         }
     };
 
     return (
-        <CrushContext.Provider
+        <FlechazoContext.Provider
             value={{
                 user,
-                crushes,
+                flechazos,
                 matches,
                 loading,
                 isVerified,
@@ -328,22 +328,22 @@ export const CrushProvider = ({ children }) => {
                 login,
                 register,
                 logout,
-                loadCrushes,
-                addCrush,
-                removeCrush,
-                updateCrush,
+                loadFlechazos,
+                addFlechazo,
+                removeFlechazo,
+                updateFlechazo,
                 refreshInstagramVerification
             }}
         >
             {children}
-        </CrushContext.Provider>
+        </FlechazoContext.Provider>
     );
 };
 
-export const useCrush = () => {
-    const context = useContext(CrushContext);
+export const useFlechazo = () => {
+    const context = useContext(FlechazoContext);
     if (!context) {
-        throw new Error('useCrush must be used within a CrushProvider');
+        throw new Error('useFlechazo must be used within a FlechazoProvider');
     }
     return context;
 };

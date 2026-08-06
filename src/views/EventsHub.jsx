@@ -1,15 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useEvent } from '../contexts/EventContext';
 import GameModeCard from '../components/GameModeCard';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
-
-const subsections = [
-    { id: 'penas', name: 'Peñas', icon: '🎪', route: '/eventos/penas' },
-    { id: 'crush', name: 'Crush', icon: '💕', route: '/crush' },
-];
 
 const Container = styled.div`
   min-height: 100vh;
@@ -81,19 +76,22 @@ const LockedText = styled.p`
 
 export default function EventsHub() {
     const navigate = useNavigate();
-    const { hasEvent, eventName, loading } = useEvent();
+    const { eventId } = useParams();
+    const { events, loading } = useEvent();
 
     if (loading) return null;
 
-    if (!hasEvent) {
+    const evento = events.find((e) => e.id === eventId);
+
+    if (!evento) {
         return (
             <Container>
                 <PageHeader title="Eventos" onBack={() => navigate('/')} />
                 <Content>
                     <LockedState>
-                        <LockedTitle>Necesitas un código de evento</LockedTitle>
+                        <LockedTitle>No perteneces a este evento</LockedTitle>
                         <LockedText>
-                            Introduce el código de tu evento en Ajustes para desbloquear esta sección.
+                            Introduce el código de un evento en Ajustes para apuntarte.
                         </LockedText>
                         <Button size="lg" onClick={() => navigate('/ajustes')}>
                             Ir a Ajustes
@@ -104,9 +102,14 @@ export default function EventsHub() {
         );
     }
 
+    const subsections = [
+        { id: 'penas', name: 'Peñas', icon: '🎪', route: `/eventos/${eventId}/penas` },
+        { id: 'flechazo', name: 'Flechazo', icon: '💕', route: `/eventos/${eventId}/flechazo` },
+    ];
+
     return (
         <Container>
-            <PageHeader title={eventName || 'Eventos'} onBack={() => navigate('/')} />
+            <PageHeader title={evento.name} onBack={() => navigate('/')} />
             <Content>
                 <SectionLabel>
                     <SectionEyebrow>Subsecciones</SectionEyebrow>
