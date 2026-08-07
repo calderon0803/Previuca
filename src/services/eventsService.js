@@ -51,6 +51,50 @@ export const getUserEvents = async (userId) => {
     }
 };
 
+// Abandona un evento: borra todo rastro del usuario en ese evento (peña,
+// flechazos, sellos coleccionados y la propia membresía), como si nunca
+// hubiese estado apuntado.
+export const leaveEvent = async (userId, eventId) => {
+    try {
+        const { error: stampsError } = await supabase
+            .from('pena_stamp_unlocks')
+            .delete()
+            .eq('user_id', userId)
+            .eq('event_id', eventId);
+
+        if (stampsError) throw stampsError;
+
+        const { error: flechazosError } = await supabase
+            .from('users_flechazos')
+            .delete()
+            .eq('user_id', userId)
+            .eq('event_id', eventId);
+
+        if (flechazosError) throw flechazosError;
+
+        const { error: penaMemberError } = await supabase
+            .from('pena_members')
+            .delete()
+            .eq('user_id', userId)
+            .eq('event_id', eventId);
+
+        if (penaMemberError) throw penaMemberError;
+
+        const { error: eventoError } = await supabase
+            .from('user_eventos')
+            .delete()
+            .eq('user_id', userId)
+            .eq('event_id', eventId);
+
+        if (eventoError) throw eventoError;
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error leaving event:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 // Crea un evento nuevo (solo admins, la RLS lo exige) y apunta al creador automáticamente
 export const createEvent = async ({ userId, name, description, startDate, endDate, colors }) => {
     try {

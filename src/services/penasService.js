@@ -105,6 +105,25 @@ export const joinPenaByCode = async (eventId, userId, code) => {
     }
 };
 
+// Abandona la peña actual dentro de un evento (el sello ya coleccionado se
+// conserva; solo se borra la membresía, para poder crear u unirse a otra).
+export const leavePena = async (userId, eventId) => {
+    try {
+        const { error } = await supabase
+            .from('pena_members')
+            .delete()
+            .eq('user_id', userId)
+            .eq('event_id', eventId);
+
+        if (error) throw error;
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error leaving pena:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 // Todas las peñas apuntadas a un evento, con su número de miembros
 export const getPenasByEvent = async (eventId) => {
     try {

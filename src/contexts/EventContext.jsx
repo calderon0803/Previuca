@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useFlechazo } from './FlechazoContext';
-import { redeemEventCode, getUserEvents, createEvent as createEventService } from '../services/eventsService';
+import { redeemEventCode, getUserEvents, createEvent as createEventService, leaveEvent as leaveEventService } from '../services/eventsService';
 
 const EventContext = createContext();
 
@@ -49,6 +49,16 @@ export const EventProvider = ({ children }) => {
         return result;
     };
 
+    const leaveEvent = async (eventId) => {
+        if (!user) return { success: false, error: 'No has iniciado sesión' };
+
+        const result = await leaveEventService(user.id, eventId);
+        if (result.success) {
+            await loadEvents(user.id);
+        }
+        return result;
+    };
+
     return (
         <EventContext.Provider
             value={{
@@ -57,6 +67,7 @@ export const EventProvider = ({ children }) => {
                 loading,
                 redeemCode,
                 createEvent,
+                leaveEvent,
             }}
         >
             {children}

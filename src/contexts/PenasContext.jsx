@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext } from 'react';
 import { useFlechazo } from './FlechazoContext';
-import { createPena as createPenaService, joinPenaByCode, getPenasByEvent, getMyPena } from '../services/penasService';
+import { createPena as createPenaService, joinPenaByCode, getPenasByEvent, getMyPena, leavePena as leavePenaService } from '../services/penasService';
 
 const PenasContext = createContext();
 
@@ -52,6 +52,17 @@ export const PenasProvider = ({ children }) => {
         return result;
     };
 
+    const leavePena = async (eventId) => {
+        if (!user || !eventId) return { success: false, error: 'Debes tener un evento activo' };
+        if (!myPena) return { success: false, error: 'No perteneces a ninguna peña' };
+
+        const result = await leavePenaService(user.id, eventId);
+        if (result.success) {
+            await loadPenas(eventId);
+        }
+        return result;
+    };
+
     return (
         <PenasContext.Provider
             value={{
@@ -61,6 +72,7 @@ export const PenasProvider = ({ children }) => {
                 loadPenas,
                 createPena,
                 joinPena,
+                leavePena,
             }}
         >
             {children}

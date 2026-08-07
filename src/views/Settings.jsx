@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoPersonCircle, IoLogOut } from 'react-icons/io5';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { useEvent } from '../contexts/EventContext';
+import { getEventStatus } from '../utils/eventStatus';
 import { deleteInstagramVerification } from '../services/instagramService';
 import { supabase } from '../config/supabase';
 import PageHeader from '../components/ui/PageHeader';
@@ -93,6 +94,38 @@ const SettingValue = styled.div`
     font-size: ${({ theme }) => theme.typography.fontSize.sm};
 `;
 
+const ProfileHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: ${({ theme }) => theme.spacing(4)};
+    margin-bottom: ${({ theme }) => theme.spacing(7)};
+`;
+
+const ProfileAvatar = styled.div`
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: ${({ theme }) => theme.colors.primaryMuted};
+    color: ${({ theme }) => theme.colors.primary};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`;
+
+const ProfileName = styled.h1`
+    color: ${({ theme }) => theme.colors.text.primary};
+    font-size: ${({ theme }) => theme.typography.fontSize.xl};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+    margin: 0;
+`;
+
+const ProfileMeta = styled.p`
+    color: ${({ theme }) => theme.colors.text.secondary};
+    font-size: ${({ theme }) => theme.typography.fontSize.sm};
+    margin: 2px 0 0 0;
+`;
+
 const Settings = () => {
     const navigate = useNavigate();
     const {
@@ -102,27 +135,16 @@ const Settings = () => {
         instagramUsername,
         verificationCode,
         refreshInstagramVerification,
-        firstName,
-        lastName,
-        birthdate,
-        saveProfile,
+        fullName,
+        age,
+        gender,
         loading: contextLoading
     } = useFlechazo();
-    const { events, redeemCode } = useEvent();
+    const { events, redeemCode, leaveEvent } = useEvent();
     const [eventCode, setEventCode] = useState('');
     const [eventStatus, setEventStatus] = useState('');
     const [redeeming, setRedeeming] = useState(false);
-    const [firstNameInput, setFirstNameInput] = useState(firstName);
-    const [lastNameInput, setLastNameInput] = useState(lastName);
-    const [birthdateInput, setBirthdateInput] = useState(birthdate);
-    const [profileStatus, setProfileStatus] = useState('');
-    const [savingProfile, setSavingProfile] = useState(false);
-
-    useEffect(() => {
-        setFirstNameInput(firstName);
-        setLastNameInput(lastName);
-        setBirthdateInput(birthdate);
-    }, [firstName, lastName, birthdate]);
+    const [leavingEventId, setLeavingEventId] = useState(null);
 
     // Construir objeto de datos de Instagram desde el contexto
     const instagramData = user && instagramUsername ? {
@@ -188,14 +210,19 @@ const Settings = () => {
         }
     };
 
-    const handleSaveProfile = async () => {
-        setSavingProfile(true);
-        setProfileStatus('');
+    const handleLeaveEvent = async (evento) => {
+        const confirmed = window.confirm(
+            `¿Seguro que quieres abandonar «${evento.name}»? Perderás tu peña, tus flechazos y los sellos coleccionados en este evento. No se puede deshacer.`
+        );
+        if (!confirmed) return;
 
-        const result = await saveProfile(firstNameInput, lastNameInput, birthdateInput);
+        setLeavingEventId(evento.id);
+        const result = await leaveEvent(evento.id);
+        setLeavingEventId(null);
 
-        setSavingProfile(false);
-        setProfileStatus(result.success ? 'Guardado' : (result.error || 'Error al guardar'));
+        if (!result.success) {
+            alert(result.error || 'No se pudo abandonar el evento');
+        }
     };
 
     const handleRedeemEventCode = async () => {
@@ -269,6 +296,20 @@ const Settings = () => {
             <PageHeader title="Ajustes" onBack={handleBack} />
 
             <Content>
+                <ProfileHeader>
+                    <ProfileAvatar>
+                        <IoPersonCircle size={36} />
+                    </ProfileAvatar>
+                    <div>
+                        <ProfileName>{fullName || 'Sin nombre'}</ProfileName>
+                        {(age !== null || gender) && (
+                            <ProfileMeta>
+                                {[age !== null ? `${age} años` : null, gender || null].filter(Boolean).join(' · ')}
+                            </ProfileMeta>
+                        )}
+                    </div>
+                </ProfileHeader>
+
                 <Section>
                     <SectionTitle>Cuenta</SectionTitle>
 
@@ -289,67 +330,24 @@ const Settings = () => {
                 </Section>
 
                 <Section>
-                    <SectionTitle>Perfil</SectionTitle>
-
-                    <SettingItem>
-                        <SettingInfo>
-                            <SettingLabel>Nombre</SettingLabel>
-                            <Input
-                                placeholder="Nombre"
-                                value={firstNameInput}
-                                onChange={(e) => setFirstNameInput(e.target.value)}
-                                disabled={savingProfile}
-                                style={{ marginTop: '8px' }}
-                            />
-                        </SettingInfo>
-                    </SettingItem>
-
-                    <SettingItem>
-                        <SettingInfo>
-                            <SettingLabel>Apellido</SettingLabel>
-                            <Input
-                                placeholder="Apellido"
-                                value={lastNameInput}
-                                onChange={(e) => setLastNameInput(e.target.value)}
-                                disabled={savingProfile}
-                                style={{ marginTop: '8px' }}
-                            />
-                        </SettingInfo>
-                    </SettingItem>
-
-                    <SettingItem>
-                        <SettingInfo>
-                            <SettingLabel>Fecha de nacimiento</SettingLabel>
-                            <Input
-                                type="date"
-                                value={birthdateInput}
-                                onChange={(e) => setBirthdateInput(e.target.value)}
-                                disabled={savingProfile}
-                                style={{ marginTop: '8px' }}
-                            />
-                        </SettingInfo>
-                    </SettingItem>
-
-                    <Button
-                        variant="secondary"
-                        fullWidth
-                        onClick={handleSaveProfile}
-                        disabled={!firstNameInput.trim() || !lastNameInput.trim() || !birthdateInput || savingProfile}
-                    >
-                        {savingProfile ? 'Guardando...' : 'Guardar'}
-                    </Button>
-                    {profileStatus && <SettingValue style={{ marginTop: '8px' }}>{profileStatus}</SettingValue>}
-                </Section>
-
-                <Section>
                     <SectionTitle>Eventos</SectionTitle>
 
                     {events.map((evento) => (
                         <SettingItem key={evento.id}>
                             <SettingInfo>
                                 <SettingLabel>{evento.name}</SettingLabel>
-                                {evento.description && <SettingValue>{evento.description}</SettingValue>}
+                                <SettingValue>
+                                    {getEventStatus(evento) === 'archivado' ? 'Archivado' : 'Activo'}
+                                    {evento.description ? ` · ${evento.description}` : ''}
+                                </SettingValue>
                             </SettingInfo>
+                            <Button
+                                variant="danger"
+                                onClick={() => handleLeaveEvent(evento)}
+                                disabled={leavingEventId === evento.id}
+                            >
+                                {leavingEventId === evento.id ? 'Abandonando...' : 'Abandonar'}
+                            </Button>
                         </SettingItem>
                     ))}
 

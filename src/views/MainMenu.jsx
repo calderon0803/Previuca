@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { css } from 'styled-components';
 import { Gamepad2, PartyPopper, Settings, Plus } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
 import { useAdmin } from '../contexts/AdminContext';
+import { isEventVisibleInMenu } from '../utils/eventStatus';
+import Modal from '../components/ui/Modal';
+import TermsAndConditions from '../components/TermsAndConditions';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -211,10 +214,25 @@ const SecondaryLabel = styled.span`
   white-space: nowrap;
 `;
 
+const TermsFooter = styled.button`
+  background: none;
+  border: none;
+  margin: ${({ theme }) => theme.spacing(6)} 0 0 0;
+  padding: 0;
+  color: ${({ theme }) => theme.colors.text.disabled};
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  text-decoration: underline;
+  cursor: pointer;
+  align-self: center;
+`;
+
 export default function MainMenu() {
   const navigate = useNavigate();
-  const { events, hasEvents } = useEvent();
+  const { events } = useEvent();
   const { isAdmin } = useAdmin();
+  const visibleEvents = events.filter(isEventVisibleInMenu);
+  const hasEvents = visibleEvents.length > 0;
+  const [showTerms, setShowTerms] = useState(false);
 
   return (
     <Container>
@@ -224,7 +242,7 @@ export default function MainMenu() {
           <Wordmark>Previuca</Wordmark>
         </Kicker>
 
-        <Headline>¿A qué jugamos hoy?</Headline>
+        <Headline>¿Qué hacemos hoy?</Headline>
 
         <PrimaryHeroCard onClick={() => navigate('/games')}>
           <HeroWatermark aria-hidden="true"><Gamepad2 size={72} /></HeroWatermark>
@@ -235,7 +253,7 @@ export default function MainMenu() {
         </PrimaryHeroCard>
 
         {hasEvents ? (
-          events.map((evento) => (
+          visibleEvents.map((evento) => (
             <HeroCard
               key={evento.id}
               onClick={() => navigate(`/eventos/${evento.id}`)}
@@ -271,7 +289,15 @@ export default function MainMenu() {
             </SecondaryTile>
           )}
         </SecondaryRow>
+
+        <TermsFooter type="button" onClick={() => setShowTerms(true)}>
+          Términos y condiciones
+        </TermsFooter>
       </Content>
+
+      <Modal visible={showTerms} onClose={() => setShowTerms(false)}>
+        <TermsAndConditions />
+      </Modal>
     </Container>
   );
 }

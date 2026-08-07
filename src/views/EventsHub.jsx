@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { Tent, BookOpen, Heart } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
+import { hasEventStarted } from '../utils/eventStatus';
 import GameModeCard from '../components/GameModeCard';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
@@ -103,11 +104,21 @@ export default function EventsHub() {
         );
     }
 
+    const eventStarted = hasEventStarted(evento);
+
     const subsections = [
-        { id: 'penas', name: 'Peñas', icon: Tent, route: `/eventos/${eventId}/penas` },
-        { id: 'album', name: 'Álbum de sellos', icon: BookOpen, route: `/eventos/${eventId}/album` },
-        { id: 'flechazo', name: 'Flechazo', icon: Heart, route: `/eventos/${eventId}/flechazo` },
+        { id: 'penas', name: 'Peñas', icon: Tent, route: `/eventos/${eventId}/penas`, isLocked: false },
+        { id: 'album', name: 'Álbum de sellos', icon: BookOpen, route: `/eventos/${eventId}/album`, isLocked: !eventStarted },
+        { id: 'flechazo', name: 'Flechazo', icon: Heart, route: `/eventos/${eventId}/flechazo`, isLocked: !eventStarted },
     ];
+
+    const handleSectionClick = (section) => {
+        if (section.isLocked) {
+            alert('Disponible cuando empiece el evento. Mientras tanto puedes ir organizando tu peña.');
+            return;
+        }
+        navigate(section.route);
+    };
 
     return (
         <Container>
@@ -121,8 +132,8 @@ export default function EventsHub() {
                         <GameModeCard
                             key={section.id}
                             game={section}
-                            isLocked={false}
-                            onClick={() => navigate(section.route)}
+                            isLocked={section.isLocked}
+                            onClick={() => handleSectionClick(section)}
                         />
                     ))}
                 </Grid>

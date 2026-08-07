@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase';
 
 export const MIN_AGE = 18;
+export const GENDER_OPTIONS = ['Hombre', 'Mujer', 'No binario', 'Otro', 'Prefiero no decirlo'];
 
 // Años completos entre una fecha de nacimiento y hoy.
 export const calculateAge = (birthdate) => {
@@ -23,12 +24,13 @@ export const isAtLeastMinAge = (birthdate) => {
     return age !== null && age >= MIN_AGE;
 };
 
-// Nombre, apellido y fecha de nacimiento del usuario (o null si todavía no rellenó su perfil)
+// Nombre, apellido, fecha de nacimiento y género del usuario (o null si
+// todavía no rellenó su perfil)
 export const getProfile = async (userId) => {
     try {
         const { data, error } = await supabase
             .from('profiles')
-            .select('first_name, last_name, birthdate')
+            .select('first_name, last_name, birthdate, gender')
             .eq('user_id', userId)
             .single();
 
@@ -41,30 +43,8 @@ export const getProfile = async (userId) => {
     }
 };
 
-export const upsertProfile = async (userId, firstName, lastName, birthdate) => {
-    if (!isAtLeastMinAge(birthdate)) {
-        return { success: false, error: `Debes ser mayor de ${MIN_AGE} años para usar Previuca` };
-    }
-
-    try {
-        const { error } = await supabase
-            .from('profiles')
-            .upsert(
-                [{ user_id: userId, first_name: firstName.trim(), last_name: lastName.trim(), birthdate }],
-                { onConflict: 'user_id' }
-            );
-
-        if (error) throw error;
-
-        return { success: true };
-    } catch (error) {
-        console.error('Error saving profile:', error);
-        return { success: false, error: error.message };
-    }
-};
-
-// Perfiles públicos (edad y peña) de varios usuarios, para la vista de
-// admiradores — sin nombre ni instagram, solo lo necesario para las
+// Perfiles públicos (género, edad y peña) de varios usuarios, para la vista
+// de admiradores — sin nombre ni instagram, solo lo necesario para las
 // revelaciones progresivas.
 export const getProfilesByUserIds = async (userIds) => {
     if (!userIds || userIds.length === 0) return { success: true, profiles: [] };
@@ -72,7 +52,7 @@ export const getProfilesByUserIds = async (userIds) => {
     try {
         const { data, error } = await supabase
             .from('profiles')
-            .select('user_id, birthdate')
+            .select('user_id, birthdate, gender')
             .in('user_id', userIds);
 
         if (error) throw error;

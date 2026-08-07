@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { signIn, signUp, signOut, onAuthStateChange } from '../services/authService';
-import { getProfile, upsertProfile, calculateAge, isAtLeastMinAge, MIN_AGE } from '../services/profileService';
+import { getProfile, calculateAge, isAtLeastMinAge, MIN_AGE, GENDER_OPTIONS } from '../services/profileService';
 import { supabase } from '../config/supabase';
 
 const FlechazoContext = createContext();
@@ -18,6 +18,7 @@ export const FlechazoProvider = ({ children }) => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [birthdate, setBirthdate] = useState('');
+    const [gender, setGender] = useState('');
     const hasLoadedData = useRef(false); // Track si ya cargamos la verificación de Instagram
 
     useEffect(() => {
@@ -49,6 +50,7 @@ export const FlechazoProvider = ({ children }) => {
                     setFirstName('');
                     setLastName('');
                     setBirthdate('');
+                    setGender('');
                     hasLoadedData.current = false;
                 }
                 setLoading(false);
@@ -152,24 +154,7 @@ export const FlechazoProvider = ({ children }) => {
         setFirstName(result.profile?.first_name || '');
         setLastName(result.profile?.last_name || '');
         setBirthdate(result.profile?.birthdate || '');
-    };
-
-    const saveProfile = async (newFirstName, newLastName, newBirthdate) => {
-        if (!user) return { success: false, error: 'No user logged in' };
-        if (!newFirstName?.trim() || !newLastName?.trim()) {
-            return { success: false, error: 'Nombre y apellido son obligatorios' };
-        }
-        if (!isAtLeastMinAge(newBirthdate)) {
-            return { success: false, error: `Debes ser mayor de ${MIN_AGE} años para usar Previuca` };
-        }
-
-        const result = await upsertProfile(user.id, newFirstName, newLastName, newBirthdate);
-        if (result.success) {
-            setFirstName(newFirstName.trim());
-            setLastName(newLastName.trim());
-            setBirthdate(newBirthdate);
-        }
-        return result;
+        setGender(result.profile?.gender || '');
     };
 
     const loadMatchedByCount = async (username, myFlechazos, eventId) => {
@@ -253,12 +238,18 @@ export const FlechazoProvider = ({ children }) => {
         }
     };
 
-    const register = async (email, password, firstName, lastName, birthdateValue) => {
+    const register = async (email, password, firstName, lastName, birthdateValue, genderValue) => {
         if (!firstName?.trim() || !lastName?.trim()) {
             return { success: false, error: 'Nombre y apellido son obligatorios' };
         }
         if (!isAtLeastMinAge(birthdateValue)) {
             return { success: false, error: `Debes ser mayor de ${MIN_AGE} años para registrarte` };
+        }
+        if (!genderValue) {
+            return { success: false, error: 'Selecciona un género' };
+        }
+        if (!GENDER_OPTIONS.includes(genderValue)) {
+            return { success: false, error: 'Género no válido' };
         }
 
         try {
@@ -266,6 +257,7 @@ export const FlechazoProvider = ({ children }) => {
                 first_name: firstName.trim(),
                 last_name: lastName.trim(),
                 birthdate: birthdateValue,
+                gender: genderValue,
             });
             if (error) {
                 return { success: false, error };
@@ -378,9 +370,10 @@ export const FlechazoProvider = ({ children }) => {
                 firstName,
                 lastName,
                 birthdate,
+                gender,
                 age: calculateAge(birthdate),
                 fullName: `${firstName} ${lastName}`.trim(),
-                hasProfile: Boolean(firstName && lastName && birthdate),
+                hasProfile: Boolean(firstName && lastName && birthdate && gender),
                 login,
                 register,
                 logout,
@@ -388,8 +381,7 @@ export const FlechazoProvider = ({ children }) => {
                 addFlechazo,
                 removeFlechazo,
                 updateFlechazo,
-                refreshInstagramVerification,
-                saveProfile
+                refreshInstagramVerification
             }}
         >
             {children}

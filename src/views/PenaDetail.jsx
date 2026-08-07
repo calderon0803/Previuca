@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import QRCode from 'qrcode';
-import { IoKeyOutline, IoPersonCircleOutline, IoRibbonOutline } from 'react-icons/io5';
+import { IoKeyOutline, IoPersonCircleOutline, IoRibbonOutline, IoExitOutline } from 'react-icons/io5';
 import { usePenas } from '../contexts/PenasContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { getPenaMembers } from '../services/penasService';
@@ -161,7 +161,7 @@ const PayloadText = styled.code`
 export default function PenaDetail() {
     const navigate = useNavigate();
     const { eventId, penaId } = useParams();
-    const { penas, myPena, loading: penasLoading, loadPenas } = usePenas();
+    const { penas, myPena, loading: penasLoading, loadPenas, leavePena } = usePenas();
     const { user, loading: flechazoLoading } = useFlechazo();
     const [members, setMembers] = useState([]);
     const [loadingMembers, setLoadingMembers] = useState(true);
@@ -169,6 +169,7 @@ export default function PenaDetail() {
     const [showStampModal, setShowStampModal] = useState(false);
     const [qrDataUrl, setQrDataUrl] = useState(null);
     const [stampPayload, setStampPayload] = useState('');
+    const [leaving, setLeaving] = useState(false);
 
     const pena = penas.find((p) => p.id === penaId) || (myPena?.id === penaId ? myPena : null);
 
@@ -198,6 +199,23 @@ export default function PenaDetail() {
     }, [pena?.id, eventId]);
 
     const isOwnPena = myPena?.id === penaId;
+
+    const handleLeavePena = async () => {
+        const confirmed = window.confirm(
+            `¿Seguro que quieres abandonar «${pena?.name}»? Podrás crear u unirte a otra peña de este evento.`
+        );
+        if (!confirmed) return;
+
+        setLeaving(true);
+        const result = await leavePena(eventId);
+        setLeaving(false);
+
+        if (result.success) {
+            navigate(`/eventos/${eventId}/penas`, { replace: true });
+        } else {
+            alert(result.error || 'No se pudo abandonar la peña');
+        }
+    };
 
     if (flechazoLoading || penasLoading) {
         return (
@@ -254,7 +272,7 @@ export default function PenaDetail() {
                     </MemberList>
                 )}
 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     <Button variant="secondary" onClick={() => setShowStampModal(true)}>
                         <IoRibbonOutline size={16} />
                         Mostrar sello
@@ -262,6 +280,10 @@ export default function PenaDetail() {
                     <Button variant="secondary" onClick={() => setShowCodeModal(true)}>
                         <IoKeyOutline size={16} />
                         Ver código
+                    </Button>
+                    <Button variant="danger" onClick={handleLeavePena} disabled={leaving}>
+                        <IoExitOutline size={16} />
+                        {leaving ? 'Abandonando...' : 'Abandonar peña'}
                     </Button>
                 </div>
             </Content>

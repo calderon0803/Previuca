@@ -4,10 +4,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { IoArrowBack, IoLockClosed, IoMail, IoPersonOutline, IoCalendarOutline } from 'react-icons/io5';
 import { Loader2 } from 'lucide-react';
-import { isAtLeastMinAge, MIN_AGE } from '../services/profileService';
+import { isAtLeastMinAge, MIN_AGE, GENDER_OPTIONS } from '../services/profileService';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import Modal from '../components/ui/Modal';
+import TermsAndConditions from '../components/TermsAndConditions';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -90,6 +92,38 @@ const StatusMessage = styled.p`
   text-align: center;
 `;
 
+const TermsRow = styled.label`
+  display: flex;
+  align-items: flex-start;
+  gap: ${({ theme }) => theme.spacing(2)};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
+  cursor: pointer;
+`;
+
+const TermsCheckbox = styled.input`
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: ${({ theme }) => theme.colors.primary};
+  flex-shrink: 0;
+`;
+
+const TermsText = styled.span`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  line-height: 1.4;
+`;
+
+const TermsLink = styled.button`
+  background: none;
+  border: none;
+  padding: 0;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  text-decoration: underline;
+  cursor: pointer;
+`;
+
 export default function FlechazoLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -97,6 +131,9 @@ export default function FlechazoLogin() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [birthdate, setBirthdate] = useState('');
+  const [gender, setGender] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [status, setStatus] = useState('');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -159,7 +196,12 @@ export default function FlechazoLogin() {
   };
 
   const handleRegister = async () => {
-    if (!email || !password || !firstName.trim() || !lastName.trim() || !birthdate) return;
+    if (!email || !password || !firstName.trim() || !lastName.trim() || !birthdate || !gender) return;
+
+    if (!acceptedTerms) {
+      setStatus('Debes aceptar los términos y condiciones para registrarte');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setStatus('Las contraseñas no coinciden');
@@ -180,7 +222,7 @@ export default function FlechazoLogin() {
     setStatus('Creando cuenta...');
 
     try {
-      const result = await register(email, password, firstName, lastName, birthdate);
+      const result = await register(email, password, firstName, lastName, birthdate, gender);
 
       if (result.success) {
         setStatus('¡Cuenta creada! Verifica tu email para continuar.');
@@ -192,6 +234,8 @@ export default function FlechazoLogin() {
           setFirstName('');
           setLastName('');
           setBirthdate('');
+          setGender('');
+          setAcceptedTerms(false);
         }, 3000);
       } else {
         setStatus(result.error || 'Error al crear cuenta');
@@ -211,6 +255,8 @@ export default function FlechazoLogin() {
     setFirstName('');
     setLastName('');
     setBirthdate('');
+    setGender('');
+    setAcceptedTerms(false);
   };
 
   return (
@@ -318,6 +364,21 @@ export default function FlechazoLogin() {
             </InputGroup>
 
             <InputGroup>
+              <Label>Género</Label>
+              <Input
+                as="select"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                disabled={isVerifying}
+              >
+                <option value="" disabled>Selecciona una opción</option>
+                {GENDER_OPTIONS.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </Input>
+            </InputGroup>
+
+            <InputGroup>
               <Label>Correo electrónico</Label>
               <InputWrapper>
                 <InputIcon>
@@ -368,7 +429,22 @@ export default function FlechazoLogin() {
               </InputWrapper>
             </InputGroup>
 
-            <Button type="submit" fullWidth size="lg" disabled={!email || !password || !confirmPassword || !firstName.trim() || !lastName.trim() || !birthdate || isVerifying}>
+            <TermsRow>
+              <TermsCheckbox
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                disabled={isVerifying}
+              />
+              <TermsText>
+                He leído y acepto los{' '}
+                <TermsLink type="button" onClick={(e) => { e.preventDefault(); setShowTerms(true); }}>
+                  términos y condiciones
+                </TermsLink>
+              </TermsText>
+            </TermsRow>
+
+            <Button type="submit" fullWidth size="lg" disabled={!email || !password || !confirmPassword || !firstName.trim() || !lastName.trim() || !birthdate || !gender || !acceptedTerms || isVerifying}>
               {isVerifying ? 'Creando cuenta...' : 'Registrarse'}
             </Button>
           </form>
@@ -388,6 +464,10 @@ export default function FlechazoLogin() {
 
         <StatusMessage>{status}</StatusMessage>
       </LoginCard>
+
+      <Modal visible={showTerms} onClose={() => setShowTerms(false)}>
+        <TermsAndConditions />
+      </Modal>
     </Container>
   );
 }

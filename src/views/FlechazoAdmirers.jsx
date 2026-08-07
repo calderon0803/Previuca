@@ -3,14 +3,21 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoLockClosed, IoPersonCircleOutline, IoCheckmarkCircle } from 'react-icons/io5';
 import { useFlechazo } from '../contexts/FlechazoContext';
-import { getPenasByEvent, getPenaAffiliationsByUserIds } from '../services/penasService';
+import { getPenasByEvent, getPenaAffiliationsByUserIds, getMyPena } from '../services/penasService';
 import { getUnlockedStamps } from '../services/stampService';
 import { getProfilesByUserIds, calculateAge } from '../services/profileService';
 import PageHeader from '../components/ui/PageHeader';
 
-const AGE_UNLOCK_STAMPS = 5;
-const PENA_COLOR_UNLOCK_STAMPS = 10;
-const IDENTITY_REVEAL_RATIO = 0.75;
+// El evento necesita este mínimo de peñas para que la revelación progresiva
+// tenga sentido (con pocas peñas, los sellos disponibles no darían margen).
+const MIN_PENAS_REQUIRED = 20;
+
+// Umbrales como % de los sellos disponibles (sin contar el de la propia
+// peña, que se obtiene gratis al unirse). Redondeo siempre hacia arriba.
+const GENDER_UNLOCK_RATIO = 0.01;
+const AGE_UNLOCK_RATIO = 0.05;
+const PENA_COLOR_UNLOCK_RATIO = 0.10;
+const IDENTITY_UNLOCK_RATIO = 0.50;
 
 const Container = styled.div`
   min-height: 100vh;
@@ -140,6 +147,7 @@ export default function FlechazoAdmirers() {
     const [unlockedCount, setUnlockedCount] = useState(0);
     const [profiles, setProfiles] = useState([]);
     const [affiliations, setAffiliations] = useState({});
+    const [myPena, setMyPena] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -158,97 +166,147 @@ export default function FlechazoAdmirers() {
             getUnlockedStamps(user.id, eventId),
             getProfilesByUserIds(matchedByUserIds),
             getPenaAffiliationsByUserIds(matchedByUserIds, eventId),
-        ]).then(([penasResult, unlockedResult, profilesResult, affiliationsResult]) => {
+            getMyPena(user.id, eventId),
+        ]).then(([penasResult, unlockedResult, profilesResult, affiliationsResult, myPenaResult]) => {
             if (!active) return;
             setTotalPenas(penasResult.penas.length);
             setUnlockedCount(unlockedResult.penaIds.length);
             setProfiles(profilesResult.profiles);
             setAffiliations(affiliationsResult.affiliations);
+            setMyPena(myPenaResult.pena);
             setLoading(false);
         });
 
         return () => { active = false; };
     }, [eventId, user?.id, matchedByUserIds]);
 
-    const ageUnlocked = unlockedCount >= AGE_UNLOCK_STAMPS;
-    const penaColorUnlocked = unlockedCount >= PENA_COLOR_UNLOCK_STAMPS;
-    const collectedRatio = totalPenas > 0 ? unlockedCount / totalPenas : 0;
-    const identityRevealed = collectedRatio > IDENTITY_REVEAL_RATIO;
+    const hasEnoughPenas = totalPenas >= MIN_PENAS_REQUIRED;
+
+    // El sello de la propia peña no cuenta para los requisitos: se resta de
+    // ambos lados antes de calcular los umbrales.
+    const ownStampCounted = myPena ? 1 : 0;
+    const effectiveTotal = Math.max(0, totalPenas - ownStampCounted);
+    const effectiveUnlocked = Math.max(0, unlockedCount - ownStampCounted);
+
+    // Umbrales en orden ascendente de %. Si el de mayor porcentaje exigiría
+    // los mismos sellos (o menos) que el anterior, se le suman 2 sellos para
+    // que siga siendo más difícil de desbloquear.
+    const requiredStamps = [
+        Math.ceil(GENDER_UNLOCK_RATIO * effectiveTotal),
+        Math.ceil(AGE_UNLOCK_RATIO * effectiveTotal),
+        Math.ceil(PENA_COLOR_UNLOCK_RATIO * effectiveTotal),
+        Math.ceil(IDENTITY_UNLOCK_RATIO * effectiveTotal),
+    ];
+    for (let i = 1; i < requiredStamps.length; i += 1) {
+        if (requiredStamps[i] <= requiredStamps[i - 1]) {
+            requiredStamps[i] = requiredStamps[i - 1] + 2;
+        }
+    }
+    const [genderRequired, ageRequired, penaColorRequired, identityRequired] = requiredStamps;
+
+    const genderUnlocked = effectiveUnlocked >= genderRequired;
+    const ageUnlocked = effectiveUnlocked >= ageRequired;
+    const penaColorUnlocked = effectiveUnlocked >= penaColorRequired;
+    const identityRevealed = effectiveUnlocked >= identityRequired;
 
     return (
         <Container>
             <PageHeader title="Quién te tiene en su lista" onBack={() => navigate(-1)} />
             <Content>
-                <ProgressCard>
-                    <ProgressText>
-                        Sellos coleccionados: {unlockedCount} de {totalPenas}
-                    </ProgressText>
-                    <ProgressText $done={ageUnlocked}>
-                        <ProgressIcon done={ageUnlocked} />
-                        Edad — se desbloquea con {AGE_UNLOCK_STAMPS} sellos
-                    </ProgressText>
-                    <ProgressText $done={penaColorUnlocked}>
-                        <ProgressIcon done={penaColorUnlocked} />
-                        Color de su peña — se desbloquea con {PENA_COLOR_UNLOCK_STAMPS} sellos
-                    </ProgressText>
-                    <ProgressText $done={identityRevealed}>
-                        <ProgressIcon done={identityRevealed} />
-                        Nombre de su peña — se desbloquea con más del 75% de los sellos
-                    </ProgressText>
-                </ProgressCard>
-
                 {loading ? (
                     <EmptyText>Cargando...</EmptyText>
-                ) : matchedByUserIds.length === 0 ? (
-                    <EmptyText>Todavía nadie te ha añadido a su lista.</EmptyText>
+                ) : !hasEnoughPenas ? (
+                    <EmptyText>
+                        Esta función se desbloquea cuando el evento tiene al menos {MIN_PENAS_REQUIRED} peñas
+                        (ahora mismo hay {totalPenas}).
+                    </EmptyText>
                 ) : (
-                    <List>
-                        {matchedByUserIds.map((uid, index) => {
-                            const profile = profiles.find((p) => p.user_id === uid);
-                            const affiliation = affiliations[uid];
-                            const age = calculateAge(profile?.birthdate);
+                    <>
+                        <ProgressCard>
+                            <ProgressText>
+                                Sellos coleccionados: {effectiveUnlocked} de {effectiveTotal} (sin contar el de tu propia peña)
+                            </ProgressText>
+                            <ProgressText $done={genderUnlocked}>
+                                <ProgressIcon done={genderUnlocked} />
+                                Género — se desbloquea con el {Math.round(GENDER_UNLOCK_RATIO * 100)}% de los sellos ({genderRequired})
+                            </ProgressText>
+                            <ProgressText $done={ageUnlocked}>
+                                <ProgressIcon done={ageUnlocked} />
+                                Edad — se desbloquea con el {Math.round(AGE_UNLOCK_RATIO * 100)}% de los sellos ({ageRequired})
+                            </ProgressText>
+                            <ProgressText $done={penaColorUnlocked}>
+                                <ProgressIcon done={penaColorUnlocked} />
+                                Color de su peña — se desbloquea con el {Math.round(PENA_COLOR_UNLOCK_RATIO * 100)}% de los sellos ({penaColorRequired})
+                            </ProgressText>
+                            <ProgressText $done={identityRevealed}>
+                                <ProgressIcon done={identityRevealed} />
+                                Nombre de su peña — se desbloquea con el {Math.round(IDENTITY_UNLOCK_RATIO * 100)}% de los sellos ({identityRequired})
+                            </ProgressText>
+                        </ProgressCard>
 
-                            return (
-                                <Row key={uid}>
-                                    <RowIcon>
-                                        <IoPersonCircleOutline size={28} />
-                                    </RowIcon>
-                                    <RowLabel>Admirador/a #{index + 1}</RowLabel>
-                                    <StatsRow>
-                                        <Stat>
-                                            <StatLabel>Edad</StatLabel>
-                                            {ageUnlocked ? (
-                                                <StatValue>{age !== null ? `${age} años` : 'Sin datos'}</StatValue>
-                                            ) : (
-                                                <LockedValue>
-                                                    <IoLockClosed size={12} />
-                                                    {AGE_UNLOCK_STAMPS} sellos
-                                                </LockedValue>
-                                            )}
-                                        </Stat>
-                                        <Stat>
-                                            <StatLabel>Peña</StatLabel>
-                                            {penaColorUnlocked ? (
-                                                affiliation ? (
-                                                    <StatValue>
-                                                        <ColorDot $color={affiliation.color} />
-                                                        {identityRevealed ? affiliation.name : null}
-                                                    </StatValue>
-                                                ) : (
-                                                    <StatValue>Sin peña</StatValue>
-                                                )
-                                            ) : (
-                                                <LockedValue>
-                                                    <IoLockClosed size={12} />
-                                                    {PENA_COLOR_UNLOCK_STAMPS} sellos
-                                                </LockedValue>
-                                            )}
-                                        </Stat>
-                                    </StatsRow>
-                                </Row>
-                            );
-                        })}
-                    </List>
+                        {matchedByUserIds.length === 0 ? (
+                            <EmptyText>Todavía nadie te ha añadido a su lista.</EmptyText>
+                        ) : (
+                            <List>
+                                {matchedByUserIds.map((uid, index) => {
+                                    const profile = profiles.find((p) => p.user_id === uid);
+                                    const affiliation = affiliations[uid];
+                                    const age = calculateAge(profile?.birthdate);
+
+                                    return (
+                                        <Row key={uid}>
+                                            <RowIcon>
+                                                <IoPersonCircleOutline size={28} />
+                                            </RowIcon>
+                                            <RowLabel>Admirador/a #{index + 1}</RowLabel>
+                                            <StatsRow>
+                                                <Stat>
+                                                    <StatLabel>Género</StatLabel>
+                                                    {genderUnlocked ? (
+                                                        <StatValue>{profile?.gender || 'Sin datos'}</StatValue>
+                                                    ) : (
+                                                        <LockedValue>
+                                                            <IoLockClosed size={12} />
+                                                            {Math.round(GENDER_UNLOCK_RATIO * 100)}%
+                                                        </LockedValue>
+                                                    )}
+                                                </Stat>
+                                                <Stat>
+                                                    <StatLabel>Edad</StatLabel>
+                                                    {ageUnlocked ? (
+                                                        <StatValue>{age !== null ? `${age} años` : 'Sin datos'}</StatValue>
+                                                    ) : (
+                                                        <LockedValue>
+                                                            <IoLockClosed size={12} />
+                                                            {Math.round(AGE_UNLOCK_RATIO * 100)}%
+                                                        </LockedValue>
+                                                    )}
+                                                </Stat>
+                                                <Stat>
+                                                    <StatLabel>Peña</StatLabel>
+                                                    {penaColorUnlocked ? (
+                                                        affiliation ? (
+                                                            <StatValue>
+                                                                <ColorDot $color={affiliation.color} />
+                                                                {identityRevealed ? affiliation.name : null}
+                                                            </StatValue>
+                                                        ) : (
+                                                            <StatValue>Sin peña</StatValue>
+                                                        )
+                                                    ) : (
+                                                        <LockedValue>
+                                                            <IoLockClosed size={12} />
+                                                            {Math.round(PENA_COLOR_UNLOCK_RATIO * 100)}%
+                                                        </LockedValue>
+                                                    )}
+                                                </Stat>
+                                            </StatsRow>
+                                        </Row>
+                                    );
+                                })}
+                            </List>
+                        )}
+                    </>
                 )}
             </Content>
         </Container>
