@@ -1,30 +1,37 @@
 // Design tokens — single source of truth for the app's visual language.
 // Every styled-component should read from here instead of hardcoding values.
 
+// Escala neutra clara, tono ciruela/gris muy desaturado — ni negro puro
+// (texto) ni blanco puro (fondo). 50 = más claro, 950 = más oscuro.
 const neutral = {
-    950: '#0A0B0E',
-    900: '#121317',
-    800: '#191B20',
-    700: '#23262D',
-    600: '#2E323B',
-    500: '#454A55',
-    400: '#5C616D',
-    300: '#7C818C',
-    200: '#A6ABB4',
-    100: '#D2D4D9',
-    50: '#F5F6F7',
+    50: '#F8F5F6',
+    100: '#EFEAEC',
+    200: '#D2C5CB',
+    300: '#B5A6AE',
+    400: '#A79DA5',
+    500: '#847A83',
+    600: '#665D65',
+    700: '#4A424A',
+    800: '#332C33',
+    900: '#241F26',
+    950: '#171317',
 };
+
+// Fondo de página: pastel cálido (blush), distinto de la rampa gris de
+// arriba — así las tarjetas (blancas) resaltan sobre un fondo con color,
+// en vez de un blanco/gris plano.
+const pastelBackground = '#F7ECE7';
 
 const primary = {
     base: '#B23A63',
     hover: '#C4507A',
     active: '#8F2C4E',
-    muted: 'rgba(178, 58, 99, 0.14)',
+    muted: 'rgba(178, 58, 99, 0.12)',
 };
 
 const accent = {
-    base: '#D9A54B',
-    muted: 'rgba(217, 165, 75, 0.16)',
+    base: '#996022',
+    muted: 'rgba(153, 96, 34, 0.16)',
 };
 
 export const theme = {
@@ -37,22 +44,22 @@ export const theme = {
         accent: accent.base,
         accentMuted: accent.muted,
 
-        background: neutral[950],
-        surface: neutral[900],
-        surfaceHover: neutral[800],
-        surfaceRaised: neutral[800],
+        background: pastelBackground,
+        surface: '#FFFFFF',
+        surfaceHover: neutral[50],
+        surfaceRaised: neutral[50],
 
-        border: neutral[700],
-        borderStrong: neutral[600],
+        border: neutral[200],
+        borderStrong: neutral[300],
 
         text: {
-            primary: neutral[50],
-            secondary: neutral[300],
-            disabled: neutral[500],
+            primary: neutral[900],
+            secondary: neutral[600],
+            disabled: neutral[400],
         },
 
-        success: '#3FA772',
-        error: '#E5484D',
+        success: '#297D50',
+        error: '#D2373D',
         warning: accent.base,
     },
 

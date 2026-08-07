@@ -48,6 +48,12 @@ const MatchedByInfo = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing(5)};
   text-align: center;
   color: ${({ theme }) => theme.colors.text.primary};
+  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
+  transition: transform ${({ theme }) => theme.transitions.fast};
+
+  &:active {
+    transform: ${({ $clickable }) => ($clickable ? 'scale(0.99)' : 'none')};
+  }
 
   span {
     display: block;
@@ -203,7 +209,10 @@ export default function FlechazoList() {
               <IoPerson />
             </UserInfo>
 
-            <MatchedByInfo>
+            <MatchedByInfo
+              $clickable={matchedByCount > 0}
+              onClick={() => matchedByCount > 0 && navigate(`/eventos/${eventId}/flechazo/admiradores`)}
+            >
               <span>Personas que te tienen en su lista</span>
               <strong>{matchedByCount}</strong>
             </MatchedByInfo>

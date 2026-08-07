@@ -6,7 +6,7 @@ import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
-const COLORS = ['#B23A63', '#D9A54B', '#3F8CD9', '#3FA772', '#8A5FD9', '#D95F5F', '#5F5F5F'];
+const COLORS = ['#000000', '#B23A63', '#D9A54B', '#3F8CD9', '#3FA772', '#8A5FD9', '#D95F5F', '#5F5F5F'];
 const DESCRIPTION_MAX_LENGTH = 80;
 
 const Container = styled.div`
@@ -61,7 +61,7 @@ const ColorSwatch = styled.button`
   height: 36px;
   border-radius: 50%;
   background: ${({ $color }) => $color};
-  border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.text.primary : 'transparent')};
+  border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.text.primary : theme.colors.borderStrong)};
   cursor: pointer;
   transition: transform ${({ theme }) => theme.transitions.fast};
 

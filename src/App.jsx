@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
+import styled from 'styled-components';
 import { theme } from './styles/theme';
 import { GlobalStyles } from './styles/GlobalStyles';
 import { PlayersProvider } from './contexts/PlayersContext';
@@ -35,6 +36,7 @@ import { AdminProvider, useAdmin } from './contexts/AdminContext';
 import { PenasProvider } from './contexts/PenasContext';
 import FlechazoLogin from './views/FlechazoLogin';
 import FlechazoList from './views/FlechazoList';
+import FlechazoAdmirers from './views/FlechazoAdmirers';
 import InstagramVerification from './views/InstagramVerification';
 import Settings from './views/Settings';
 import EventsHub from './views/EventsHub';
@@ -45,16 +47,17 @@ import CreateEvent from './views/CreateEvent';
 import StampAlbum from './views/StampAlbum';
 import ScanStamp from './views/ScanStamp';
 
+const LoadingScreenWrap = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.text.primary};
+`;
+
 const LoadingScreen = () => (
-    <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        color: '#fff'
-    }}>
-        Cargando...
-    </div>
+    <LoadingScreenWrap>Cargando...</LoadingScreenWrap>
 );
 
 // Protected Route specific for Flechazo
@@ -101,6 +104,14 @@ function App() {
                                 element={
                                     <FlechazoRoute>
                                         <FlechazoList />
+                                    </FlechazoRoute>
+                                }
+                            />
+                            <Route
+                                path="/eventos/:eventId/flechazo/admiradores"
+                                element={
+                                    <FlechazoRoute>
+                                        <FlechazoAdmirers />
                                     </FlechazoRoute>
                                 }
                             />

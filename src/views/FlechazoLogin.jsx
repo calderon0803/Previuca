@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFlechazo } from '../contexts/FlechazoContext';
-import { IoArrowBack, IoLockClosed, IoMail, IoPersonOutline } from 'react-icons/io5';
+import { IoArrowBack, IoLockClosed, IoMail, IoPersonOutline, IoCalendarOutline } from 'react-icons/io5';
 import { Loader2 } from 'lucide-react';
+import { isAtLeastMinAge, MIN_AGE } from '../services/profileService';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -95,6 +96,7 @@ export default function FlechazoLogin() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [birthdate, setBirthdate] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [status, setStatus] = useState('');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -115,7 +117,7 @@ export default function FlechazoLogin() {
   if (loading) {
     return (
       <Container>
-        <div style={{ textAlign: 'center', color: '#fff' }}>
+        <div style={{ textAlign: 'center' }}>
           <Spinner size={32} />
           <div style={{ fontSize: '18px', fontWeight: 'bold' }}>Verificando sesión...</div>
         </div>
@@ -157,7 +159,7 @@ export default function FlechazoLogin() {
   };
 
   const handleRegister = async () => {
-    if (!email || !password || !firstName.trim() || !lastName.trim()) return;
+    if (!email || !password || !firstName.trim() || !lastName.trim() || !birthdate) return;
 
     if (password !== confirmPassword) {
       setStatus('Las contraseñas no coinciden');
@@ -169,11 +171,16 @@ export default function FlechazoLogin() {
       return;
     }
 
+    if (!isAtLeastMinAge(birthdate)) {
+      setStatus(`Debes ser mayor de ${MIN_AGE} años para registrarte`);
+      return;
+    }
+
     setIsVerifying(true);
     setStatus('Creando cuenta...');
 
     try {
-      const result = await register(email, password, firstName, lastName);
+      const result = await register(email, password, firstName, lastName, birthdate);
 
       if (result.success) {
         setStatus('¡Cuenta creada! Verifica tu email para continuar.');
@@ -184,6 +191,7 @@ export default function FlechazoLogin() {
           setConfirmPassword('');
           setFirstName('');
           setLastName('');
+          setBirthdate('');
         }, 3000);
       } else {
         setStatus(result.error || 'Error al crear cuenta');
@@ -202,6 +210,7 @@ export default function FlechazoLogin() {
     setConfirmPassword('');
     setFirstName('');
     setLastName('');
+    setBirthdate('');
   };
 
   return (
@@ -293,6 +302,22 @@ export default function FlechazoLogin() {
             </InputGroup>
 
             <InputGroup>
+              <Label>Fecha de nacimiento</Label>
+              <InputWrapper>
+                <InputIcon>
+                  <IoCalendarOutline size={18} />
+                </InputIcon>
+                <Input
+                  $hasIcon
+                  type="date"
+                  value={birthdate}
+                  onChange={(e) => setBirthdate(e.target.value)}
+                  disabled={isVerifying}
+                />
+              </InputWrapper>
+            </InputGroup>
+
+            <InputGroup>
               <Label>Correo electrónico</Label>
               <InputWrapper>
                 <InputIcon>
@@ -343,7 +368,7 @@ export default function FlechazoLogin() {
               </InputWrapper>
             </InputGroup>
 
-            <Button type="submit" fullWidth size="lg" disabled={!email || !password || !confirmPassword || !firstName.trim() || !lastName.trim() || isVerifying}>
+            <Button type="submit" fullWidth size="lg" disabled={!email || !password || !confirmPassword || !firstName.trim() || !lastName.trim() || !birthdate || isVerifying}>
               {isVerifying ? 'Creando cuenta...' : 'Registrarse'}
             </Button>
           </form>

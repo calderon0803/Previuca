@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { signIn, signUp, signOut, onAuthStateChange } from '../services/authService';
-import { getProfile, upsertProfile } from '../services/profileService';
+import { getProfile, upsertProfile, calculateAge, isAtLeastMinAge, MIN_AGE } from '../services/profileService';
 import { supabase } from '../config/supabase';
 
 const FlechazoContext = createContext();
@@ -14,8 +14,10 @@ export const FlechazoProvider = ({ children }) => {
     const [instagramUsername, setInstagramUsername] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
     const [matchedByCount, setMatchedByCount] = useState(0);
+    const [matchedByUserIds, setMatchedByUserIds] = useState([]);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+    const [birthdate, setBirthdate] = useState('');
     const hasLoadedData = useRef(false); // Track si ya cargamos la verificación de Instagram
 
     useEffect(() => {
@@ -43,8 +45,10 @@ export const FlechazoProvider = ({ children }) => {
                     setIsVerified(false);
                     setInstagramUsername('');
                     setMatchedByCount(0);
+                    setMatchedByUserIds([]);
                     setFirstName('');
                     setLastName('');
+                    setBirthdate('');
                     hasLoadedData.current = false;
                 }
                 setLoading(false);
@@ -147,18 +151,23 @@ export const FlechazoProvider = ({ children }) => {
         const result = await getProfile(userId);
         setFirstName(result.profile?.first_name || '');
         setLastName(result.profile?.last_name || '');
+        setBirthdate(result.profile?.birthdate || '');
     };
 
-    const saveProfile = async (newFirstName, newLastName) => {
+    const saveProfile = async (newFirstName, newLastName, newBirthdate) => {
         if (!user) return { success: false, error: 'No user logged in' };
         if (!newFirstName?.trim() || !newLastName?.trim()) {
             return { success: false, error: 'Nombre y apellido son obligatorios' };
         }
+        if (!isAtLeastMinAge(newBirthdate)) {
+            return { success: false, error: `Debes ser mayor de ${MIN_AGE} años para usar Previuca` };
+        }
 
-        const result = await upsertProfile(user.id, newFirstName, newLastName);
+        const result = await upsertProfile(user.id, newFirstName, newLastName, newBirthdate);
         if (result.success) {
             setFirstName(newFirstName.trim());
             setLastName(newLastName.trim());
+            setBirthdate(newBirthdate);
         }
         return result;
     };
@@ -174,11 +183,12 @@ export const FlechazoProvider = ({ children }) => {
             if (error) throw error;
 
             const count = data?.length || 0;
+            const userIds = data?.map(d => d.user_id) || [];
             setMatchedByCount(count);
+            setMatchedByUserIds(userIds);
 
             // Si hay gente que me tiene Y yo tengo flechazos, verificar matches mutuos
             if (count > 0 && myFlechazos && myFlechazos.length > 0) {
-                const userIds = data.map(d => d.user_id);
                 console.log('UserIds que me tienen:', userIds);
 
                 if (userIds.length === 0) {
@@ -211,6 +221,7 @@ export const FlechazoProvider = ({ children }) => {
         } catch (error) {
             console.error('Error loading matched by count:', error);
             setMatchedByCount(0);
+            setMatchedByUserIds([]);
             setMatches([]);
         }
     };
@@ -242,15 +253,19 @@ export const FlechazoProvider = ({ children }) => {
         }
     };
 
-    const register = async (email, password, firstName, lastName) => {
+    const register = async (email, password, firstName, lastName, birthdateValue) => {
         if (!firstName?.trim() || !lastName?.trim()) {
             return { success: false, error: 'Nombre y apellido son obligatorios' };
+        }
+        if (!isAtLeastMinAge(birthdateValue)) {
+            return { success: false, error: `Debes ser mayor de ${MIN_AGE} años para registrarte` };
         }
 
         try {
             const { data, error } = await signUp(email, password, {
                 first_name: firstName.trim(),
                 last_name: lastName.trim(),
+                birthdate: birthdateValue,
             });
             if (error) {
                 return { success: false, error };
@@ -359,10 +374,13 @@ export const FlechazoProvider = ({ children }) => {
                 instagramUsername,
                 verificationCode,
                 matchedByCount,
+                matchedByUserIds,
                 firstName,
                 lastName,
+                birthdate,
+                age: calculateAge(birthdate),
                 fullName: `${firstName} ${lastName}`.trim(),
-                hasProfile: Boolean(firstName && lastName),
+                hasProfile: Boolean(firstName && lastName && birthdate),
                 login,
                 register,
                 logout,

@@ -104,6 +104,7 @@ const Settings = () => {
         refreshInstagramVerification,
         firstName,
         lastName,
+        birthdate,
         saveProfile,
         loading: contextLoading
     } = useFlechazo();
@@ -113,13 +114,15 @@ const Settings = () => {
     const [redeeming, setRedeeming] = useState(false);
     const [firstNameInput, setFirstNameInput] = useState(firstName);
     const [lastNameInput, setLastNameInput] = useState(lastName);
+    const [birthdateInput, setBirthdateInput] = useState(birthdate);
     const [profileStatus, setProfileStatus] = useState('');
     const [savingProfile, setSavingProfile] = useState(false);
 
     useEffect(() => {
         setFirstNameInput(firstName);
         setLastNameInput(lastName);
-    }, [firstName, lastName]);
+        setBirthdateInput(birthdate);
+    }, [firstName, lastName, birthdate]);
 
     // Construir objeto de datos de Instagram desde el contexto
     const instagramData = user && instagramUsername ? {
@@ -189,7 +192,7 @@ const Settings = () => {
         setSavingProfile(true);
         setProfileStatus('');
 
-        const result = await saveProfile(firstNameInput, lastNameInput);
+        const result = await saveProfile(firstNameInput, lastNameInput, birthdateInput);
 
         setSavingProfile(false);
         setProfileStatus(result.success ? 'Guardado' : (result.error || 'Error al guardar'));
@@ -314,11 +317,24 @@ const Settings = () => {
                         </SettingInfo>
                     </SettingItem>
 
+                    <SettingItem>
+                        <SettingInfo>
+                            <SettingLabel>Fecha de nacimiento</SettingLabel>
+                            <Input
+                                type="date"
+                                value={birthdateInput}
+                                onChange={(e) => setBirthdateInput(e.target.value)}
+                                disabled={savingProfile}
+                                style={{ marginTop: '8px' }}
+                            />
+                        </SettingInfo>
+                    </SettingItem>
+
                     <Button
                         variant="secondary"
                         fullWidth
                         onClick={handleSaveProfile}
-                        disabled={!firstNameInput.trim() || !lastNameInput.trim() || savingProfile}
+                        disabled={!firstNameInput.trim() || !lastNameInput.trim() || !birthdateInput || savingProfile}
                     >
                         {savingProfile ? 'Guardando...' : 'Guardar'}
                     </Button>

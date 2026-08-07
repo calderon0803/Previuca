@@ -414,7 +414,8 @@ const PicoPaloGame = () => {
             const isMayor = newCardNumber > referenceNumber;
             const isMenor = newCardNumber < referenceNumber;
 
-            correct = (choice === 'mayor' && isMayor) || (choice === 'menor' && isMenor) || (newCardNumber === referenceNumber);
+            // Si sale el mismo valor no es ni "mayor" ni "menor" -> fallo, sea cual sea la elección.
+            correct = (choice === 'mayor' && isMayor) || (choice === 'menor' && isMenor);
 
             if (correct) {
                 // Añadir carta a las usadas en esta secuencia

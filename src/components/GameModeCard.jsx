@@ -36,7 +36,8 @@ const Icon = styled.span`
   position: absolute;
   top: -10px;
   right: -10px;
-  opacity: ${({ $isLocked }) => ($isLocked ? 0.04 : 0.14)};
+  color: ${({ $color }) => $color};
+  opacity: ${({ $isLocked }) => ($isLocked ? 0.05 : 0.3)};
   filter: ${({ $isLocked }) => ($isLocked ? 'grayscale(100%)' : 'none')};
   transform: rotate(-10deg);
   pointer-events: none;
@@ -75,7 +76,7 @@ export default function GameModeCard({ game, onClick, isLocked }) {
           </LockIndicator>
         )}
         <Name $isLocked={isLocked}>{game.name}</Name>
-        <Icon $isLocked={isLocked} aria-hidden="true">
+        <Icon $isLocked={isLocked} $color={game.color} aria-hidden="true">
           <game.icon size={52} />
         </Icon>
       </Card>

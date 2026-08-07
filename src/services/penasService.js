@@ -147,6 +147,32 @@ export const getMyPena = async (userId, eventId) => {
     }
 };
 
+// Peña (color/nombre) de una lista de usuarios dentro de un evento concreto —
+// para revelar progresivamente la afiliación de quienes te tienen en su lista.
+export const getPenaAffiliationsByUserIds = async (userIds, eventId) => {
+    if (!userIds || userIds.length === 0) return { success: true, affiliations: {} };
+
+    try {
+        const { data, error } = await supabase
+            .from('pena_members')
+            .select('user_id, penas!inner(name, color)')
+            .eq('event_id', eventId)
+            .in('user_id', userIds);
+
+        if (error) throw error;
+
+        const affiliations = {};
+        (data || []).forEach((row) => {
+            affiliations[row.user_id] = { name: row.penas.name, color: row.penas.color };
+        });
+
+        return { success: true, affiliations };
+    } catch (error) {
+        console.error('Error loading pena affiliations:', error);
+        return { success: false, error: error.message, affiliations: {} };
+    }
+};
+
 // Miembros de una peña concreta, con su nombre y apellido
 export const getPenaMembers = async (penaId) => {
     try {

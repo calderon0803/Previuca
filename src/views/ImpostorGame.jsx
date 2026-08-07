@@ -87,9 +87,11 @@ const SecretBox = styled(motion.div)`
 const SecretText = styled.span`
   font-size: ${({ $size }) => $size || '32px'};
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  /* "swipe" vive sobre SwipeCover, un fondo oscuro fijo (no depende del
+     tema), así que usa un dorado fijo en vez del accent del tema. */
   color: ${({ theme, $variant }) =>
     $variant === 'impostor' ? theme.colors.error :
-    $variant === 'swipe' ? theme.colors.accent :
+    $variant === 'swipe' ? '#D9A54B' :
     theme.colors.text.primary};
 `;
 

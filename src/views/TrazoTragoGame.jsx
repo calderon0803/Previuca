@@ -35,15 +35,19 @@ const StartOverlay = styled.div`
     box-sizing: border-box;
 `;
 
+// StartOverlay/ResultOverlay son siempre una cortina oscura fija (no
+// dependen del tema), así que su texto usa colores claros fijos en vez
+// de theme.colors.text.* — si no, con un tema claro el texto se volvería
+// invisible sobre este fondo oscuro.
 const StartTitle = styled.h2`
-    color: ${({ theme }) => theme.colors.text.primary};
+    color: #F1EDF0;
     font-size: ${({ theme }) => theme.typography.fontSize.xxl};
     margin: 0;
     text-align: center;
 `;
 
 const StartDescription = styled.p`
-    color: ${({ theme }) => theme.colors.text.secondary};
+    color: #C7C0CB;
     font-size: ${({ theme }) => theme.typography.fontSize.md};
     text-align: center;
     max-width: 320px;
@@ -62,11 +66,11 @@ const ResultTitle = styled(StartTitle)`
 const ResultValue = styled.div`
     font-size: ${({ theme }) => theme.typography.fontSize.display};
     font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-    color: ${({ theme }) => theme.colors.text.primary};
+    color: #F1EDF0;
 `;
 
 const ResultDetail = styled.p`
-    color: ${({ theme }) => theme.colors.text.primary};
+    color: #F1EDF0;
     font-size: ${({ theme }) => theme.typography.fontSize.md};
     margin: 5px 0;
 `;

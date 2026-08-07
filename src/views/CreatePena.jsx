@@ -10,7 +10,7 @@ import Input from '../components/ui/Input';
 const COLORS = [
     '#E5484D', '#D9455B', '#B23A63', '#D9377E', '#C23FA0', '#8A5FD9',
     '#6E56CF', '#3F8CD9', '#3FA0D9', '#3FA9A0', '#3FA772', '#5FA83F',
-    '#8FB93F', '#D9C23F', '#D9A54B', '#D97C3F', '#D95F5F', '#7C818C',
+    '#8FB93F', '#D9C23F', '#D9A54B', '#D97C3F', '#D95F5F', '#7C818C', '#000000',
 ];
 
 const Container = styled.div`
@@ -51,7 +51,7 @@ const ColorSwatch = styled.button`
   height: 36px;
   border-radius: 50%;
   background: ${({ $color }) => $color};
-  border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.text.primary : 'transparent')};
+  border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.text.primary : theme.colors.borderStrong)};
   cursor: pointer;
   transition: transform ${({ theme }) => theme.transitions.fast};
 

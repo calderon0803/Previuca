@@ -65,7 +65,8 @@ const BigText = styled(motion.h2)`
 
 const InstructionText = styled.p`
   font-size: ${({ theme }) => theme.typography.fontSize.md};
-  color: ${({ theme }) => theme.colors.text.secondary};
+  color: ${({ theme, $strong }) => ($strong ? theme.colors.primary : theme.colors.text.secondary)};
+  font-weight: ${({ theme, $strong }) => ($strong ? theme.typography.fontWeight.semibold : theme.typography.fontWeight.regular)};
   margin-top: ${({ theme }) => theme.spacing(8)};
   max-width: 280px;
   line-height: 1.5;
@@ -167,7 +168,7 @@ export default function MedusaGame() {
                             >
                                 <BigText style={{ fontSize: '36px' }}>¡MIRAD!</BigText>
                             </MainCircle>
-                            <InstructionText style={{ color: '#fff', fontWeight: 600 }}>
+                            <InstructionText $strong>
                                 ¡Si cruzas la mirada con alguien, BEBEIS!
                             </InstructionText>
                             <div style={{ marginTop: '32px' }}>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoPeople } from 'react-icons/io5';
 import {
-    EyeOff, Eye, Crown, Spade, Disc3, UserSearch,
+    Flame, Eye, Crown, Spade, Disc3, VenetianMask,
     Dice5, Triangle, Skull, Palette,
 } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
@@ -17,61 +17,71 @@ const gameModes = [
         id: 1,
         name: 'Yo Nunca',
         description: 'Confiesa lo que nunca has hecho',
-        icon: EyeOff,
+        icon: Flame,
+        color: '#E2572B', // llama - confesiones "calientes"
     },
     {
         id: 2,
         name: 'Medusa',
         description: 'No cruces la mirada',
         icon: Eye,
+        color: '#2E9E8F', // verde-azulado, mirada hipnótica
     },
     {
         id: 3,
         name: 'Rey de Copas',
         description: 'Juego de cartas legendario',
         icon: Crown,
+        color: '#C9862E', // dorado real
     },
     {
         id: 4,
         name: 'Pico Palo',
         description: 'Adivina la carta correcta',
         icon: Spade,
+        color: '#3F5D9E', // azul carta clásica
     },
     {
         id: 6,
         name: 'Ruleta',
         description: 'Gira y prueba tu suerte',
         icon: Disc3,
+        color: '#2F8F5B', // verde de tapete de casino
     },
     {
         id: 7,
         name: 'Impostor',
         description: '¿Quién es el infiltrado?',
-        icon: UserSearch,
+        icon: VenetianMask,
+        color: '#6E56CF', // violeta, misterio
     },
     {
         id: 8,
         name: 'Dados de Beber',
         description: 'Tira los dados y bebe',
         icon: Dice5,
+        color: '#3F8CD9', // azul lúdico
     },
     {
         id: 9,
         name: 'Illuminati',
         description: 'Escala la pirámide de cartas',
         icon: Triangle,
+        color: '#8B6F1F', // bronce/oro místico, distinto del de Rey de Copas
     },
     {
         id: 10,
         name: 'Asesino',
         description: 'Descubre quién es el asesino',
         icon: Skull,
+        color: '#A31E28', // rojo sangre, oscuro
     },
     {
         id: 11,
         name: 'Trazo & Trago',
         description: 'Dibuja y adivina. El que pierda, bebe.',
         icon: Palette,
+        color: '#C23FA0', // magenta creativo
     },
 ];
 

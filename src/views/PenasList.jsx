@@ -9,6 +9,20 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 
+// Tinte suave del color de la peña para el fondo de "Tu peña" — el color
+// completo se reserva para el borde y la etiqueta, así el texto principal
+// sigue siendo legible sea cual sea el color elegido.
+function hexToRgba(hex, alpha) {
+    const clean = (hex || '#B23A63').replace('#', '');
+    const full = clean.length === 3
+        ? clean.split('').map((ch) => ch + ch).join('')
+        : clean.padEnd(6, '0');
+    const r = parseInt(full.slice(0, 2), 16);
+    const g = parseInt(full.slice(2, 4), 16);
+    const b = parseInt(full.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 const Container = styled.div`
   min-height: 100vh;
   background-color: ${({ theme }) => theme.colors.background};
@@ -32,8 +46,8 @@ const ActionsRow = styled.div`
 `;
 
 const OwnPenaBanner = styled.div`
-  background: ${({ theme }) => theme.colors.primaryMuted};
-  border: 1px solid ${({ theme }) => theme.colors.primary};
+  background: ${({ $color }) => hexToRgba($color, 0.14)};
+  border: 1px solid ${({ $color }) => $color};
   border-radius: ${({ theme }) => theme.radii.md};
   padding: ${({ theme }) => theme.spacing(4)};
   margin-bottom: ${({ theme }) => theme.spacing(6)};
@@ -42,7 +56,7 @@ const OwnPenaBanner = styled.div`
 
 const OwnPenaLabel = styled.p`
   font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  color: ${({ theme }) => theme.colors.primary};
+  color: ${({ $color }) => $color};
   text-transform: uppercase;
   letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
   font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
@@ -174,8 +188,8 @@ export default function PenasList() {
             <PageHeader title="Peñas" onBack={() => navigate(`/eventos/${eventId}`)} />
             <Content>
                 {myPena ? (
-                    <OwnPenaBanner onClick={() => navigate(`/eventos/${eventId}/penas/${myPena.id}`)}>
-                        <OwnPenaLabel>Tu peña</OwnPenaLabel>
+                    <OwnPenaBanner $color={myPena.color} onClick={() => navigate(`/eventos/${eventId}/penas/${myPena.id}`)}>
+                        <OwnPenaLabel $color={myPena.color}>Tu peña</OwnPenaLabel>
                         <OwnPenaName>{myPena.name}</OwnPenaName>
                     </OwnPenaBanner>
                 ) : (
