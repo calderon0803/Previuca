@@ -2,10 +2,14 @@
 // Node.js 18+ tiene fetch built-in, no necesita imports
 
 exports.handler = async (event, context) => {
+    const origin = event.headers.origin || event.headers.Origin || '*';
+    const allowedOrigins = [process.env.URL, process.env.DEPLOY_URL, 'http://localhost:5173', 'http://localhost:8889'].filter(Boolean);
+    const allowOrigin = allowedOrigins.includes(origin) ? origin : (process.env.NODE_ENV === 'production' ? (allowedOrigins[0] || '*') : '*');
+
     // Configurar CORS
     const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Origin': allowOrigin,
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Content-Type': 'application/json'
     };
@@ -29,9 +33,9 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        const { username } = JSON.parse(event.body);
+        const { username } = JSON.parse(event.body || '{}');
 
-        if (!username) {
+        if (!username || typeof username !== 'string') {
             return {
                 statusCode: 400,
                 headers,
@@ -40,6 +44,16 @@ exports.handler = async (event, context) => {
         }
 
         const cleanUsername = username.replace('@', '').trim();
+        const isValidUsername = /^[a-zA-Z0-9._]{1,30}$/.test(cleanUsername);
+
+        if (!isValidUsername) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ error: 'Nombre de usuario de Instagram no válido' })
+            };
+        }
+
         const instagramUrl = `https://www.instagram.com/${cleanUsername}/`;
 
         console.log('Fetching Instagram profile:', cleanUsername);

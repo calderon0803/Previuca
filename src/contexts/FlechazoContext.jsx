@@ -159,40 +159,37 @@ export const FlechazoProvider = ({ children }) => {
 
     const loadMatchedByCount = async (username, myFlechazos, eventId) => {
         try {
-            const { data, error } = await supabase
-                .from('users_flechazos')
-                .select('user_id')
-                .eq('match_name', username)
-                .eq('event_id', eventId);
+            // Usa la función RPC de BD segura 'get_my_admirers'
+            const { data: admirerIds, error } = await supabase
+                .rpc('get_my_admirers', {
+                    p_event_id: eventId,
+                    p_my_instagram: username
+                });
 
             if (error) throw error;
 
-            const count = data?.length || 0;
-            const userIds = data?.map(d => d.user_id) || [];
+            const userIds = (admirerIds || []).map(row => row.admirer_user_id || row);
+            const count = userIds.length;
             setMatchedByCount(count);
             setMatchedByUserIds(userIds);
 
             // Si hay gente que me tiene Y yo tengo flechazos, verificar matches mutuos
             if (count > 0 && myFlechazos && myFlechazos.length > 0) {
-                console.log('UserIds que me tienen:', userIds);
-
                 if (userIds.length === 0) {
                     setMatches([]);
                     return;
                 }
 
-                // Obtener los usernames de Instagram de quienes me tienen
+                // Obtener usernames de admiradores vía RPC segura
                 const { data: igData, error: igError } = await supabase
-                    .from('instagram_verification')
-                    .select('instagram_username')
-                    .in('user_id', userIds);
-
-                console.log('Instagram data:', igData);
-                console.log('Instagram error:', igError);
+                    .rpc('get_admirer_instagrams', {
+                        p_event_id: eventId,
+                        p_admirer_ids: userIds
+                    });
 
                 if (igError) throw igError;
 
-                const theirUsernames = igData?.map(u => u.instagram_username) || [];
+                const theirUsernames = (igData || []).map(u => u.instagram_username);
 
                 // Encontrar matches mutuos: flechazos míos que también me tienen
                 const mutualMatches = myFlechazos.filter(flechazo =>
@@ -212,25 +209,16 @@ export const FlechazoProvider = ({ children }) => {
     };
 
     const login = async (email, password) => {
-        console.log('[FlechazoContext] login called with:', email);
         try {
-            console.log('[FlechazoContext] calling signIn...');
             const result = await signIn(email, password);
-            console.log('[FlechazoContext] signIn returned:', result);
-
             const { data, error } = result;
-            console.log('[FlechazoContext] extracted data:', data);
-            console.log('[FlechazoContext] extracted error:', error);
 
             if (error) {
-                console.log('[FlechazoContext] returning error');
                 return { success: false, error: error };
             }
             if (data?.session) {
-                console.log('[FlechazoContext] returning success');
                 return { success: true, data };
             }
-            console.log('[FlechazoContext] no session, returning error');
             return { success: false, error: 'No se pudo iniciar sesión' };
         } catch (error) {
             console.error('[FlechazoContext] Login exception:', error);

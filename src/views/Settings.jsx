@@ -271,18 +271,17 @@ const Settings = () => {
         }
 
         try {
-            // Eliminar datos del usuario
-            const { error: flechazoError } = await supabase
-                .from('users_flechazos')
-                .delete()
-                .eq('user_id', user.id);
+            // Eliminar de todas las tablas asociadas al usuario
+            await Promise.all([
+                supabase.from('users_flechazos').delete().eq('user_id', user.id),
+                supabase.from('pena_members').delete().eq('user_id', user.id),
+                supabase.from('pena_stamp_unlocks').delete().eq('user_id', user.id),
+                supabase.from('user_eventos').delete().eq('user_id', user.id),
+                deleteInstagramVerification(user.id),
+                supabase.from('profiles').delete().eq('user_id', user.id)
+            ]);
 
-            if (flechazoError) throw flechazoError;
-
-            // Eliminar verificación de Instagram
-            await deleteInstagramVerification(user.id);
-
-            alert('Cuenta eliminada. Serás redirigido al inicio.');
+            alert('Datos de cuenta eliminados. Serás redirigido al inicio.');
             await logout();
             navigate('/');
         } catch (error) {

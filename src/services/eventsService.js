@@ -1,7 +1,9 @@
 import { supabase } from '../config/supabase';
 
 const generateEventCode = () => {
-    return Math.random().toString(36).substring(2, 10).toUpperCase();
+    const array = new Uint8Array(6);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(36)).join('').substring(0, 8).toUpperCase();
 };
 
 // Buscar un evento por su código y apuntar al usuario (se añade a los que ya tenga)

@@ -50,17 +50,12 @@ export const getInstagramVerification = async (userId) => {
 export const verifyInstagramCode = async (userId, instagramUsername, expectedCode) => {
     try {
         const cleanUsername = instagramUsername.replace('@', '').trim();
-        
-        console.log('Verificando Instagram:', cleanUsername);
-        console.log('Código esperado:', expectedCode);
-        
+
         // Determinar la URL de la función según el entorno
         const functionUrl = import.meta.env.PROD 
             ? '/.netlify/functions/verify-instagram'  // Producción en Netlify
             : 'http://localhost:8889/.netlify/functions/verify-instagram';  // Desarrollo local
-        
-        console.log('Llamando a función serverless:', functionUrl);
-        
+
         // Llamar a la función serverless que hace el scraping
         const response = await fetch(functionUrl, {
             method: 'POST',
@@ -76,34 +71,25 @@ export const verifyInstagramCode = async (userId, instagramUsername, expectedCod
         }
 
         const result = await response.json();
-        
+
         if (!result.success) {
             throw new Error(result.error || 'No se pudo obtener la biografía');
         }
 
-        console.log('Biografía obtenida:', result.biography);
-        
         // Verificar si el código está en la biografía (case insensitive y sin espacios)
         const normalizedBio = result.biography.replace(/\s/g, '').toLowerCase();
         const normalizedCode = expectedCode.replace(/\s/g, '').toLowerCase();
         const codeFound = normalizedBio.includes(normalizedCode);
-        
-        console.log('Código encontrado:', codeFound);
-        
+
         if (codeFound) {
-            // Actualizar en la base de datos
-            const { data, error } = await supabase
-                .from('instagram_verification')
-                .update({
-                    is_verified: true,
-                    verified_at: new Date().toISOString()
-                })
-                .eq('user_id', userId)
-                .select()
-                .single();
+            // Actualizar en la base de datos a través del procedimiento almacenado seguro (RPC)
+            const { data, error } = await supabase.rpc('confirm_instagram_verification', {
+                p_verification_code: expectedCode
+            });
 
             if (error) throw error;
-            
+            if (!data?.success) throw new Error(data?.error || 'Error al confirmar la verificación');
+
             return { 
                 success: true, 
                 verified: true, 
@@ -118,7 +104,7 @@ export const verifyInstagramCode = async (userId, instagramUsername, expectedCod
                 biography: result.biography
             };
         }
-        
+
     } catch (error) {
         console.error('Error verifying instagram code:', error);
         return { 

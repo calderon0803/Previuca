@@ -2,17 +2,34 @@ import { supabase } from '../config/supabase';
 import { unlockStamp } from './stampService';
 
 const generatePenaCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+    const array = new Uint8Array(4);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(36)).join('').substring(0, 6).toUpperCase();
 };
 
 // Sube la imagen de la peña al bucket público y devuelve su URL
 const uploadPenaImage = async (userId, imageFile) => {
-    const extension = imageFile.name.split('.').pop();
-    const path = `${userId}/${Date.now()}.${extension}`;
+    // Validar tipo MIME
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(imageFile.type)) {
+        throw new Error('Tipo de archivo no permitido. Solo se aceptan imágenes (JPEG, PNG, WEBP, GIF).');
+    }
+
+    // Validar tamaño máximo (5MB)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (imageFile.size > MAX_SIZE) {
+        throw new Error('La imagen no puede superar los 5MB.');
+    }
+
+    const extension = imageFile.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const path = `${userId}/${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${extension}`;
 
     const { error } = await supabase.storage
         .from('pena-images')
-        .upload(path, imageFile);
+        .upload(path, imageFile, {
+            contentType: imageFile.type,
+            upsert: false
+        });
 
     if (error) throw error;
 

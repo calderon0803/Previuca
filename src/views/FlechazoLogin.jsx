@@ -169,11 +169,7 @@ export default function FlechazoLogin() {
     setStatus('Autenticando...');
 
     try {
-      console.log('Intentando login con:', email);
       const result = await login(email, password);
-      console.log('Login result completo:', JSON.stringify(result, null, 2));
-      console.log('result.success:', result?.success);
-      console.log('Tipo de result:', typeof result);
 
       if (result?.success) {
         setStatus('¡Bienvenido!');
@@ -184,7 +180,6 @@ export default function FlechazoLogin() {
         const errorMsg = typeof result?.error === 'string'
           ? result.error
           : result?.error?.message || 'Error al iniciar sesión';
-        console.log('Error message:', errorMsg);
         setStatus(errorMsg);
         setIsVerifying(false);
       }
