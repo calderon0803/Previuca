@@ -47,7 +47,7 @@ export default function TermsAndConditions() {
         <Wrapper>
             <div>
                 <Title>Términos y condiciones de Previuca</Title>
-                <UpdatedAt>Última actualización: 7 de agosto de 2026</UpdatedAt>
+                <UpdatedAt>Última actualización: 10 de agosto de 2026</UpdatedAt>
             </div>
 
             <Section title="1. Aceptación">
@@ -74,17 +74,29 @@ export default function TermsAndConditions() {
                 incumple esta norma.
             </Section>
 
-            <Section title="5. Flechazo y revelación progresiva de datos">
-                La función Flechazo te permite indicar hasta 5 usuarios de Instagram que te gusten.
-                Si alguien te indica a ti de la misma forma, coleccionando sellos de otras peñas del
-                evento esa persona podrá desbloquear progresivamente algunos de tus datos (género,
-                edad y, más adelante, tu peña), y si hay coincidencia mutua se revela el match.
-                Al usar esta función aceptas que esta información pueda mostrarse de forma
-                progresiva a quienes te hayan añadido a su lista, en los términos descritos en la
-                propia aplicación.
+            <Section title="5. Salseo">
+                Salseo es un muro de mensajes visible para el resto de participantes del evento,
+                donde puedes publicar, responder y dar «me gusta». Los mensajes se publican con tu
+                nombre y apellido, nunca de forma anónima, y no se pueden editar una vez publicados.
+                Puedes borrar tus propios mensajes y respuestas cuando quieras; el equipo organizador
+                también puede borrar contenido que incumpla estas normas. Al abandonar un evento (ver
+                punto 9), tus mensajes y respuestas no se eliminan automáticamente, ya que pueden
+                formar parte de conversaciones de otras personas: si quieres borrarlos, hazlo
+                individualmente antes de salir.
             </Section>
 
-            <Section title="6. Juegos y consumo responsable">
+            <Section title="6. Flechazo y revelación progresiva de datos">
+                La función Flechazo te permite indicar hasta 5 usuarios de Instagram que te gusten.
+                Si alguien te indica a ti, podrás desbloquear progresivamente algunos de sus datos
+                (género, edad y, más adelante, su peña) a medida que colecciones sellos de otras
+                peñas del evento. Del mismo modo, si tú indicas a alguien, esa persona podrá
+                desbloquear progresivamente algunos de tus datos a medida que colecciona sus propios
+                sellos. Si hay coincidencia mutua, se revela el match. Al usar esta función aceptas
+                que tus datos puedan mostrarse de forma progresiva a cualquier persona a la que hayas
+                indicado, en los términos descritos en la propia aplicación.
+            </Section>
+
+            <Section title="7. Juegos y consumo responsable">
                 Previuca incluye juegos de fiesta pensados para jugarse en un contexto social, algunos
                 de los cuales pueden implicar el consumo de alcohol. La aplicación no fomenta el
                 consumo excesivo ni irresponsable: juega con moderación, respeta la normativa local
@@ -93,25 +105,26 @@ export default function TermsAndConditions() {
                 los juegos ni de las consecuencias derivadas de un consumo indebido.
             </Section>
 
-            <Section title="7. Conducta prohibida">
+            <Section title="8. Conducta prohibida">
                 No está permitido acosar, amenazar o suplantar a otros usuarios, ni usar la app con
                 fines distintos a los previstos (organizar y disfrutar eventos con tu grupo). Podemos
                 suspender o eliminar cuentas que incumplan esta norma.
             </Section>
 
-            <Section title="8. Abandonar un evento o una peña">
+            <Section title="9. Abandonar un evento o una peña">
                 Puedes abandonar un evento en cualquier momento desde tu perfil; al hacerlo se
                 eliminará toda tu información relacionada con ese evento (peña, sellos, flechazos)
-                como si nunca hubieras participado. También puedes abandonar tu peña sin perder el
-                resto de tus datos del evento.
+                como si nunca hubieras participado, salvo tus mensajes y respuestas (ver punto 5), que
+                se conservan salvo que los borres tú mismo. También puedes abandonar tu peña sin
+                perder el resto de tus datos del evento.
             </Section>
 
-            <Section title="9. Cambios en estos términos">
+            <Section title="10. Cambios en estos términos">
                 Podemos actualizar estos términos si la aplicación cambia. Si los cambios son
                 relevantes, te lo indicaremos dentro de la propia app antes de que sigas usándola.
             </Section>
 
-            <Section title="10. Contacto">
+            <Section title="11. Contacto">
                 Si tienes dudas sobre estos términos, puedes contactar con el equipo organizador del
                 evento a través de los canales habituales del mismo.
             </Section>

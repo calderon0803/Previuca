@@ -233,7 +233,6 @@ export default function PenasList() {
                     placeholder="Código de la peña"
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    autoFocus
                 />
                 {joinError && <ErrorText>{joinError}</ErrorText>}
                 <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>

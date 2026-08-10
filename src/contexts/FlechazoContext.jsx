@@ -19,6 +19,7 @@ export const FlechazoProvider = ({ children }) => {
     const [lastName, setLastName] = useState('');
     const [birthdate, setBirthdate] = useState('');
     const [gender, setGender] = useState('');
+    const [isBlocked, setIsBlocked] = useState(false);
     const hasLoadedData = useRef(false); // Track si ya cargamos la verificación de Instagram
 
     useEffect(() => {
@@ -37,6 +38,7 @@ export const FlechazoProvider = ({ children }) => {
                     if (!hasLoadedData.current) {
                         loadInstagramVerification(session.user);
                         loadProfile(session.user.id);
+                        loadBlockedStatus(session.user.id);
                         hasLoadedData.current = true;
                     }
                 } else {
@@ -51,6 +53,7 @@ export const FlechazoProvider = ({ children }) => {
                     setLastName('');
                     setBirthdate('');
                     setGender('');
+                    setIsBlocked(false);
                     hasLoadedData.current = false;
                 }
                 setLoading(false);
@@ -75,6 +78,7 @@ export const FlechazoProvider = ({ children }) => {
                 if (!hasLoadedData.current) {
                     await loadInstagramVerification(session.user);
                     await loadProfile(session.user.id);
+                    await loadBlockedStatus(session.user.id);
                     hasLoadedData.current = true;
                 }
             }
@@ -155,6 +159,25 @@ export const FlechazoProvider = ({ children }) => {
         setLastName(result.profile?.last_name || '');
         setBirthdate(result.profile?.birthdate || '');
         setGender(result.profile?.gender || '');
+    };
+
+    // Sustituto de un ban real de Supabase Auth (no hay service-role key en
+    // este proyecto): mientras exista fila en blocked_users, App.jsx muestra
+    // una pantalla de bloqueado en vez de las rutas normales.
+    const loadBlockedStatus = async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('blocked_users')
+                .select('user_id')
+                .eq('user_id', userId)
+                .single();
+
+            if (error && error.code !== 'PGRST116') throw error;
+            setIsBlocked(!!data);
+        } catch (error) {
+            console.error('Error checking blocked status:', error);
+            setIsBlocked(false);
+        }
     };
 
     const loadMatchedByCount = async (username, myFlechazos, eventId) => {
@@ -359,6 +382,7 @@ export const FlechazoProvider = ({ children }) => {
                 lastName,
                 birthdate,
                 gender,
+                isBlocked,
                 age: calculateAge(birthdate),
                 fullName: `${firstName} ${lastName}`.trim(),
                 hasProfile: Boolean(firstName && lastName && birthdate && gender),

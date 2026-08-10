@@ -253,7 +253,6 @@ export default function FlechazoList() {
             placeholder="Usuario (sin espacios)"
             value={newFlechazoName}
             onChange={e => setNewFlechazoName(e.target.value.replace(/\s/g, ''))}
-            autoFocus
           />
         </div>
         <ButtonGroup>

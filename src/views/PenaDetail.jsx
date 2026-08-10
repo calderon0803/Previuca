@@ -202,7 +202,7 @@ export default function PenaDetail() {
 
     const handleLeavePena = async () => {
         const confirmed = window.confirm(
-            `¿Seguro que quieres abandonar «${pena?.name}»? Podrás crear u unirte a otra peña de este evento.`
+            `¿Seguro que quieres abandonar «${pena?.name}»? Podrás crear o unirte a otra peña de este evento.`
         );
         if (!confirmed) return;
 

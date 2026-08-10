@@ -218,7 +218,6 @@ export default function PlayersModal({ visible, onClose }) {
           value={newPlayerName}
           onChange={(e) => setNewPlayerName(e.target.value)}
           onKeyDown={handleKeyDown}
-          autoFocus
         />
         <AddButton onClick={handleAddPlayer} disabled={!newPlayerName.trim()}>
           <IoAddCircle size={26} />

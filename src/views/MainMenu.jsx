@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { css } from 'styled-components';
-import { Gamepad2, PartyPopper, Settings, Plus } from 'lucide-react';
+import { Gamepad2, PartyPopper, Settings, ShieldCheck } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
 import { useAdmin } from '../contexts/AdminContext';
+import { useFlechazo } from '../contexts/FlechazoContext';
+import { getUnreadNotices, markNoticeRead } from '../services/adminService';
 import { isEventVisibleInMenu } from '../utils/eventStatus';
 import Modal from '../components/ui/Modal';
+import Button from '../components/ui/Button';
 import TermsAndConditions from '../components/TermsAndConditions';
 
 const Container = styled.div`
@@ -214,6 +217,21 @@ const SecondaryLabel = styled.span`
   white-space: nowrap;
 `;
 
+const NoticesTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-top: 0;
+  margin-bottom: ${({ theme }) => theme.spacing(4)};
+  text-align: center;
+`;
+
+const NoticeItem = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(4)};
+  margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
+`;
+
 const TermsFooter = styled.button`
   background: none;
   border: none;
@@ -230,9 +248,21 @@ export default function MainMenu() {
   const navigate = useNavigate();
   const { events } = useEvent();
   const { isAdmin } = useAdmin();
+  const { user } = useFlechazo();
   const visibleEvents = events.filter(isEventVisibleInMenu);
   const hasEvents = visibleEvents.length > 0;
   const [showTerms, setShowTerms] = useState(false);
+  const [pendingNotices, setPendingNotices] = useState([]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getUnreadNotices(user.id).then((result) => setPendingNotices(result.notices));
+  }, [user?.id]);
+
+  const handleDismissNotices = async () => {
+    await Promise.all(pendingNotices.map((notice) => markNoticeRead(notice.id)));
+    setPendingNotices([]);
+  };
 
   return (
     <Container>
@@ -283,9 +313,9 @@ export default function MainMenu() {
             <SecondaryLabel>Ajustes</SecondaryLabel>
           </SecondaryTile>
           {isAdmin && (
-            <SecondaryTile onClick={() => navigate('/eventos/nuevo')}>
-              <SecondaryIcon><Plus size={18} /></SecondaryIcon>
-              <SecondaryLabel>Crear evento</SecondaryLabel>
+            <SecondaryTile onClick={() => navigate('/admin')}>
+              <SecondaryIcon><ShieldCheck size={18} /></SecondaryIcon>
+              <SecondaryLabel>Administración</SecondaryLabel>
             </SecondaryTile>
           )}
         </SecondaryRow>
@@ -297,6 +327,14 @@ export default function MainMenu() {
 
       <Modal visible={showTerms} onClose={() => setShowTerms(false)}>
         <TermsAndConditions />
+      </Modal>
+
+      <Modal visible={pendingNotices.length > 0} onClose={handleDismissNotices}>
+        <NoticesTitle>Avisos del equipo organizador</NoticesTitle>
+        {pendingNotices.map((notice) => (
+          <NoticeItem key={notice.id}>{notice.message}</NoticeItem>
+        ))}
+        <Button fullWidth onClick={handleDismissNotices}>Entendido</Button>
       </Modal>
     </Container>
   );

@@ -48,6 +48,47 @@ CREATE POLICY "Admins can create eventos"
     ON eventos FOR INSERT
     WITH CHECK (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
+-- Los eventos no tienen un "propietario" individual más allá del admin que
+-- los crea, así que editarlos/borrarlos es solo cosa de admins.
+DROP POLICY IF EXISTS "Admins can update eventos" ON eventos;
+CREATE POLICY "Admins can update eventos"
+    ON eventos FOR UPDATE
+    USING (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can delete eventos" ON eventos;
+CREATE POLICY "Admins can delete eventos"
+    ON eventos FOR DELETE
+    USING (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+-- -------------------------------------------------
+-- 2b. Tabla: blocked_users
+-- -------------------------------------------------
+-- Sustituto de un ban real de Supabase Auth (que requeriría la service-role
+-- key, no disponible en este proyecto): mientras un usuario tenga fila aquí,
+-- la app le muestra una pantalla de bloqueado y no puede publicar en Salseos.
+CREATE TABLE IF NOT EXISTS blocked_users (
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    blocked_by UUID REFERENCES auth.users(id),
+    blocked_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE blocked_users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can check their own block status" ON blocked_users;
+CREATE POLICY "Users can check their own block status"
+    ON blocked_users FOR SELECT
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can block users" ON blocked_users;
+CREATE POLICY "Admins can block users"
+    ON blocked_users FOR INSERT
+    WITH CHECK (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can unblock users" ON blocked_users;
+CREATE POLICY "Admins can unblock users"
+    ON blocked_users FOR DELETE
+    USING (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
 -- -------------------------------------------------
 -- 3. Tabla: profiles
 -- -------------------------------------------------
@@ -76,12 +117,12 @@ CREATE POLICY "Users can insert their own profile"
 DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
 CREATE POLICY "Users can update their own profile"
     ON profiles FOR UPDATE
-    USING (auth.uid() = user_id);
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "Users can delete their own profile" ON profiles;
 CREATE POLICY "Users can delete their own profile"
     ON profiles FOR DELETE
-    USING (auth.uid() = user_id);
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 -- Trigger de alta automática de perfil
 CREATE OR REPLACE FUNCTION public.handle_new_user_profile()
@@ -136,7 +177,7 @@ CREATE POLICY "Users can join an evento"
 DROP POLICY IF EXISTS "Users can leave an evento" ON user_eventos;
 CREATE POLICY "Users can leave an evento"
     ON user_eventos FOR DELETE
-    USING (auth.uid() = user_id);
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 -- -------------------------------------------------
 -- 5. Tabla: penas
@@ -169,12 +210,12 @@ CREATE POLICY "Users can create their own pena"
 DROP POLICY IF EXISTS "Users can update their own pena" ON penas;
 CREATE POLICY "Users can update their own pena"
     ON penas FOR UPDATE
-    USING (auth.uid() = created_by);
+    USING (auth.uid() = created_by OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "Users can delete their own pena" ON penas;
 CREATE POLICY "Users can delete their own pena"
     ON penas FOR DELETE
-    USING (auth.uid() = created_by);
+    USING (auth.uid() = created_by OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 -- -------------------------------------------------
 -- 6. Tabla: pena_members
@@ -205,7 +246,7 @@ CREATE POLICY "Users can join a pena"
 DROP POLICY IF EXISTS "Users can leave their pena" ON pena_members;
 CREATE POLICY "Users can leave their pena"
     ON pena_members FOR DELETE
-    USING (auth.uid() = user_id);
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 -- -------------------------------------------------
 -- 7. Tabla: users_flechazos
@@ -241,7 +282,7 @@ CREATE POLICY "Users can update their own matches"
 DROP POLICY IF EXISTS "Users can delete their own matches" ON users_flechazos;
 CREATE POLICY "Users can delete their own matches"
     ON users_flechazos FOR DELETE
-    USING (auth.uid() = user_id);
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 -- -------------------------------------------------
 -- 8. Tabla: instagram_verification
@@ -281,7 +322,7 @@ CREATE POLICY "Users can update their own verification"
 DROP POLICY IF EXISTS "Users can delete their own verification" ON instagram_verification;
 CREATE POLICY "Users can delete their own verification"
     ON instagram_verification FOR DELETE
-    USING (auth.uid() = user_id);
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 -- -------------------------------------------------
 -- 9. Tabla: pena_stamp_unlocks
@@ -314,7 +355,7 @@ CREATE POLICY "Users can unlock a stamp for themselves"
 DROP POLICY IF EXISTS "Users can delete their own stamps" ON pena_stamp_unlocks;
 CREATE POLICY "Users can delete their own stamps"
     ON pena_stamp_unlocks FOR DELETE
-    USING (auth.uid() = user_id);
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 -- -------------------------------------------------
 -- 10. Funciones RPC Seguras
@@ -547,6 +588,203 @@ DROP TRIGGER IF EXISTS audit_penas ON penas;
 CREATE TRIGGER audit_penas
     AFTER INSERT OR UPDATE OR DELETE ON penas
     FOR EACH ROW EXECUTE FUNCTION audit_log_trigger('created_by');
+
+-- -------------------------------------------------
+-- 13. Tablas: salseos_posts, salseos_replies, salseos_likes
+-- -------------------------------------------------
+CREATE TABLE IF NOT EXISTS salseos_posts (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    event_id UUID REFERENCES eventos(id) ON DELETE CASCADE NOT NULL,
+    author_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    body TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_salseos_posts_event_id ON salseos_posts(event_id);
+
+CREATE TABLE IF NOT EXISTS salseos_replies (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    post_id UUID REFERENCES salseos_posts(id) ON DELETE CASCADE NOT NULL,
+    event_id UUID REFERENCES eventos(id) ON DELETE CASCADE NOT NULL,
+    author_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    body TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_salseos_replies_post_id ON salseos_replies(post_id);
+
+CREATE TABLE IF NOT EXISTS salseos_likes (
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    post_id UUID REFERENCES salseos_posts(id) ON DELETE CASCADE NOT NULL,
+    event_id UUID REFERENCES eventos(id) ON DELETE CASCADE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    PRIMARY KEY (user_id, post_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_salseos_likes_post_id ON salseos_likes(post_id);
+
+ALTER TABLE salseos_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE salseos_replies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE salseos_likes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can view salseos posts" ON salseos_posts;
+CREATE POLICY "Authenticated users can view salseos posts"
+    ON salseos_posts FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Users can create their own salseos posts" ON salseos_posts;
+CREATE POLICY "Users can create their own salseos posts"
+    ON salseos_posts FOR INSERT
+    WITH CHECK (
+        auth.uid() = author_id
+        AND NOT EXISTS (SELECT 1 FROM blocked_users WHERE user_id = auth.uid())
+    );
+
+DROP POLICY IF EXISTS "Author or admin can delete salseos posts" ON salseos_posts;
+CREATE POLICY "Author or admin can delete salseos posts"
+    ON salseos_posts FOR DELETE
+    USING (
+        auth.uid() = author_id
+        OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid())
+    );
+
+DROP POLICY IF EXISTS "Authenticated users can view salseos replies" ON salseos_replies;
+CREATE POLICY "Authenticated users can view salseos replies"
+    ON salseos_replies FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Users can create their own salseos replies" ON salseos_replies;
+CREATE POLICY "Users can create their own salseos replies"
+    ON salseos_replies FOR INSERT
+    WITH CHECK (
+        auth.uid() = author_id
+        AND event_id = (SELECT p.event_id FROM salseos_posts p WHERE p.id = post_id)
+        AND NOT EXISTS (SELECT 1 FROM blocked_users WHERE user_id = auth.uid())
+    );
+
+DROP POLICY IF EXISTS "Author or admin can delete salseos replies" ON salseos_replies;
+CREATE POLICY "Author or admin can delete salseos replies"
+    ON salseos_replies FOR DELETE
+    USING (
+        auth.uid() = author_id
+        OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid())
+    );
+
+DROP POLICY IF EXISTS "Authenticated users can view salseos likes" ON salseos_likes;
+CREATE POLICY "Authenticated users can view salseos likes"
+    ON salseos_likes FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Users can like posts" ON salseos_likes;
+CREATE POLICY "Users can like posts"
+    ON salseos_likes FOR INSERT
+    WITH CHECK (
+        auth.uid() = user_id
+        AND event_id = (SELECT p.event_id FROM salseos_posts p WHERE p.id = post_id)
+    );
+
+DROP POLICY IF EXISTS "Users can unlike their own like" ON salseos_likes;
+CREATE POLICY "Users can unlike their own like"
+    ON salseos_likes FOR DELETE
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+DROP TRIGGER IF EXISTS audit_salseos_posts ON salseos_posts;
+CREATE TRIGGER audit_salseos_posts
+    AFTER INSERT OR UPDATE OR DELETE ON salseos_posts
+    FOR EACH ROW EXECUTE FUNCTION audit_log_trigger('author_id');
+
+DROP TRIGGER IF EXISTS audit_salseos_replies ON salseos_replies;
+CREATE TRIGGER audit_salseos_replies
+    AFTER INSERT OR UPDATE OR DELETE ON salseos_replies
+    FOR EACH ROW EXECUTE FUNCTION audit_log_trigger('author_id');
+
+-- -------------------------------------------------
+-- 14. Tabla: salseos_reports
+-- -------------------------------------------------
+CREATE TABLE IF NOT EXISTS salseos_reports (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    event_id UUID REFERENCES eventos(id) ON DELETE CASCADE NOT NULL,
+    post_id UUID REFERENCES salseos_posts(id) ON DELETE CASCADE,
+    reply_id UUID REFERENCES salseos_replies(id) ON DELETE CASCADE,
+    reporter_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    reason TEXT NOT NULL CHECK (reason IN ('acoso', 'ofensivo', 'suplantacion', 'spam', 'otro')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    CONSTRAINT salseos_reports_target_check CHECK (
+        (post_id IS NOT NULL AND reply_id IS NULL) OR (post_id IS NULL AND reply_id IS NOT NULL)
+    )
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_salseos_reports_unique_post
+    ON salseos_reports(reporter_id, post_id) WHERE post_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_salseos_reports_unique_reply
+    ON salseos_reports(reporter_id, reply_id) WHERE reply_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_salseos_reports_post_id ON salseos_reports(post_id);
+CREATE INDEX IF NOT EXISTS idx_salseos_reports_reply_id ON salseos_reports(reply_id);
+
+ALTER TABLE salseos_reports ENABLE ROW LEVEL SECURITY;
+
+-- Solo quien reportó (para saber que ya lo hizo) o un admin (para moderar)
+-- pueden ver los reportes; nunca la persona autora del contenido reportado.
+DROP POLICY IF EXISTS "Reporter or admin can view salseos reports" ON salseos_reports;
+CREATE POLICY "Reporter or admin can view salseos reports"
+    ON salseos_reports FOR SELECT
+    USING (
+        auth.uid() = reporter_id
+        OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid())
+    );
+
+DROP POLICY IF EXISTS "Users can report salseos content" ON salseos_reports;
+CREATE POLICY "Users can report salseos content"
+    ON salseos_reports FOR INSERT
+    WITH CHECK (
+        auth.uid() = reporter_id
+        AND (
+            (post_id IS NOT NULL AND event_id = (SELECT p.event_id FROM salseos_posts p WHERE p.id = post_id))
+            OR
+            (reply_id IS NOT NULL AND event_id = (SELECT r.event_id FROM salseos_replies r WHERE r.id = reply_id))
+        )
+    );
+
+-- Solo un admin puede borrar un reporte (limpieza al eliminar la cuenta del
+-- reportante); el propio reportante no puede borrarlo para ocultar evidencia.
+DROP POLICY IF EXISTS "Admins can delete salseos reports" ON salseos_reports;
+CREATE POLICY "Admins can delete salseos reports"
+    ON salseos_reports FOR DELETE
+    USING (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+DROP TRIGGER IF EXISTS audit_salseos_reports ON salseos_reports;
+CREATE TRIGGER audit_salseos_reports
+    AFTER INSERT OR UPDATE OR DELETE ON salseos_reports
+    FOR EACH ROW EXECUTE FUNCTION audit_log_trigger('reporter_id');
+
+-- -------------------------------------------------
+-- 15. Tabla: user_notices
+-- -------------------------------------------------
+-- Avisos que un admin envía a un usuario (p.ej. tras moderar un reporte).
+CREATE TABLE IF NOT EXISTS user_notices (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    message TEXT NOT NULL,
+    report_id UUID REFERENCES salseos_reports(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    read_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_notices_user_id ON user_notices(user_id);
+
+ALTER TABLE user_notices ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own notices" ON user_notices;
+CREATE POLICY "Users can view their own notices"
+    ON user_notices FOR SELECT
+    USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can send notices" ON user_notices;
+CREATE POLICY "Admins can send notices"
+    ON user_notices FOR INSERT
+    WITH CHECK (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+DROP POLICY IF EXISTS "Users can mark their own notices as read" ON user_notices;
+CREATE POLICY "Users can mark their own notices as read"
+    ON user_notices FOR UPDATE
+    USING (auth.uid() = user_id);
 
 -- -------------------------------------------------
 -- Success Notification

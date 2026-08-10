@@ -197,7 +197,6 @@ export default function OptionsEditor({
             value={newItem}
             onChange={(e) => setNewItem(e.target.value)}
             onKeyDown={handleKeyDown}
-            autoFocus
           />
           <AddButton onClick={handleAddItem} disabled={!newItem.trim()}>
             <IoAddCircle size={26} />

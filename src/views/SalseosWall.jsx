@@ -1,0 +1,261 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import styled from 'styled-components';
+import { Heart, MessageCircle, Flag, RefreshCw } from 'lucide-react';
+import { useSalseos } from '../contexts/SalseosContext';
+import { useFlechazo } from '../contexts/FlechazoContext';
+import { formatRelativeTime } from '../utils/relativeTime';
+import PageHeader from '../components/ui/PageHeader';
+import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
+import Modal from '../components/ui/Modal';
+import Textarea from '../components/ui/Textarea';
+import ReportModal from '../components/ReportModal';
+
+const Container = styled.div`
+  min-height: 100vh;
+  background-color: ${({ theme }) => theme.colors.background};
+  display: flex;
+  flex-direction: column;
+`;
+
+const Content = styled.div`
+  flex: 1;
+  padding: ${({ theme }) => theme.spacing(5)};
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
+const ActionsRow = styled.div`
+  margin-bottom: ${({ theme }) => theme.spacing(6)};
+`;
+
+const List = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(3)};
+`;
+
+const PostCard = styled.div`
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.spacing(4)};
+  cursor: pointer;
+`;
+
+const AuthorRow = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: ${({ theme }) => theme.spacing(2)};
+  margin-bottom: ${({ theme }) => theme.spacing(2)};
+`;
+
+const AuthorName = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+const TimeText = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  color: ${({ theme }) => theme.colors.text.disabled};
+`;
+
+const BodyText = styled.p`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.md};
+  line-height: 1.4;
+  margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
+  white-space: pre-wrap;
+`;
+
+const ActionsBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(5)};
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(1.5)};
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.text.secondary)};
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+const EmptyText = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  text-align: center;
+  margin-top: ${({ theme }) => theme.spacing(8)};
+`;
+
+const ModalTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-top: 0;
+  margin-bottom: ${({ theme }) => theme.spacing(4)};
+  text-align: center;
+`;
+
+const ErrorText = styled.p`
+  color: ${({ theme }) => theme.colors.error};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  text-align: center;
+  margin: ${({ theme }) => theme.spacing(3)} 0 0 0;
+`;
+
+export default function SalseosWall() {
+    const navigate = useNavigate();
+    const { eventId } = useParams();
+    const { posts, loading, loadPosts, createPost, toggleLike, reportPost } = useSalseos();
+    const { user, loading: flechazoLoading } = useFlechazo();
+    const [showComposeModal, setShowComposeModal] = useState(false);
+    const [newBody, setNewBody] = useState('');
+    const [composeError, setComposeError] = useState('');
+    const [publishing, setPublishing] = useState(false);
+    const [reportingPostId, setReportingPostId] = useState(null);
+    const [reportError, setReportError] = useState('');
+    const [reporting, setReporting] = useState(false);
+
+    useEffect(() => {
+        if (flechazoLoading) return;
+        loadPosts(eventId);
+    }, [eventId, user?.id, flechazoLoading]);
+
+    const handlePublish = async () => {
+        setPublishing(true);
+        setComposeError('');
+        const result = await createPost(eventId, newBody);
+        setPublishing(false);
+        if (result.success) {
+            setShowComposeModal(false);
+            setNewBody('');
+        } else {
+            setComposeError(result.error || 'No se pudo publicar el mensaje');
+        }
+    };
+
+    const handleLikeClick = (event, postId) => {
+        event.stopPropagation();
+        toggleLike(postId, eventId);
+    };
+
+    const handleReportClick = (event, postId) => {
+        event.stopPropagation();
+        setReportError('');
+        setReportingPostId(postId);
+    };
+
+    const handleReportSubmit = async (reason) => {
+        setReporting(true);
+        setReportError('');
+        const result = await reportPost(reportingPostId, eventId, reason);
+        setReporting(false);
+        if (result.success) {
+            setReportingPostId(null);
+        } else {
+            setReportError(result.error || 'No se pudo enviar el reporte');
+        }
+    };
+
+    return (
+        <Container>
+            <PageHeader
+                title="Salseo"
+                onBack={() => navigate(`/eventos/${eventId}`)}
+                rightAction={
+                    <IconButton variant="ghost" onClick={() => loadPosts(eventId)} aria-label="Recargar">
+                        <RefreshCw size={18} />
+                    </IconButton>
+                }
+            />
+            <Content>
+                <ActionsRow>
+                    <Button fullWidth onClick={() => setShowComposeModal(true)}>
+                        Nuevo mensaje
+                    </Button>
+                </ActionsRow>
+
+                {loading ? (
+                    <EmptyText>Cargando...</EmptyText>
+                ) : posts.length === 0 ? (
+                    <EmptyText>Todavía no hay ningún mensaje en este evento. ¡Sé el primero!</EmptyText>
+                ) : (
+                    <List>
+                        {posts.map((post) => (
+                            <PostCard key={post.id} onClick={() => navigate(`/eventos/${eventId}/salseos/${post.id}`)}>
+                                <AuthorRow>
+                                    <AuthorName>{post.authorName}</AuthorName>
+                                    <TimeText>{formatRelativeTime(post.created_at)}</TimeText>
+                                </AuthorRow>
+                                <BodyText>{post.body}</BodyText>
+                                <ActionsBar>
+                                    <ActionButton $active={post.likedByMe} onClick={(e) => handleLikeClick(e, post.id)}>
+                                        <Heart size={16} fill={post.likedByMe ? 'currentColor' : 'none'} />
+                                        {post.likeCount}
+                                    </ActionButton>
+                                    <ActionButton>
+                                        <MessageCircle size={16} />
+                                        {post.replyCount}
+                                    </ActionButton>
+                                    {post.author_id !== user?.id && (
+                                        <ActionButton
+                                            $active={post.reportedByMe}
+                                            disabled={post.reportedByMe}
+                                            onClick={(e) => handleReportClick(e, post.id)}
+                                        >
+                                            <Flag size={16} fill={post.reportedByMe ? 'currentColor' : 'none'} />
+                                            {post.reportedByMe ? 'Reportado' : 'Reportar'}
+                                        </ActionButton>
+                                    )}
+                                </ActionsBar>
+                            </PostCard>
+                        ))}
+                    </List>
+                )}
+            </Content>
+
+            <Modal
+                visible={showComposeModal}
+                onClose={() => {
+                    setShowComposeModal(false);
+                    setComposeError('');
+                }}
+            >
+                <ModalTitle>Nuevo mensaje</ModalTitle>
+                <Textarea
+                    placeholder="¿Qué está pasando?"
+                    value={newBody}
+                    onChange={(e) => setNewBody(e.target.value)}
+                />
+                {composeError && <ErrorText>{composeError}</ErrorText>}
+                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <Button variant="secondary" fullWidth onClick={() => setShowComposeModal(false)}>
+                        Cancelar
+                    </Button>
+                    <Button fullWidth onClick={handlePublish} disabled={!newBody.trim() || publishing}>
+                        {publishing ? 'Publicando...' : 'Publicar'}
+                    </Button>
+                </div>
+            </Modal>
+
+            <ReportModal
+                visible={reportingPostId !== null}
+                onClose={() => setReportingPostId(null)}
+                onSubmit={handleReportSubmit}
+                submitting={reporting}
+                error={reportError}
+            />
+        </Container>
+    );
+}

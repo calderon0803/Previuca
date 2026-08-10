@@ -8,7 +8,7 @@ const generatePenaCode = () => {
 };
 
 // Sube la imagen de la peña al bucket público y devuelve su URL
-const uploadPenaImage = async (userId, imageFile) => {
+export const uploadPenaImage = async (userId, imageFile) => {
     // Validar tipo MIME
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(imageFile.type)) {
@@ -123,7 +123,7 @@ export const joinPenaByCode = async (eventId, userId, code) => {
 };
 
 // Abandona la peña actual dentro de un evento (el sello ya coleccionado se
-// conserva; solo se borra la membresía, para poder crear u unirse a otra).
+// conserva; solo se borra la membresía, para poder crear o unirse a otra).
 export const leavePena = async (userId, eventId) => {
     try {
         const { error } = await supabase

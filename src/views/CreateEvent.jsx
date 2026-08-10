@@ -119,7 +119,7 @@ export default function CreateEvent() {
 
     return (
         <Container>
-            <PageHeader title="Crear evento" onBack={() => navigate('/')} />
+            <PageHeader title="Crear evento" onBack={() => navigate('/admin')} />
             <Content>
                 <Field>
                     <Label>Nombre</Label>
@@ -128,7 +128,6 @@ export default function CreateEvent() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         disabled={submitting}
-                        autoFocus
                     />
                 </Field>
 

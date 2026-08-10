@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { Tent, BookOpen, Heart } from 'lucide-react';
+import { Tent, BookOpen, Heart, MessageCircle } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
+import { useAdmin } from '../contexts/AdminContext';
 import { hasEventStarted } from '../utils/eventStatus';
 import GameModeCard from '../components/GameModeCard';
 import PageHeader from '../components/ui/PageHeader';
@@ -80,6 +81,7 @@ export default function EventsHub() {
     const navigate = useNavigate();
     const { eventId } = useParams();
     const { events, loading } = useEvent();
+    const { isAdmin } = useAdmin();
 
     if (loading) return null;
 
@@ -104,12 +106,15 @@ export default function EventsHub() {
         );
     }
 
-    const eventStarted = hasEventStarted(evento);
+    // A un admin no le afecta el bloqueo por fechas: necesita poder entrar a
+    // revisar/organizar antes de que el evento empiece oficialmente.
+    const eventStarted = hasEventStarted(evento) || isAdmin;
 
     const subsections = [
         { id: 'penas', name: 'Peñas', icon: Tent, route: `/eventos/${eventId}/penas`, isLocked: false },
         { id: 'album', name: 'Álbum de sellos', icon: BookOpen, route: `/eventos/${eventId}/album`, isLocked: !eventStarted },
         { id: 'flechazo', name: 'Flechazo', icon: Heart, route: `/eventos/${eventId}/flechazo`, isLocked: !eventStarted },
+        { id: 'salseos', name: 'Salseo', icon: MessageCircle, route: `/eventos/${eventId}/salseos`, isLocked: false },
     ];
 
     const handleSectionClick = (section) => {
@@ -125,7 +130,7 @@ export default function EventsHub() {
             <PageHeader title={evento.name} onBack={() => navigate('/')} />
             <Content>
                 <SectionLabel>
-                    <SectionEyebrow>Subsecciones</SectionEyebrow>
+                    <SectionEyebrow>Actividades</SectionEyebrow>
                 </SectionLabel>
                 <Grid>
                     {subsections.map((section) => (
