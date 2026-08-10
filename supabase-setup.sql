@@ -124,6 +124,13 @@ CREATE POLICY "Users can delete their own profile"
     ON profiles FOR DELETE
     USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
+-- Identidad pública en Salseo: el usuario de Instagram vinculado, o uno
+-- propio elegido si no tiene Instagram — único en toda la app (case-insensitive).
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS salseo_username TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_salseo_username_unique
+    ON profiles (LOWER(salseo_username));
+
 -- Trigger de alta automática de perfil
 CREATE OR REPLACE FUNCTION public.handle_new_user_profile()
 RETURNS TRIGGER AS $$

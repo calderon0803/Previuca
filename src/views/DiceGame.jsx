@@ -210,7 +210,7 @@ export default function DiceGame() {
         <Container>
             <PageHeader
                 title="Dados de Beber"
-                onBack={() => navigate('/games')}
+                onBack={() => navigate(-1)}
                 rightAction={
                     <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
                         <IoRefresh size={20} />

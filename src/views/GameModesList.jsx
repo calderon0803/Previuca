@@ -196,7 +196,7 @@ export default function GameModesList() {
         <Container>
             <PageHeader
                 title="Juegos"
-                onBack={() => navigate('/')}
+                onBack={() => navigate(-1)}
                 rightAction={
                     <IconButton
                         variant="ghost"

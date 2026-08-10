@@ -246,7 +246,7 @@ export default function AsesinoGame() {
     if (players.length < 5) {
         return (
             <Container>
-                <PageHeader title="Asesino" onBack={() => navigate('/games')} />
+                <PageHeader title="Asesino" onBack={() => navigate(-1)} />
                 <Content>
                     <Card>
                         <Title>Jugadores insuficientes</Title>
@@ -269,7 +269,7 @@ export default function AsesinoGame() {
             <Container>
                 <PageHeader
                     title="Asesino"
-                    onBack={() => navigate('/games')}
+                    onBack={() => navigate(-1)}
                     rightAction={
                         <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
                             <IoRefresh size={20} />
@@ -311,7 +311,7 @@ export default function AsesinoGame() {
             <Container>
                 <PageHeader
                     title="Asesino"
-                    onBack={() => navigate('/games')}
+                    onBack={() => navigate(-1)}
                     rightAction={
                         <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
                             <IoRefresh size={20} />
@@ -390,7 +390,7 @@ export default function AsesinoGame() {
             <Container>
                 <PageHeader
                     title="Asesino"
-                    onBack={() => navigate('/games')}
+                    onBack={() => navigate(-1)}
                     rightAction={
                         <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
                             <IoRefresh size={20} />

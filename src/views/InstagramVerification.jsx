@@ -194,7 +194,7 @@ export default function InstagramVerification() {
     if (contextLoading) {
         return (
             <Container>
-                <PageHeader title="Verificación Instagram" onBack={() => navigate(backPath)} />
+                <PageHeader title="Verificación Instagram" onBack={() => navigate(-1)} />
                 <Content>
                     <Card>
                         <p style={{ textAlign: 'center', color: '#7C818C', margin: 0 }}>Cargando...</p>
@@ -206,7 +206,7 @@ export default function InstagramVerification() {
 
     return (
         <Container>
-            <PageHeader title="Verificación Instagram" onBack={() => navigate(backPath)} />
+            <PageHeader title="Verificación Instagram" onBack={() => navigate(-1)} />
             <Content>
                 <Card>
                     <Title>

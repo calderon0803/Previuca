@@ -12,6 +12,7 @@ import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
 import Textarea from '../components/ui/Textarea';
 import ReportModal from '../components/ReportModal';
+import SalseoUsernameModal from '../components/SalseoUsernameModal';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -144,7 +145,7 @@ export default function SalseoDetail() {
     const navigate = useNavigate();
     const { eventId, postId } = useParams();
     const { posts, loading: postsLoading, loadPosts, deletePost, toggleLike, reportPost } = useSalseos();
-    const { user, loading: flechazoLoading } = useFlechazo();
+    const { user, loading: flechazoLoading, salseoUsername } = useFlechazo();
     const { isAdmin } = useAdmin();
     const [replies, setReplies] = useState([]);
     const [loadingReplies, setLoadingReplies] = useState(true);
@@ -154,6 +155,7 @@ export default function SalseoDetail() {
     const [reportingTarget, setReportingTarget] = useState(null); // { type: 'post' | 'reply', id }
     const [reportError, setReportError] = useState('');
     const [reporting, setReporting] = useState(false);
+    const [showUsernameModal, setShowUsernameModal] = useState(false);
 
     const post = posts.find((p) => p.id === postId);
 
@@ -229,6 +231,11 @@ export default function SalseoDetail() {
     const handleSubmitReply = async () => {
         if (!replyBody.trim()) return;
 
+        if (!salseoUsername) {
+            setShowUsernameModal(true);
+            return;
+        }
+
         setSubmittingReply(true);
         setReplyError('');
         const result = await createReply({ postId, eventId, authorId: user.id, body: replyBody });
@@ -246,7 +253,7 @@ export default function SalseoDetail() {
     if (flechazoLoading || postsLoading) {
         return (
             <Container>
-                <PageHeader title="Salseo" onBack={() => navigate(`/eventos/${eventId}/salseos`)} />
+                <PageHeader title="Salseo" onBack={() => navigate(-1)} />
                 <Content>
                     <EmptyText>Cargando...</EmptyText>
                 </Content>
@@ -257,7 +264,7 @@ export default function SalseoDetail() {
     if (!post) {
         return (
             <Container>
-                <PageHeader title="Salseo" onBack={() => navigate(`/eventos/${eventId}/salseos`)} />
+                <PageHeader title="Salseo" onBack={() => navigate(-1)} />
                 <Content>
                     <EmptyText>No se encontró este mensaje.</EmptyText>
                 </Content>
@@ -267,7 +274,7 @@ export default function SalseoDetail() {
 
     return (
         <Container>
-            <PageHeader title="Salseo" onBack={() => navigate(`/eventos/${eventId}/salseos`)} />
+            <PageHeader title="Salseo" onBack={() => navigate(-1)} />
             <Content>
                 <PostCard>
                     <AuthorRow>
@@ -369,6 +376,15 @@ export default function SalseoDetail() {
                 onSubmit={handleReportSubmit}
                 submitting={reporting}
                 error={reportError}
+            />
+
+            <SalseoUsernameModal
+                visible={showUsernameModal}
+                onClose={() => setShowUsernameModal(false)}
+                onSuccess={() => {
+                    setShowUsernameModal(false);
+                    handleSubmitReply();
+                }}
             />
         </Container>
     );

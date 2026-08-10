@@ -201,7 +201,7 @@ export default function ScanStamp() {
 
     return (
         <Container>
-            <PageHeader title="Escanear sello" onBack={() => navigate(`/eventos/${eventId}/album`)} />
+            <PageHeader title="Escanear sello" onBack={() => navigate(-1)} />
             <Content>
                 <CameraFrame>
                     <Video ref={videoRef} autoPlay playsInline muted />

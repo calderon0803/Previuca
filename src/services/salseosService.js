@@ -18,11 +18,16 @@ const withAuthorNames = async (rows) => {
     const authorIds = [...new Set(rows.map((r) => r.author_id))];
     const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, first_name, last_name')
+        .select('user_id, first_name, last_name, salseo_username')
         .in('user_id', authorIds);
 
+    // En Salseo se muestra el usuario elegido (Instagram o propio) en vez
+    // del nombre real — el nombre solo queda como último recurso.
     const nameByUserId = new Map(
-        (profiles || []).map((p) => [p.user_id, `${p.first_name} ${p.last_name}`.trim()])
+        (profiles || []).map((p) => [
+            p.user_id,
+            p.salseo_username ? `@${p.salseo_username}` : `${p.first_name} ${p.last_name}`.trim(),
+        ])
     );
 
     return rows.map((row) => ({

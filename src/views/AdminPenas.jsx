@@ -232,7 +232,7 @@ export default function AdminPenas() {
 
     return (
         <Container>
-            <PageHeader title="Administrar peñas" onBack={() => navigate('/admin')} />
+            <PageHeader title="Administrar peñas" onBack={() => navigate(-1)} />
             <Content>
                 {loading ? (
                     <EmptyText>Cargando...</EmptyText>

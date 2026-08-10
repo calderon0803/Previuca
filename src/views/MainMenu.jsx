@@ -246,7 +246,7 @@ const TermsFooter = styled.button`
 
 export default function MainMenu() {
   const navigate = useNavigate();
-  const { events } = useEvent();
+  const { events, loading: eventsLoading } = useEvent();
   const { isAdmin } = useAdmin();
   const { user } = useFlechazo();
   const visibleEvents = events.filter(isEventVisibleInMenu);
@@ -282,7 +282,15 @@ export default function MainMenu() {
           <HeroSubtitle>Diversión sin límites</HeroSubtitle>
         </PrimaryHeroCard>
 
-        {hasEvents ? (
+        {eventsLoading ? (
+          <HeroCard $locked>
+            <HeroWatermark aria-hidden="true"><PartyPopper size={72} /></HeroWatermark>
+            <HeroTop>
+              <HeroTitle>Eventos</HeroTitle>
+            </HeroTop>
+            <HeroSubtitle>Cargando...</HeroSubtitle>
+          </HeroCard>
+        ) : hasEvents ? (
           visibleEvents.map((evento) => (
             <HeroCard
               key={evento.id}

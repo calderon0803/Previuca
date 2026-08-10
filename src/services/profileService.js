@@ -30,7 +30,7 @@ export const getProfile = async (userId) => {
     try {
         const { data, error } = await supabase
             .from('profiles')
-            .select('first_name, last_name, birthdate, gender')
+            .select('first_name, last_name, birthdate, gender, salseo_username')
             .eq('user_id', userId)
             .single();
 
@@ -40,6 +40,37 @@ export const getProfile = async (userId) => {
     } catch (error) {
         console.error('Error loading profile:', error);
         return { success: false, error: error.message, profile: null };
+    }
+};
+
+// Formato permitido para el usuario de Salseo: igual que un handle de
+// Instagram (letras, números, puntos y guiones bajos).
+const SALSEO_USERNAME_PATTERN = /^[a-zA-Z0-9._]{1,30}$/;
+
+// Fija el usuario público de Salseo (el de Instagram si está vinculado, o
+// uno propio). Es único en toda la app sin distinguir mayúsculas/minúsculas.
+export const setSalseoUsername = async (userId, username) => {
+    const cleanUsername = username.trim().replace(/^@/, '');
+
+    if (!SALSEO_USERNAME_PATTERN.test(cleanUsername)) {
+        return { success: false, error: 'Usa solo letras, números, puntos o guiones bajos (máx. 30 caracteres).' };
+    }
+
+    try {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ salseo_username: cleanUsername })
+            .eq('user_id', userId);
+
+        if (error) {
+            if (error.code === '23505') return { success: false, error: 'Ese usuario ya está en uso, elige otro.' };
+            throw error;
+        }
+
+        return { success: true, username: cleanUsername };
+    } catch (error) {
+        console.error('Error setting salseo username:', error);
+        return { success: false, error: error.message };
     }
 };
 

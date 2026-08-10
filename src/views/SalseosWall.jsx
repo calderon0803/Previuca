@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { Heart, MessageCircle, Flag, RefreshCw } from 'lucide-react';
+import { Heart, MessageCircle, Reply, Flag, RefreshCw } from 'lucide-react';
 import { useSalseos } from '../contexts/SalseosContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { formatRelativeTime } from '../utils/relativeTime';
@@ -11,6 +11,7 @@ import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Textarea from '../components/ui/Textarea';
 import ReportModal from '../components/ReportModal';
+import SalseoUsernameModal from '../components/SalseoUsernameModal';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -117,8 +118,10 @@ const ErrorText = styled.p`
 export default function SalseosWall() {
     const navigate = useNavigate();
     const { eventId } = useParams();
-    const { posts, loading, loadPosts, createPost, toggleLike, reportPost } = useSalseos();
-    const { user, loading: flechazoLoading } = useFlechazo();
+    const { posts, loading, loadPosts, createPost, toggleLike, reportPost, replyFromFeed } = useSalseos();
+    const { user, loading: flechazoLoading, salseoUsername } = useFlechazo();
+    const [showUsernameModal, setShowUsernameModal] = useState(false);
+    const [pendingIntent, setPendingIntent] = useState(null);
     const [showComposeModal, setShowComposeModal] = useState(false);
     const [newBody, setNewBody] = useState('');
     const [composeError, setComposeError] = useState('');
@@ -126,6 +129,10 @@ export default function SalseosWall() {
     const [reportingPostId, setReportingPostId] = useState(null);
     const [reportError, setReportError] = useState('');
     const [reporting, setReporting] = useState(false);
+    const [replyingPostId, setReplyingPostId] = useState(null);
+    const [replyBody, setReplyBody] = useState('');
+    const [replyError, setReplyError] = useState('');
+    const [sendingReply, setSendingReply] = useState(false);
 
     useEffect(() => {
         if (flechazoLoading) return;
@@ -150,6 +157,52 @@ export default function SalseosWall() {
         toggleLike(postId, eventId);
     };
 
+    const handleComposeClick = () => {
+        if (!salseoUsername) {
+            setPendingIntent({ type: 'compose' });
+            setShowUsernameModal(true);
+            return;
+        }
+        setShowComposeModal(true);
+    };
+
+    const handleReplyClick = (event, postId) => {
+        event.stopPropagation();
+        if (!salseoUsername) {
+            setPendingIntent({ type: 'reply', postId });
+            setShowUsernameModal(true);
+            return;
+        }
+        setReplyError('');
+        setReplyBody('');
+        setReplyingPostId(postId);
+    };
+
+    const handleUsernameChosen = () => {
+        setShowUsernameModal(false);
+        if (pendingIntent?.type === 'compose') {
+            setShowComposeModal(true);
+        } else if (pendingIntent?.type === 'reply') {
+            setReplyError('');
+            setReplyBody('');
+            setReplyingPostId(pendingIntent.postId);
+        }
+        setPendingIntent(null);
+    };
+
+    const handleReplySubmit = async () => {
+        setSendingReply(true);
+        setReplyError('');
+        const result = await replyFromFeed(replyingPostId, eventId, replyBody);
+        setSendingReply(false);
+        if (result.success) {
+            setReplyingPostId(null);
+            setReplyBody('');
+        } else {
+            setReplyError(result.error || 'No se pudo enviar la respuesta');
+        }
+    };
+
     const handleReportClick = (event, postId) => {
         event.stopPropagation();
         setReportError('');
@@ -172,7 +225,7 @@ export default function SalseosWall() {
         <Container>
             <PageHeader
                 title="Salseo"
-                onBack={() => navigate(`/eventos/${eventId}`)}
+                onBack={() => navigate(-1)}
                 rightAction={
                     <IconButton variant="ghost" onClick={() => loadPosts(eventId)} aria-label="Recargar">
                         <RefreshCw size={18} />
@@ -181,7 +234,7 @@ export default function SalseosWall() {
             />
             <Content>
                 <ActionsRow>
-                    <Button fullWidth onClick={() => setShowComposeModal(true)}>
+                    <Button fullWidth onClick={handleComposeClick}>
                         Nuevo mensaje
                     </Button>
                 </ActionsRow>
@@ -203,6 +256,9 @@ export default function SalseosWall() {
                                     <ActionButton $active={post.likedByMe} onClick={(e) => handleLikeClick(e, post.id)}>
                                         <Heart size={16} fill={post.likedByMe ? 'currentColor' : 'none'} />
                                         {post.likeCount}
+                                    </ActionButton>
+                                    <ActionButton onClick={(e) => handleReplyClick(e, post.id)} aria-label="Responder">
+                                        <Reply size={16} />
                                     </ActionButton>
                                     <ActionButton>
                                         <MessageCircle size={16} />
@@ -255,6 +311,39 @@ export default function SalseosWall() {
                 onSubmit={handleReportSubmit}
                 submitting={reporting}
                 error={reportError}
+            />
+
+            <Modal
+                visible={replyingPostId !== null}
+                onClose={() => {
+                    setReplyingPostId(null);
+                    setReplyError('');
+                }}
+            >
+                <ModalTitle>Responder</ModalTitle>
+                <Textarea
+                    placeholder="Escribe una respuesta..."
+                    value={replyBody}
+                    onChange={(e) => setReplyBody(e.target.value)}
+                />
+                {replyError && <ErrorText>{replyError}</ErrorText>}
+                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <Button variant="secondary" fullWidth onClick={() => setReplyingPostId(null)}>
+                        Cancelar
+                    </Button>
+                    <Button fullWidth onClick={handleReplySubmit} disabled={!replyBody.trim() || sendingReply}>
+                        {sendingReply ? 'Enviando...' : 'Responder'}
+                    </Button>
+                </div>
+            </Modal>
+
+            <SalseoUsernameModal
+                visible={showUsernameModal}
+                onClose={() => {
+                    setShowUsernameModal(false);
+                    setPendingIntent(null);
+                }}
+                onSuccess={handleUsernameChosen}
             />
         </Container>
     );

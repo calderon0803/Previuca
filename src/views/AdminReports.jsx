@@ -183,7 +183,7 @@ export default function AdminReports() {
 
     return (
         <Container>
-            <PageHeader title="Administrar reportes" onBack={() => navigate('/admin')} />
+            <PageHeader title="Administrar reportes" onBack={() => navigate(-1)} />
             <Content>
                 {loading ? (
                     <EmptyText>Cargando...</EmptyText>

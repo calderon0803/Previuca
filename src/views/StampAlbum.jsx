@@ -147,7 +147,7 @@ export default function StampAlbum() {
 
     return (
         <Container>
-            <PageHeader title="Álbum de sellos" onBack={() => navigate(`/eventos/${eventId}`)} />
+            <PageHeader title="Álbum de sellos" onBack={() => navigate(-1)} />
             <Content>
                 {!loading && penas.length > 0 && (
                     <ProgressText>{unlockedCount} de {penas.length} sellos coleccionados</ProgressText>

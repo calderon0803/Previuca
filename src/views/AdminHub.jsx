@@ -45,7 +45,7 @@ export default function AdminHub() {
 
     return (
         <Container>
-            <PageHeader title="Administración" onBack={() => navigate('/')} />
+            <PageHeader title="Administración" onBack={() => navigate(-1)} />
             <Content>
                 <Grid>
                     {sections.map((section) => (

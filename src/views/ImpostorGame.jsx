@@ -179,7 +179,7 @@ export default function ImpostorGame() {
   if (players.length < 3) {
     return (
       <Container>
-        <PageHeader title="Impostor" onBack={() => navigate('/games')} />
+        <PageHeader title="Impostor" onBack={() => navigate(-1)} />
         <Content>
           <Card>
             <Title>Faltan jugadores</Title>
@@ -195,7 +195,7 @@ export default function ImpostorGame() {
     <Container>
       <PageHeader
         title="Impostor"
-        onBack={() => navigate('/games')}
+        onBack={() => navigate(-1)}
         rightAction={
           <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
             <IoRefresh size={20} />

@@ -129,6 +129,12 @@ const ButtonGroup = styled.div`
   gap: ${({ theme }) => theme.spacing(3)};
 `;
 
+const LoadingText = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  text-align: center;
+  margin-top: ${({ theme }) => theme.spacing(8)};
+`;
+
 export default function FlechazoList() {
   const navigate = useNavigate();
   const {
@@ -147,15 +153,16 @@ export default function FlechazoList() {
   const { eventId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newFlechazoName, setNewFlechazoName] = useState('');
+  const [loadingFlechazos, setLoadingFlechazos] = useState(true);
 
   useEffect(() => {
-    if (eventId) {
-      loadFlechazos(eventId);
-    }
+    if (!eventId) return;
+    setLoadingFlechazos(true);
+    loadFlechazos(eventId).finally(() => setLoadingFlechazos(false));
   }, [eventId]);
 
   const handleBack = () => {
-    navigate(`/eventos/${eventId}`);
+    navigate(-1);
   };
 
   const handleAddClick = () => {
@@ -185,6 +192,17 @@ export default function FlechazoList() {
       logout();
       navigate(`/eventos/${eventId}/flechazo`);
     }
+  }
+
+  if (loading || loadingFlechazos) {
+    return (
+      <Container>
+        <PageHeader title="Mis Flechazos" onBack={handleBack} />
+        <Content>
+          <LoadingText>Cargando...</LoadingText>
+        </Content>
+      </Container>
+    );
   }
 
   // Generate 5 slots

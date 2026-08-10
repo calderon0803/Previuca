@@ -154,7 +154,7 @@ const Settings = () => {
     } : null;
 
     const handleBack = () => {
-        navigate('/');
+        navigate(-1);
     };
 
     // Si está cargando, mostrar pantalla de carga

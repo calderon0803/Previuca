@@ -185,7 +185,7 @@ export default function PenasList() {
 
     return (
         <Container>
-            <PageHeader title="Peñas" onBack={() => navigate(`/eventos/${eventId}`)} />
+            <PageHeader title="Peñas" onBack={() => navigate(-1)} />
             <Content>
                 {myPena ? (
                     <OwnPenaBanner $color={myPena.color} onClick={() => navigate(`/eventos/${eventId}/penas/${myPena.id}`)}>

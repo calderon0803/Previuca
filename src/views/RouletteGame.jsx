@@ -331,7 +331,7 @@ export default function RouletteGame() {
     <Container>
       <PageHeader
         title="Ruleta"
-        onBack={() => navigate('/games')}
+        onBack={() => navigate(-1)}
         rightAction={
           <HeaderActions>
             <IconButton variant="ghost" onClick={() => setShowEditor(true)} aria-label="Opciones">

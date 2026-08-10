@@ -196,7 +196,7 @@ export default function AdminUsers() {
 
     return (
         <Container>
-            <PageHeader title="Administrar usuarios" onBack={() => navigate('/admin')} />
+            <PageHeader title="Administrar usuarios" onBack={() => navigate(-1)} />
             <Content>
                 {loading ? (
                     <EmptyText>Cargando...</EmptyText>

@@ -263,11 +263,17 @@ export const getReports = async () => {
 
         const { data: profiles } = await supabase
             .from('profiles')
-            .select('user_id, first_name, last_name')
+            .select('user_id, first_name, last_name, salseo_username')
             .in('user_id', [...userIds]);
 
+        // Para moderación se muestran ambos: el usuario público de Salseo
+        // (lo que ve el resto) y el nombre real entre paréntesis.
         const nameByUserId = new Map(
-            (profiles || []).map((p) => [p.user_id, `${p.first_name} ${p.last_name}`.trim() || 'Alguien'])
+            (profiles || []).map((p) => {
+                const realName = `${p.first_name} ${p.last_name}`.trim() || 'Alguien';
+                const displayName = p.salseo_username ? `@${p.salseo_username} (${realName})` : realName;
+                return [p.user_id, displayName];
+            })
         );
 
         const reportsWithContent = reports.map((r) => {

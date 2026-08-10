@@ -220,7 +220,7 @@ export default function PenaDetail() {
     if (flechazoLoading || penasLoading) {
         return (
             <Container>
-                <PageHeader title="Peña" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
+                <PageHeader title="Peña" onBack={() => navigate(-1)} />
                 <Content>
                     <EmptyText>Cargando...</EmptyText>
                 </Content>
@@ -233,7 +233,7 @@ export default function PenaDetail() {
     if (!pena || !isOwnPena) {
         return (
             <Container>
-                <PageHeader title="Peña" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
+                <PageHeader title="Peña" onBack={() => navigate(-1)} />
                 <Content>
                     <EmptyText>
                         {!pena ? 'No se encontró esta peña.' : 'Solo puedes ver el perfil de tu propia peña.'}
@@ -245,7 +245,7 @@ export default function PenaDetail() {
 
     return (
         <Container>
-            <PageHeader title="" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
+            <PageHeader title="" onBack={() => navigate(-1)} />
             <Photo $color={pena.color} $image={pena.image_url}>
                 <StampBadgeWrap>
                     <PenaStamp pena={pena} size={56} locked={false} />

@@ -77,20 +77,35 @@ const LockedText = styled.p`
   margin-bottom: ${({ theme }) => theme.spacing(6)};
 `;
 
+const LoadingText = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  text-align: center;
+  margin-top: ${({ theme }) => theme.spacing(8)};
+`;
+
 export default function EventsHub() {
     const navigate = useNavigate();
     const { eventId } = useParams();
     const { events, loading } = useEvent();
     const { isAdmin } = useAdmin();
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <Container>
+                <PageHeader title="Eventos" onBack={() => navigate(-1)} />
+                <Content>
+                    <LoadingText>Cargando...</LoadingText>
+                </Content>
+            </Container>
+        );
+    }
 
     const evento = events.find((e) => e.id === eventId);
 
     if (!evento) {
         return (
             <Container>
-                <PageHeader title="Eventos" onBack={() => navigate('/')} />
+                <PageHeader title="Eventos" onBack={() => navigate(-1)} />
                 <Content>
                     <LockedState>
                         <LockedTitle>No perteneces a este evento</LockedTitle>
@@ -127,7 +142,7 @@ export default function EventsHub() {
 
     return (
         <Container>
-            <PageHeader title={evento.name} onBack={() => navigate('/')} />
+            <PageHeader title={evento.name} onBack={() => navigate(-1)} />
             <Content>
                 <SectionLabel>
                     <SectionEyebrow>Actividades</SectionEyebrow>

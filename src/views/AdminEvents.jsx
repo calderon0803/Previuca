@@ -207,7 +207,7 @@ export default function AdminEvents() {
 
     return (
         <Container>
-            <PageHeader title="Administrar eventos" onBack={() => navigate('/admin')} />
+            <PageHeader title="Administrar eventos" onBack={() => navigate(-1)} />
             <Content>
                 {loading ? (
                     <EmptyText>Cargando...</EmptyText>

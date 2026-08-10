@@ -128,7 +128,7 @@ export default function CreatePena() {
 
     return (
         <Container>
-            <PageHeader title="Crear peña" onBack={() => navigate(`/eventos/${eventId}/penas`)} />
+            <PageHeader title="Crear peña" onBack={() => navigate(-1)} />
             <Content>
                 <Field>
                     <Label>Nombre</Label>

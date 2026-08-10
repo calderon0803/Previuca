@@ -333,7 +333,7 @@ export default function TrazoTragoGame() {
         <Container>
             <PageHeader
                 title="Trazo & Trago"
-                onBack={() => navigate('/games')}
+                onBack={() => navigate(-1)}
                 rightAction={
                     <IconButton variant="ghost" onClick={selectNewWord} aria-label="Nueva palabra">
                         <IoRefresh size={20} />

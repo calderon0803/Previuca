@@ -6,12 +6,13 @@ import {
     deletePost as deletePostService,
     toggleLike as toggleLikeService,
     reportPost as reportPostService,
+    createReply as createReplyService,
 } from '../services/salseosService';
 
 const SalseosContext = createContext();
 
 export const SalseosProvider = ({ children }) => {
-    const { user, hasProfile } = useFlechazo();
+    const { user, hasProfile, salseoUsername } = useFlechazo();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -31,6 +32,7 @@ export const SalseosProvider = ({ children }) => {
     const createPost = async (eventId, body) => {
         if (!user || !eventId) return { success: false, error: 'Debes tener un evento activo' };
         if (!hasProfile) return { success: false, error: 'Completa tu nombre y apellido en Ajustes antes de publicar' };
+        if (!salseoUsername) return { success: false, error: 'Elige antes tu usuario de Salseo' };
         if (!body.trim()) return { success: false, error: 'El mensaje no puede estar vacío' };
 
         const result = await createPostService({ eventId, authorId: user.id, body });
@@ -95,6 +97,26 @@ export const SalseosProvider = ({ children }) => {
         return result;
     };
 
+    // Responder desde el feed no navega al detalle: solo sube el contador de
+    // respuestas en memoria (el cuerpo de la respuesta solo se ve al entrar
+    // al mensaje concreto).
+    const replyFromFeed = async (postId, eventId, body) => {
+        if (!user) return { success: false, error: 'Debes iniciar sesión' };
+        if (!hasProfile) return { success: false, error: 'Completa tu nombre y apellido en Ajustes antes de responder' };
+        if (!salseoUsername) return { success: false, error: 'Elige antes tu usuario de Salseo' };
+        if (!body.trim()) return { success: false, error: 'La respuesta no puede estar vacía' };
+
+        const result = await createReplyService({ postId, eventId, authorId: user.id, body });
+
+        if (result.success) {
+            setPosts((prev) =>
+                prev.map((p) => (p.id === postId ? { ...p, replyCount: p.replyCount + 1 } : p))
+            );
+        }
+
+        return result;
+    };
+
     return (
         <SalseosContext.Provider
             value={{
@@ -105,6 +127,7 @@ export const SalseosProvider = ({ children }) => {
                 deletePost,
                 toggleLike,
                 reportPost,
+                replyFromFeed,
             }}
         >
             {children}

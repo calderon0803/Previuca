@@ -325,7 +325,7 @@ export default function IlluminatiGame() {
     if (players.length === 0) {
         return (
             <Container>
-                <PageHeader title="Illuminati" onBack={() => navigate('/games')} />
+                <PageHeader title="Illuminati" onBack={() => navigate(-1)} />
                 <Content>
                     <Message>
                         Necesitas agregar jugadores para jugar Illuminati.
@@ -341,7 +341,7 @@ export default function IlluminatiGame() {
         <Container>
             <PageHeader
                 title="Illuminati"
-                onBack={() => navigate('/games')}
+                onBack={() => navigate(-1)}
                 rightAction={
                     <IconButton variant="ghost" onClick={initializeGame} aria-label="Reiniciar">
                         <IoRefresh size={20} />

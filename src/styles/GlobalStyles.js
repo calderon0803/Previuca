@@ -13,6 +13,7 @@ export const GlobalStyles = createGlobalStyle`
     position: fixed;
     width: 100%;
     height: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -64,14 +65,24 @@ export const GlobalStyles = createGlobalStyle`
     border: none;
     background: none;
     color: inherit;
+    -webkit-tap-highlight-color: transparent;
   }
 
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:focus,
+  a:focus,
+  input:focus,
+  textarea:focus,
+  select:focus,
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
-  textarea:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.primaryHover};
-    outline-offset: 2px;
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
   }
 
   ::selection {

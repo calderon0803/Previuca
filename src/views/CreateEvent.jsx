@@ -119,7 +119,7 @@ export default function CreateEvent() {
 
     return (
         <Container>
-            <PageHeader title="Crear evento" onBack={() => navigate('/admin')} />
+            <PageHeader title="Crear evento" onBack={() => navigate(-1)} />
             <Content>
                 <Field>
                     <Label>Nombre</Label>

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { signIn, signUp, signOut, onAuthStateChange } from '../services/authService';
-import { getProfile, calculateAge, isAtLeastMinAge, MIN_AGE, GENDER_OPTIONS } from '../services/profileService';
+import { getProfile, setSalseoUsername as setSalseoUsernameService, calculateAge, isAtLeastMinAge, MIN_AGE, GENDER_OPTIONS } from '../services/profileService';
 import { supabase } from '../config/supabase';
 
 const FlechazoContext = createContext();
@@ -19,6 +19,7 @@ export const FlechazoProvider = ({ children }) => {
     const [lastName, setLastName] = useState('');
     const [birthdate, setBirthdate] = useState('');
     const [gender, setGender] = useState('');
+    const [salseoUsername, setSalseoUsername] = useState('');
     const [isBlocked, setIsBlocked] = useState(false);
     const hasLoadedData = useRef(false); // Track si ya cargamos la verificación de Instagram
 
@@ -53,6 +54,7 @@ export const FlechazoProvider = ({ children }) => {
                     setLastName('');
                     setBirthdate('');
                     setGender('');
+                    setSalseoUsername('');
                     setIsBlocked(false);
                     hasLoadedData.current = false;
                 }
@@ -159,6 +161,18 @@ export const FlechazoProvider = ({ children }) => {
         setLastName(result.profile?.last_name || '');
         setBirthdate(result.profile?.birthdate || '');
         setGender(result.profile?.gender || '');
+        setSalseoUsername(result.profile?.salseo_username || '');
+    };
+
+    // Fija el usuario público de Salseo (Instagram vinculado, o uno propio).
+    const updateSalseoUsername = async (username) => {
+        if (!user) return { success: false, error: 'No has iniciado sesión' };
+
+        const result = await setSalseoUsernameService(user.id, username);
+        if (result.success) {
+            setSalseoUsername(result.username);
+        }
+        return result;
     };
 
     // Sustituto de un ban real de Supabase Auth (no hay service-role key en
@@ -382,6 +396,8 @@ export const FlechazoProvider = ({ children }) => {
                 lastName,
                 birthdate,
                 gender,
+                salseoUsername,
+                updateSalseoUsername,
                 isBlocked,
                 age: calculateAge(birthdate),
                 fullName: `${firstName} ${lastName}`.trim(),

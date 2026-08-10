@@ -588,7 +588,7 @@ const PicoPaloGame = () => {
         <Container>
             <PageHeader
                 title="Pico Palo"
-                onBack={() => navigate('/games')}
+                onBack={() => navigate(-1)}
                 rightAction={
                     <IconButton variant="ghost" onClick={generateNewCard} aria-label="Nueva carta">
                         <IoRefresh size={20} />
