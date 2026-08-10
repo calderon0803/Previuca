@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh, IoSettingsOutline } from 'react-icons/io5';
+import { HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
 import OptionsEditor from '../components/OptionsEditor';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -232,6 +234,7 @@ export default function RouletteGame() {
   const [options, setOptions] = useState(defaultOptions);
   const [showEditor, setShowEditor] = useState(false);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(OPTS_KEY);
@@ -334,6 +337,9 @@ export default function RouletteGame() {
         onBack={() => navigate(-1)}
         rightAction={
           <HeaderActions>
+            <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+              <HelpCircle size={20} />
+            </IconButton>
             <IconButton variant="ghost" onClick={() => setShowEditor(true)} aria-label="Opciones">
               <IoSettingsOutline size={20} />
             </IconButton>
@@ -347,6 +353,17 @@ export default function RouletteGame() {
           </HeaderActions>
         }
       />
+
+      <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Ruleta">
+        <p>
+          Gira la ruleta y bebe lo que te toque. Si sale «Manda X», la app elige a otro jugador al
+          azar y es esa persona quien bebe, no tú.
+        </p>
+        <p>
+          Puedes tocar el icono de ajustes para cambiar el texto de las 10 casillas a tu gusto — el
+          número de casillas no se puede tocar, solo lo que pone en cada una.
+        </p>
+      </HowToPlayModal>
 
       <OptionsEditor
         visible={showEditor}

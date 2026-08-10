@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
+import { HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -147,6 +149,7 @@ export default function DiceGame() {
     const [isRolling, setIsRolling] = useState(false);
     const [result, setResult] = useState(null);
     const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+    const [showHelp, setShowHelp] = useState(false);
 
     const getRule = (d1, d2) => {
         const sum = d1 + d2;
@@ -212,11 +215,31 @@ export default function DiceGame() {
                 title="Dados de Beber"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-                        <IoRefresh size={20} />
-                    </IconButton>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
+                        </IconButton>
+                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+                            <IoRefresh size={20} />
+                        </IconButton>
+                    </div>
                 }
             />
+
+            <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Dados de Beber">
+                <p>Turno por turno, cada uno lanza los dos dados. La suma decide qué toca:</p>
+                <ul>
+                    <li><strong>1-1:</strong> dos chupitos para ti</li>
+                    <li><strong>6-6:</strong> todos beben un chupito</li>
+                    <li><strong>Cualquier otro doble:</strong> te inventas una regla nueva que dura el resto de la partida</li>
+                    <li><strong>Suma 7:</strong> el último en tocarse la nariz bebe</li>
+                    <li><strong>Suma 3:</strong> bebes tú</li>
+                    <li><strong>Suma 9:</strong> bebe el de tu izquierda</li>
+                    <li><strong>Suma 10:</strong> bebe el de tu derecha</li>
+                    <li><strong>Suma 11:</strong> eliges a alguien para que beba 2</li>
+                    <li><strong>El resto de sumas:</strong> repartes algunos tragos a quien quieras</li>
+                </ul>
+            </HowToPlayModal>
 
             <Content>
                 {players.length > 0 && (

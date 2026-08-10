@@ -9,7 +9,7 @@ export const cardRules = {
         name: 'As',
         icon: Waves,
         rule: 'Cascada',
-        description: 'Todos beben. Empieza el que sacó la carta y cada uno puede parar cuando el anterior pare.',
+        description: 'Todos beben en orden empezando por el que sacó la carta y se deja de beber cuando él diga.',
     },
     '2': {
         name: '2',

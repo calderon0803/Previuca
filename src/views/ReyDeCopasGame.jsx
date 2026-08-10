@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
-import { Crown } from 'lucide-react';
+import { Crown, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
 import { cardRules, generateDeck, shuffleDeck } from '../data/reyDeCopasRules';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -211,6 +212,7 @@ export default function ReyDeCopasGame() {
   const [cardsDrawn, setCardsDrawn] = useState(0);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [kingsDrawn, setKingsDrawn] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     const newDeck = shuffleDeck(generateDeck());
@@ -254,11 +256,28 @@ export default function ReyDeCopasGame() {
         title="Rey de Copas"
         onBack={() => navigate(-1)}
         rightAction={
-          <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-            <IoRefresh size={20} />
-          </IconButton>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+              <HelpCircle size={20} />
+            </IconButton>
+            <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+              <IoRefresh size={20} />
+            </IconButton>
+          </div>
         }
       />
+
+      <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Rey de Copas">
+        <p>
+          Cada uno saca una carta por turnos y hace lo que diga la regla de esa carta — la tienes
+          resumida en pantalla en cuanto la sacas.
+        </p>
+        <p>
+          El chiste está en el Rey: cada vez que sale uno, quien lo sacó vierte un poco de su
+          bebida en el vaso central. El que saque el cuarto Rey se bebe el vaso entero. Ahí se
+          acaba la partida.
+        </p>
+      </HowToPlayModal>
 
       <Content>
         {currentPlayer && !currentCard && (

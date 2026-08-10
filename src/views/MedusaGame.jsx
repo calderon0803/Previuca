@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
-import { Flame } from 'lucide-react';
+import { Flame, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -76,6 +77,7 @@ export default function MedusaGame() {
     const navigate = useNavigate();
     const [gameState, setGameState] = useState('idle'); // idle, counting, result
     const [count, setCount] = useState(3);
+    const [showHelp, setShowHelp] = useState(false);
 
     useEffect(() => {
         let timer;
@@ -105,11 +107,28 @@ export default function MedusaGame() {
                 title="Medusa"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-                        <IoRefresh size={20} />
-                    </IconButton>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
+                        </IconButton>
+                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+                            <IoRefresh size={20} />
+                        </IconButton>
+                    </div>
                 }
             />
+
+            <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Medusa">
+                <p>
+                    Todos bajáis la cabeza. Cuando alguien pulse «Empezar», la app cuenta 3, 2, 1 y
+                    grita «¡Mirad!».
+                </p>
+                <p>
+                    En ese momento levantáis la vista a la vez y elegís a quién mirar. Si te cruzas
+                    con los ojos de otro jugador, los dos bebéis. Esto va de honor: la app no
+                    controla quién ha mirado a quién, así que nada de hacer trampas.
+                </p>
+            </HowToPlayModal>
 
             <GameContent>
                 <AnimatePresence mode="wait">
@@ -125,7 +144,7 @@ export default function MedusaGame() {
                                 <BigText style={{ fontSize: '22px' }}>EMPEZAR</BigText>
                             </MainCircle>
                             <InstructionText>
-                                Bajad todos la cabeza. Al pulsar el botón comenzará la cuenta atrás.
+                                Bajad la cabeza.
                             </InstructionText>
                         </motion.div>
                     )}

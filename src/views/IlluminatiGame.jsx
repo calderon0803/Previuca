@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
-import { ArrowUp, ArrowDown, PartyPopper, Beer } from 'lucide-react';
+import { ArrowUp, ArrowDown, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -163,6 +164,23 @@ export default function IlluminatiGame() {
     const [messageType, setMessageType] = useState('');
     const [gamePhase, setGamePhase] = useState('selectFirst'); // 'selectFirst', 'selectNext', 'guessing'
     const [completedPlayers, setCompletedPlayers] = useState([]);
+    const [showHelp, setShowHelp] = useState(false);
+
+    const helpModal = (
+        <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Illuminati">
+            <p>
+                Hay una pirámide de cartas boca abajo: 5 en la fila de abajo, hasta 1 en la punta.
+                En tu turno, destapas una carta de la fila de abajo y luego vas subiendo: en cada
+                fila adivinas si la carta que destapas es mayor o menor que la de la fila anterior.
+            </p>
+            <p>
+                Si aciertas, subes una fila. Si fallas, bebes según lo lejos que hayas llegado y le
+                pasas el turno al siguiente. Si llegas a la punta, ganas esa ronda y la pirámide se
+                rehace para ti — la partida sigue hasta que todos han llegado arriba al menos una
+                vez.
+            </p>
+        </HowToPlayModal>
+    );
 
     useEffect(() => {
         initializeGame();
@@ -245,16 +263,14 @@ export default function IlluminatiGame() {
                 // ¡Ganó!
                 const newCompletedPlayers = [...completedPlayers, players[currentPlayerIndex].name];
                 setCompletedPlayers(newCompletedPlayers);
-                setMessage(`¡${players[currentPlayerIndex].name} ha ganado!`);
                 setMessageType('success');
 
                 if (newCompletedPlayers.length === players.length) {
                     setMessage('¡Todos han ganado!');
                     setGamePhase('finished');
                 } else {
-                    setTimeout(() => {
-                        nextPlayer();
-                    }, 2000);
+                    setMessage(`¡${players[currentPlayerIndex].name} ha ganado esta ronda!`);
+                    setGamePhase('roundEnd');
                 }
             } else {
                 setMessage('¡Correcto! Sigue subiendo');
@@ -270,10 +286,7 @@ export default function IlluminatiGame() {
             const rowsLeft = currentRow + 1;
             setMessage(`¡Fallaste! ${players[currentPlayerIndex].name} bebe ${rowsLeft} ${rowsLeft === 1 ? 'trago' : 'tragos'}`);
             setMessageType('error');
-
-            setTimeout(() => {
-                nextPlayer();
-            }, 2500);
+            setGamePhase('roundEnd');
         }
     };
 
@@ -325,7 +338,16 @@ export default function IlluminatiGame() {
     if (players.length === 0) {
         return (
             <Container>
-                <PageHeader title="Illuminati" onBack={() => navigate(-1)} />
+                <PageHeader
+                    title="Illuminati"
+                    onBack={() => navigate(-1)}
+                    rightAction={
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
+                        </IconButton>
+                    }
+                />
+                {helpModal}
                 <Content>
                     <Message>
                         Necesitas agregar jugadores para jugar Illuminati.
@@ -343,11 +365,17 @@ export default function IlluminatiGame() {
                 title="Illuminati"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <IconButton variant="ghost" onClick={initializeGame} aria-label="Reiniciar">
-                        <IoRefresh size={20} />
-                    </IconButton>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
+                        </IconButton>
+                        <IconButton variant="ghost" onClick={initializeGame} aria-label="Reiniciar">
+                            <IoRefresh size={20} />
+                        </IconButton>
+                    </div>
                 }
             />
+            {helpModal}
 
             <Content>
 
@@ -400,7 +428,7 @@ export default function IlluminatiGame() {
                     <>
                         <Message $type="success">
                             <MessageInline>
-                                <PartyPopper size={18} />
+                                <CheckCircle2 size={18} />
                                 {message}
                             </MessageInline>
                         </Message>
@@ -410,11 +438,26 @@ export default function IlluminatiGame() {
                     </>
                 )}
 
-                {message && gamePhase !== 'finished' && gamePhase !== 'guessing' && (
+                {gamePhase === 'roundEnd' && (
+                    <>
+                        <Message $type={messageType}>
+                            <MessageInline>
+                                {messageType === 'success' && <CheckCircle2 size={18} />}
+                                {messageType === 'error' && <XCircle size={18} />}
+                                {message}
+                            </MessageInline>
+                        </Message>
+                        <Button fullWidth onClick={nextPlayer}>
+                            Siguiente jugador
+                        </Button>
+                    </>
+                )}
+
+                {message && gamePhase !== 'finished' && gamePhase !== 'guessing' && gamePhase !== 'roundEnd' && (
                     <Message $type={messageType}>
                         <MessageInline>
-                            {messageType === 'success' && <PartyPopper size={18} />}
-                            {messageType === 'error' && <Beer size={18} />}
+                            {messageType === 'success' && <CheckCircle2 size={18} />}
+                            {messageType === 'error' && <XCircle size={18} />}
                             {message}
                         </MessageInline>
                     </Message>

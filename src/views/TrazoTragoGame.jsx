@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh, IoEye, IoEyeOff, IoPlay, IoTrashOutline, IoCheckmark } from 'react-icons/io5';
-import { Palette, Beer } from 'lucide-react';
+import { Palette, Beer, HelpCircle } from 'lucide-react';
 import { trazoTragoWords } from '../data/trazoTragoWords';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -212,6 +213,7 @@ export default function TrazoTragoGame() {
     const [isTimerPaused, setIsTimerPaused] = useState(false);
     const [isGameStarted, setIsGameStarted] = useState(false);
     const [showResult, setShowResult] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
 
     useEffect(() => {
         selectNewWord();
@@ -335,11 +337,28 @@ export default function TrazoTragoGame() {
                 title="Trazo & Trago"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <IconButton variant="ghost" onClick={selectNewWord} aria-label="Nueva palabra">
-                        <IoRefresh size={20} />
-                    </IconButton>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
+                        </IconButton>
+                        <IconButton variant="ghost" onClick={selectNewWord} aria-label="Nueva palabra">
+                            <IoRefresh size={20} />
+                        </IconButton>
+                    </div>
                 }
             />
+
+            <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Trazo & Trago">
+                <p>
+                    Te toca dibujar una palabra y que los demás la adivinen a gritos, sin hablar tú
+                    ni escribir letras o números. Tienes 90 segundos.
+                </p>
+                <p>
+                    Cuanto más tardes en que la adivinen (o en pulsar «Finalizar» tú mismo), más
+                    tragos bebes: uno si acabas rápido, hasta tres si se te echa el tiempo encima. El
+                    que dibuja es quien paga, no los que adivinan.
+                </p>
+            </HowToPlayModal>
 
             <WordRevealBar>
                 <IconButton variant="ghost" size="sm" onClick={() => setShowWord(!showWord)} aria-label="Mostrar/ocultar palabra">
@@ -360,8 +379,7 @@ export default function TrazoTragoGame() {
                             Trazo & Trago <Palette size={26} style={{ verticalAlign: 'middle', marginLeft: 4 }} />
                         </StartTitle>
                         <StartDescription>
-                            Dibuja la palabra asignada y haz que tus amigos adivinen.
-                            ¡El tiempo corre!
+                            Tienes 90 segundos. ¡Vamos!
                         </StartDescription>
                         <Button size="lg" onClick={handleStartGame}>
                             <IoPlay size={20} />

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoRefresh } from 'react-icons/io5';
-import { Skull, Shield, User } from 'lucide-react';
+import { Skull, Shield, User, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -179,6 +179,27 @@ export default function AsesinoGame() {
     const [isRevealing, setIsRevealing] = useState(false);
     const [hasRevealed, setHasRevealed] = useState(false);
     const [swipeOffset, setSwipeOffset] = useState(0);
+    const [showHelp, setShowHelp] = useState(false);
+
+    const helpModal = (
+        <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Asesino">
+            <p>
+                Se reparten roles en secreto: un Asesino, un Policía, y el resto Ciudadanos. El
+                móvil pasa de jugador en jugador y cada uno desliza para ver su rol sin que los
+                demás lo vean.
+            </p>
+            <p>
+                Luego, disimulando entre todos, el Asesino va guiñando el ojo a los Ciudadanos sin
+                que el Policía se dé cuenta. Si te guiñan el ojo, esperas unos segundos y bebes un
+                trago — a la tercera vez que bebes, quedas eliminado.
+            </p>
+            <p>
+                El Policía gana si señala correctamente al Asesino. El Asesino gana si elimina a la
+                mitad de los jugadores (redondeando hacia arriba). Todo esto se juega de palabra: la
+                app solo reparte los roles, el resto lo llevan vosotros.
+            </p>
+        </HowToPlayModal>
+    );
 
     useEffect(() => {
         if (players.length >= 5 && gamePhase === 'setup') {
@@ -188,17 +209,22 @@ export default function AsesinoGame() {
 
     const assignRoles = () => {
         const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+        const assassin = shuffledPlayers[0];
+        const police = shuffledPlayers[1];
         const assignedRoles = [];
 
-        // Asignar Asesino
+        // El asesino necesita saber quién es el policía para poder evitarlo.
         assignedRoles.push({
-            player: shuffledPlayers[0],
-            role: roles[0] // Asesino
+            player: assassin,
+            role: {
+                name: 'Asesino',
+                description: `¡Eres el asesino! El policía es ${police.name}. Mata sin que te descubra.`,
+            },
         });
 
         // Asignar Policía
         assignedRoles.push({
-            player: shuffledPlayers[1],
+            player: police,
             role: roles[1] // Policía
         });
 
@@ -246,7 +272,16 @@ export default function AsesinoGame() {
     if (players.length < 5) {
         return (
             <Container>
-                <PageHeader title="Asesino" onBack={() => navigate(-1)} />
+                <PageHeader
+                    title="Asesino"
+                    onBack={() => navigate(-1)}
+                    rightAction={
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
+                        </IconButton>
+                    }
+                />
+                {helpModal}
                 <Content>
                     <Card>
                         <Title>Jugadores insuficientes</Title>
@@ -271,11 +306,12 @@ export default function AsesinoGame() {
                     title="Asesino"
                     onBack={() => navigate(-1)}
                     rightAction={
-                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-                            <IoRefresh size={20} />
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
                         </IconButton>
                     }
                 />
+                {helpModal}
                 <Content>
                     <Card>
                         <PhaseLabel>Preparación</PhaseLabel>
@@ -313,11 +349,12 @@ export default function AsesinoGame() {
                     title="Asesino"
                     onBack={() => navigate(-1)}
                     rightAction={
-                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-                            <IoRefresh size={20} />
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
                         </IconButton>
                     }
                 />
+                {helpModal}
                 <Content>
                     <Card
                         key={currentPlayerIndex}
@@ -392,27 +429,20 @@ export default function AsesinoGame() {
                     title="Asesino"
                     onBack={() => navigate(-1)}
                     rightAction={
-                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-                            <IoRefresh size={20} />
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
                         </IconButton>
                     }
                 />
+                {helpModal}
                 <Content>
                     <Card>
                         <PhaseLabel>En juego</PhaseLabel>
                         <Title>¡Que empiece la partida!</Title>
                         <Instruction>
-                            <strong>Asesino:</strong> Elimina jugadores guiñando un ojo sin que el policía te vea.
-                            <br /><br />
-                            <strong>Policía:</strong> Observa y descubre quién es el asesino.
-                            <br /><br />
-                            <strong>Ciudadanos:</strong> Si el asesino te guiña, espera unos segundos y bebe un trago (tras 3 tragos, mueres).
-                            <br /><br />
-                            El juego termina cuando:
-                            <br />
-                            • El policía atrapa al asesino
-                            <br />
-                            • El asesino elimina a la mitad de los jugadores (redondeando hacia arriba)
+                            Ya tenéis los roles repartidos. A partir de aquí va todo en silencio y
+                            disimulo — si se os olvida algo, el icono de ayuda de arriba tiene las
+                            reglas completas.
                         </Instruction>
                         <Button size="lg" fullWidth onClick={resetGame}>
                             Nueva partida

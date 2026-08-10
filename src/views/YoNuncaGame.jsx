@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoSettingsOutline } from 'react-icons/io5';
-import { Beer } from 'lucide-react';
+import { Beer, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { yoNuncaQuestions as defaultQuestions } from '../data/yoNuncaQuestions';
 import OptionsEditor from '../components/OptionsEditor';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -88,6 +89,7 @@ export default function YoNuncaGame() {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [questions, setQuestions] = useState(defaultQuestions);
     const [showEditor, setShowEditor] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
 
     useEffect(() => {
         loadQuestions();
@@ -134,9 +136,14 @@ export default function YoNuncaGame() {
                 title={`${currentQuestionIndex + 1}/${questions.length}`}
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <IconButton variant="ghost" onClick={() => setShowEditor(true)} aria-label="Editar frases">
-                        <IoSettingsOutline size={20} />
-                    </IconButton>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
+                        </IconButton>
+                        <IconButton variant="ghost" onClick={() => setShowEditor(true)} aria-label="Editar frases">
+                            <IoSettingsOutline size={20} />
+                        </IconButton>
+                    </div>
                 }
             />
 
@@ -148,6 +155,18 @@ export default function YoNuncaGame() {
                 title="Editar Frases"
                 placeholder="Yo nunca..."
             />
+
+            <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Yo nunca...">
+                <p>
+                    Va saliendo una frase que empieza por «Yo nunca...». Si alguna vez has hecho eso,
+                    bebes — así de simple.
+                </p>
+                <p>
+                    No hay turnos ni ganadores: es solo ir tirando frases hasta que a alguien se le
+                    acabe la vergüenza. Si las que trae la app no os convencen, dale al icono de
+                    ajustes y edítalas a tu gusto.
+                </p>
+            </HowToPlayModal>
 
             <Content>
                 <AnimatePresence mode="wait">

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
+import { HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
 import { wordBank } from '../data/impostorWords';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -126,6 +128,14 @@ const WordContainer = styled.div`
   justify-content: center;
 `;
 
+const PlayerGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  width: 100%;
+  margin-bottom: ${({ theme }) => theme.spacing(4)};
+`;
+
 export default function ImpostorGame() {
   const navigate = useNavigate();
   const { players } = usePlayers();
@@ -137,6 +147,29 @@ export default function ImpostorGame() {
   const [isRevealing, setIsRevealing] = useState(false);
   const [hasRevealed, setHasRevealed] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
+  const [clearedIndexes, setClearedIndexes] = useState([]);
+  const [caughtIndex, setCaughtIndex] = useState(null);
+
+  const helpModal = (
+    <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Impostor">
+      <p>
+        Todos recibís la misma palabra secreta... excepto uno, el impostor, que no recibe
+        ninguna.
+      </p>
+      <p>
+        El móvil va pasando de mano en mano: cada jugador desliza su tarjeta para ver su palabra
+        (o descubrir que es el impostor) y se lo pasa al siguiente sin que nadie más mire. Cuando
+        todos la han visto, vais describiendo la palabra por turnos con pistas, sin decirla
+        directamente. El impostor tiene que improvisar e intentar no delatarse.
+      </p>
+      <p>
+        Cuando alguien quiera acusar a otro, toca su nombre en la pantalla y confirma. Si es el
+        impostor, ha caído y bebe; si no, la partida sigue igual y esa persona queda libre de
+        sospecha.
+      </p>
+    </HowToPlayModal>
+  );
 
 
   const initGame = () => {
@@ -158,6 +191,8 @@ export default function ImpostorGame() {
     setIsRevealing(false);
     setHasRevealed(false);
     setSwipeOffset(0);
+    setClearedIndexes([]);
+    setCaughtIndex(null);
   };
 
   const handleNextReveal = () => {
@@ -171,15 +206,42 @@ export default function ImpostorGame() {
     }
   };
 
+  const handleAccuse = (index) => {
+    const player = players[index];
+    const confirmed = window.confirm(
+      `¿Seguro que queréis desvelar el rol de ${player.name}? Hacedlo solo si todos estáis de acuerdo en acusarlo.`
+    );
+    if (!confirmed) return;
+
+    if (gameState.assignments[index].role === 'impostor') {
+      setCaughtIndex(index);
+      setPhase('result');
+    } else {
+      setClearedIndexes((prev) => [...prev, index]);
+      alert(`${player.name} no era el impostor. ¡Seguid jugando!`);
+    }
+  };
+
   const resetGame = () => {
     setPhase('start');
     setGameState(null);
+    setClearedIndexes([]);
+    setCaughtIndex(null);
   };
 
   if (players.length < 3) {
     return (
       <Container>
-        <PageHeader title="Impostor" onBack={() => navigate(-1)} />
+        <PageHeader
+          title="Impostor"
+          onBack={() => navigate(-1)}
+          rightAction={
+            <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+              <HelpCircle size={20} />
+            </IconButton>
+          }
+        />
+        {helpModal}
         <Content>
           <Card>
             <Title>Faltan jugadores</Title>
@@ -197,11 +259,17 @@ export default function ImpostorGame() {
         title="Impostor"
         onBack={() => navigate(-1)}
         rightAction={
-          <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-            <IoRefresh size={20} />
-          </IconButton>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+              <HelpCircle size={20} />
+            </IconButton>
+            <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
+              <IoRefresh size={20} />
+            </IconButton>
+          </div>
         }
       />
+      {helpModal}
 
       <Content>
         <AnimatePresence mode="wait">
@@ -210,9 +278,8 @@ export default function ImpostorGame() {
               <PhaseLabel>Preparación</PhaseLabel>
               <Title>¿Quién es el impostor?</Title>
               <Instruction>
-                Todos recibiréis la misma palabra excepto uno: el impostor, que no tendrá ninguna palabra.
-                Describid vuestra palabra por turnos. El impostor debe intentar pasar desapercibido.
-                ¡Al final votad quién creéis que es el impostor!
+                Vais a repartir una palabra secreta entre todos... menos uno. Si no recuerdas cómo
+                va, tienes el icono de ayuda arriba.
               </Instruction>
               <Button size="lg" fullWidth onClick={initGame}>Empezar partida</Button>
             </Card>
@@ -276,9 +343,38 @@ export default function ImpostorGame() {
               <PhaseLabel>Debate</PhaseLabel>
               <Title>¡A debatir!</Title>
               <Instruction>
-                Por turnos, decid algo que describa vuestra palabra sin ser demasiado obvios.
-                El impostor debe intentar adivinar la palabra y mimetizarse con el resto.
-                Al final, ¡votad quién creéis que es el impostor!
+                Describid vuestra palabra por turnos. Cuando alguien quiera acusar, tocad su
+                nombre aquí abajo.
+              </Instruction>
+
+              <PlayerGrid>
+                {players.map((player, index) => {
+                  const isCleared = clearedIndexes.includes(index);
+                  return (
+                    <Button
+                      key={player.id ?? index}
+                      variant="secondary"
+                      fullWidth
+                      disabled={isCleared}
+                      onClick={() => handleAccuse(index)}
+                    >
+                      {isCleared ? `${player.name} (libre de sospecha)` : player.name}
+                    </Button>
+                  );
+                })}
+              </PlayerGrid>
+
+              <Button variant="ghost" fullWidth onClick={resetGame}>Cancelar partida</Button>
+            </Card>
+          )}
+
+          {phase === 'result' && (
+            <Card key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <PhaseLabel>Resultado</PhaseLabel>
+              <Title>¡{players[caughtIndex]?.name} era el impostor!</Title>
+              <Instruction>
+                Que beba. La palabra secreta era «
+                {gameState.assignments.find((a) => a.role !== 'impostor')?.word}».
               </Instruction>
 
               <Button size="lg" fullWidth onClick={resetGame}>Nueva partida</Button>

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { IoRefresh } from 'react-icons/io5';
-import { Circle, ArrowDownToLine, ArrowUpFromLine, ArrowUp, ArrowDown, CheckCircle2, XCircle, PartyPopper } from 'lucide-react';
+import { Circle, ArrowDownToLine, ArrowUpFromLine, ArrowUp, ArrowDown, Hash, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
+import HowToPlayModal from '../components/HowToPlayModal';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
@@ -182,9 +183,9 @@ const valueNumbers = {
     '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13
 };
 
+// El icono depende solo de si se acertó o no — nunca cambia para un mismo resultado.
 const MessageIcon = ({ tone }) => {
     if (tone === 'success') return <CheckCircle2 size={20} />;
-    if (tone === 'celebrate') return <PartyPopper size={20} />;
     if (tone === 'error') return <XCircle size={20} />;
     return null;
 };
@@ -219,16 +220,16 @@ const PicoPaloGame = () => {
         }, 0);
         return card;
     });
-    const [previousCards, setPreviousCards] = useState([]); // Cartas anteriores para dentro/fuera
     const [revealed, setRevealed] = useState(false);
     const [message, setMessage] = useState('');
-    const [messageTone, setMessageTone] = useState(null); // success | error | celebrate | null
-    const [gameState, setGameState] = useState('pico'); // pico, palo, dentro-fuera, mayor-menor
+    const [messageTone, setMessageTone] = useState(null); // success | error | null
+    const [gameState, setGameState] = useState('pico'); // pico, par-impar, dentro-fuera, palo, mayor-menor
     const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
     const [playersWhoAnswered, setPlayersWhoAnswered] = useState(0); // Contador de jugadores que respondieron
     const [playerCards, setPlayerCards] = useState({}); // Cartas de cada jugador {playerIndex: [cards]}
     const [currentCardIndexInSequence, setCurrentCardIndexInSequence] = useState(0); // Para la ronda mayor-menor
     const [usedCardsInSequence, setUsedCardsInSequence] = useState([]); // Cartas usadas en la secuencia del jugador actual
+    const [showHelp, setShowHelp] = useState(false);
 
     const clearMessage = () => {
         setMessage('');
@@ -242,11 +243,9 @@ const PicoPaloGame = () => {
 
     const drawCardFromDeck = (currentDeck) => {
         const deckToUse = currentDeck.length === 0 ? createFullDeck() : currentDeck;
-        console.log('Baraja actual tiene', deckToUse.length, 'cartas');
         const randomIndex = Math.floor(Math.random() * deckToUse.length);
         const drawnCard = deckToUse[randomIndex];
         const remainingDeck = deckToUse.filter((_, index) => index !== randomIndex);
-        console.log('Sacó', drawnCard.value + drawnCard.suit, '- Quedan', remainingDeck.length, 'cartas');
         return { drawnCard, remainingDeck };
     };
 
@@ -260,7 +259,6 @@ const PicoPaloGame = () => {
         setRevealed(false);
         clearMessage();
         setGameState('pico');
-        setPreviousCards([]);
     };
 
     const advanceToNextPlayer = () => {
@@ -278,12 +276,10 @@ const PicoPaloGame = () => {
 
         // Si todos los jugadores respondieron esta pregunta
         if (nextAnswered >= totalPlayers) {
-            // Avanzar a la siguiente fase
+            // Avanzar a la siguiente fase: pico -> par-impar -> dentro-fuera -> palo -> mayor-menor
             if (gameState === 'pico') {
-                setPreviousCards([currentCard]);
-                setGameState('palo');
+                setGameState('par-impar');
 
-                // Tomar nueva carta de la baraja
                 setDeck(prevDeck => {
                     const { drawnCard, remainingDeck } = drawCardFromDeck(prevDeck);
                     setCurrentCard(drawnCard);
@@ -294,11 +290,9 @@ const PicoPaloGame = () => {
                 setCurrentPlayerIndex(0);
                 setRevealed(false);
                 clearMessage();
-            } else if (gameState === 'palo') {
-                setPreviousCards([...previousCards, currentCard]);
+            } else if (gameState === 'par-impar') {
                 setGameState('dentro-fuera');
 
-                // Tomar nueva carta de la baraja
                 setDeck(prevDeck => {
                     const { drawnCard, remainingDeck } = drawCardFromDeck(prevDeck);
                     setCurrentCard(drawnCard);
@@ -310,6 +304,19 @@ const PicoPaloGame = () => {
                 setRevealed(false);
                 clearMessage();
             } else if (gameState === 'dentro-fuera') {
+                setGameState('palo');
+
+                setDeck(prevDeck => {
+                    const { drawnCard, remainingDeck } = drawCardFromDeck(prevDeck);
+                    setCurrentCard(drawnCard);
+                    return remainingDeck;
+                });
+
+                setPlayersWhoAnswered(0);
+                setCurrentPlayerIndex(0);
+                setRevealed(false);
+                clearMessage();
+            } else if (gameState === 'palo') {
                 // Iniciar ronda mayor-menor
                 setGameState('mayor-menor');
                 setPlayersWhoAnswered(0);
@@ -360,14 +367,16 @@ const PicoPaloGame = () => {
             } else {
                 showMessage('¡Incorrecto! Bebe', 'error');
             }
-        } else if (gameState === 'palo') {
-            // Adivinar el palo exacto
-            correct = choice === suitNames[currentCard.suit];
+        } else if (gameState === 'par-impar') {
+            // Adivinar si el valor de la carta es par o impar
+            const cardNumber = valueNumbers[currentCard.value];
+            const isEven = cardNumber % 2 === 0;
+            correct = (choice === 'par' && isEven) || (choice === 'impar' && !isEven);
 
             if (correct) {
                 showMessage('¡Correcto!', 'success');
             } else {
-                showMessage(`Era ${suitNames[currentCard.suit]}! Bebe`, 'error');
+                showMessage(`Era ${isEven ? 'par' : 'impar'}. Bebe`, 'error');
             }
         } else if (gameState === 'dentro-fuera') {
             // dentro-fuera: adivinar si la tercera carta está dentro o fuera del rango de las 2 anteriores
@@ -393,13 +402,22 @@ const PicoPaloGame = () => {
             correct = (choice === 'dentro' && isDentro) || (choice === 'fuera' && !isDentro);
 
             if (correct) {
-                showMessage('¡Correcto! Reparte 3 tragos', 'celebrate');
+                showMessage('¡Correcto!', 'success');
             } else {
                 if (card1Number === card2Number) {
-                    showMessage(`Era ${isDentro ? 'dentro' : 'fuera'} (ambas cartas eran ${currentPlayerCardsList[0].value}). Bebe 2 tragos`, 'error');
+                    showMessage(`Era ${isDentro ? 'dentro' : 'fuera'} (ambas cartas eran ${currentPlayerCardsList[0].value}). Bebe`, 'error');
                 } else {
-                    showMessage(`Era ${isDentro ? 'dentro' : 'fuera'} (${minRange}-${maxRange}). Bebe 2 tragos`, 'error');
+                    showMessage(`Era ${isDentro ? 'dentro' : 'fuera'} (${minRange}-${maxRange}). Bebe`, 'error');
                 }
+            }
+        } else if (gameState === 'palo') {
+            // Adivinar el palo exacto
+            correct = choice === suitNames[currentCard.suit];
+
+            if (correct) {
+                showMessage('¡Correcto!', 'success');
+            } else {
+                showMessage(`Era ${suitNames[currentCard.suit]}! Bebe`, 'error');
             }
         } else if (gameState === 'mayor-menor') {
             // Ronda extra: adivinar si la siguiente carta es mayor o menor que las del jugador
@@ -421,9 +439,9 @@ const PicoPaloGame = () => {
                 // Añadir carta a las usadas en esta secuencia
                 setUsedCardsInSequence([...usedCardsInSequence, currentCard]);
 
-                // Si completó todas sus cartas
+                // Si completó todas sus cartas (paso final: aquí sí se reparten varios tragos)
                 if (currentCardIndexInSequence >= currentPlayerCardsList.length - 1) {
-                    showMessage('¡Completaste la secuencia! Reparte 5 tragos', 'celebrate');
+                    showMessage('¡Completaste la secuencia! Reparte 5 tragos', 'success');
                 } else {
                     showMessage('¡Correcto! Siguiente carta', 'success');
                     setTimeout(() => {
@@ -478,6 +496,28 @@ const PicoPaloGame = () => {
                         </Button>
                     </>
                 );
+            } else if (gameState === 'par-impar') {
+                return (
+                    <>
+                        <Button variant="secondary" onClick={() => handleChoice('par')}>
+                            <Hash size={16} /> Par
+                        </Button>
+                        <Button variant="secondary" onClick={() => handleChoice('impar')}>
+                            <Hash size={16} /> Impar
+                        </Button>
+                    </>
+                );
+            } else if (gameState === 'dentro-fuera') {
+                return (
+                    <>
+                        <Button variant="secondary" onClick={() => handleChoice('dentro')}>
+                            <ArrowDownToLine size={16} /> Dentro
+                        </Button>
+                        <Button variant="secondary" onClick={() => handleChoice('fuera')}>
+                            <ArrowUpFromLine size={16} /> Fuera
+                        </Button>
+                    </>
+                );
             } else if (gameState === 'palo') {
                 return (
                     <>
@@ -492,17 +532,6 @@ const PicoPaloGame = () => {
                         </Button>
                         <Button variant="secondary" onClick={() => handleChoice('Trébol')}>
                             ♣️ Trébol
-                        </Button>
-                    </>
-                );
-            } else if (gameState === 'dentro-fuera') {
-                return (
-                    <>
-                        <Button variant="secondary" onClick={() => handleChoice('dentro')}>
-                            <ArrowDownToLine size={16} /> Dentro
-                        </Button>
-                        <Button variant="secondary" onClick={() => handleChoice('fuera')}>
-                            <ArrowUpFromLine size={16} /> Fuera
                         </Button>
                     </>
                 );
@@ -528,7 +557,7 @@ const PicoPaloGame = () => {
 
         // Si ya pasaron todos los jugadores, terminar el juego
         if (nextPlayer === 0) {
-            showMessage('¡Juego completado!', 'celebrate');
+            showMessage('¡Juego completado!', 'success');
         } else {
             setCurrentPlayerIndex(nextPlayer);
             setCurrentCardIndexInSequence(0);
@@ -548,8 +577,8 @@ const PicoPaloGame = () => {
     const getInstructions = () => {
         if (gameState === 'pico') {
             return '¿La carta es roja o negra?';
-        } else if (gameState === 'palo') {
-            return '¿Qué palo es?';
+        } else if (gameState === 'par-impar') {
+            return '¿La carta es par o impar?';
         } else if (gameState === 'dentro-fuera') {
             // dentro-fuera: mostrar el rango de las 2 cartas anteriores del jugador actual
             const currentPlayerCardsList = playerCards[currentPlayerIndex] || [];
@@ -567,6 +596,8 @@ const PicoPaloGame = () => {
                 }
             }
             return '¿El valor está dentro o fuera?';
+        } else if (gameState === 'palo') {
+            return '¿Qué palo es?';
         } else if (gameState === 'mayor-menor') {
             const currentPlayerCardsList = playerCards[currentPlayerIndex] || [];
             const referenceCard = currentPlayerCardsList[currentCardIndexInSequence];
@@ -579,7 +610,7 @@ const PicoPaloGame = () => {
 
     const currentPlayer = players.length > 0 ? players[currentPlayerIndex] : null;
     const totalPlayers = players.length || 1;
-    const isLastPhaseFinished = gameState === 'dentro-fuera' && revealed && playersWhoAnswered >= totalPlayers;
+    const isLastPhaseFinished = gameState === 'palo' && revealed && playersWhoAnswered >= totalPlayers;
     const canAdvancePlayer = revealed && playersWhoAnswered < totalPlayers && gameState !== 'mayor-menor';
     const currentPlayerCardsList = playerCards[currentPlayerIndex] || [];
     const completedMayorMenorSequence = gameState === 'mayor-menor' && revealed && currentCardIndexInSequence >= currentPlayerCardsList.length - 1 && message.includes('Completaste');
@@ -590,11 +621,37 @@ const PicoPaloGame = () => {
                 title="Pico Palo"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <IconButton variant="ghost" onClick={generateNewCard} aria-label="Nueva carta">
-                        <IoRefresh size={20} />
-                    </IconButton>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                            <HelpCircle size={20} />
+                        </IconButton>
+                        <IconButton variant="ghost" onClick={generateNewCard} aria-label="Nueva carta">
+                            <IoRefresh size={20} />
+                        </IconButton>
+                    </div>
                 }
             />
+
+            <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Pico Palo">
+                <p>
+                    Vas pasando por 5 fases con cada carta que sale, y en cada una toca adivinar
+                    algo distinto:
+                </p>
+                <ul>
+                    <li>Rojo o negro</li>
+                    <li>Par o impar</li>
+                    <li>Si la siguiente carta está dentro o fuera del rango de las dos anteriores</li>
+                    <li>El palo exacto</li>
+                    <li>
+                        Ronda final: con las 4 cartas que ya tienes, hay que ir adivinando si cada
+                        carta nueva es mayor o menor que la correspondiente
+                    </li>
+                </ul>
+                <p>
+                    Fallar en las 4 primeras fases son solo tragos sueltos. La ronda final es la
+                    que importa: si fallas ahí, bebes y tu secuencia se reinicia desde el principio.
+                </p>
+            </HowToPlayModal>
 
             <Content>
                 {currentPlayer && (
@@ -629,7 +686,7 @@ const PicoPaloGame = () => {
                     </Card>
                 )}
 
-                <Message $success={messageTone === 'success' || messageTone === 'celebrate'}>
+                <Message $success={messageTone === 'success'}>
                     <MessageIcon tone={messageTone} />
                     {message}
                 </Message>
