@@ -7,6 +7,7 @@ import { getPenasByEvent } from '../services/penasService';
 import { getUnlockedStamps } from '../services/stampService';
 import PenaStamp from '../components/PenaStamp';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import Modal from '../components/ui/Modal';
 
 const Container = styled.div`
@@ -145,17 +146,17 @@ export default function StampAlbum() {
 
     const unlockedCount = penas.filter((p) => unlockedIds.has(p.id)).length;
 
+    if (loading) return <LoadingScreen />;
+
     return (
         <Container>
             <PageHeader title="Álbum de sellos" onBack={() => navigate(-1)} />
             <Content>
-                {!loading && penas.length > 0 && (
+                {penas.length > 0 && (
                     <ProgressText>{unlockedCount} de {penas.length} sellos coleccionados</ProgressText>
                 )}
 
-                {loading ? (
-                    <EmptyText>Cargando...</EmptyText>
-                ) : penas.length === 0 ? (
+                {penas.length === 0 ? (
                     <EmptyText>Todavía no hay ninguna peña en este evento.</EmptyText>
                 ) : (
                     <Grid>

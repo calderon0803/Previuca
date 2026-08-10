@@ -5,6 +5,7 @@ import { IoPeopleOutline } from 'react-icons/io5';
 import { usePenas } from '../contexts/PenasContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
@@ -169,6 +170,8 @@ export default function PenasList() {
 
     const otherPenas = penas.filter((pena) => pena.id !== myPena?.id);
 
+    if (flechazoLoading || loading) return <LoadingScreen />;
+
     const handleJoin = async () => {
         if (!joinCode.trim()) return;
         setJoining(true);
@@ -205,9 +208,7 @@ export default function PenasList() {
 
                 <SectionLabel>Resto de peñas</SectionLabel>
 
-                {loading ? (
-                    <EmptyText>Cargando...</EmptyText>
-                ) : otherPenas.length === 0 ? (
+                {otherPenas.length === 0 ? (
                     <EmptyText>Todavía no hay ninguna otra peña en este evento.</EmptyText>
                 ) : (
                     <List>

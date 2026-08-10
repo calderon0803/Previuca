@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Pencil, Trash2 } from 'lucide-react';
 import { getAllEvents, updateEvent, deleteEvent } from '../services/adminService';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import IconButton from '../components/ui/IconButton';
 import Modal from '../components/ui/Modal';
@@ -205,13 +206,13 @@ export default function AdminEvents() {
         }
     };
 
+    if (loading) return <LoadingScreen />;
+
     return (
         <Container>
             <PageHeader title="Administrar eventos" onBack={() => navigate(-1)} />
             <Content>
-                {loading ? (
-                    <EmptyText>Cargando...</EmptyText>
-                ) : eventos.length === 0 ? (
+                {eventos.length === 0 ? (
                     <EmptyText>No hay eventos todavía.</EmptyText>
                 ) : (
                     <List>

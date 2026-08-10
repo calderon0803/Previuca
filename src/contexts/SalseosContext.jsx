@@ -15,10 +15,20 @@ export const SalseosProvider = ({ children }) => {
     const { user, hasProfile, salseoUsername } = useFlechazo();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadedEventId, setLoadedEventId] = useState(null);
 
-    const loadPosts = async (eventId) => {
+    // Si ya tenemos los posts de este evento cargados, no repetimos la
+    // petición solo por volver a entrar a la sección — hay que pasar
+    // { force: true } explícitamente (recargar, o tras crear/borrar).
+    const loadPosts = async (eventId, { force = false } = {}) => {
         if (!user?.id || !eventId) {
             setPosts([]);
+            setLoadedEventId(null);
+            setLoading(false);
+            return;
+        }
+
+        if (!force && loadedEventId === eventId) {
             setLoading(false);
             return;
         }
@@ -26,6 +36,7 @@ export const SalseosProvider = ({ children }) => {
         setLoading(true);
         const result = await getPostsByEvent(eventId, user.id);
         setPosts(result.posts);
+        setLoadedEventId(eventId);
         setLoading(false);
     };
 
@@ -37,7 +48,7 @@ export const SalseosProvider = ({ children }) => {
 
         const result = await createPostService({ eventId, authorId: user.id, body });
         if (result.success) {
-            await loadPosts(eventId);
+            await loadPosts(eventId, { force: true });
         }
         return result;
     };
@@ -45,7 +56,7 @@ export const SalseosProvider = ({ children }) => {
     const deletePost = async (postId, eventId) => {
         const result = await deletePostService(postId);
         if (result.success) {
-            await loadPosts(eventId);
+            await loadPosts(eventId, { force: true });
         }
         return result;
     };

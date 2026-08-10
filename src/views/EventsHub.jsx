@@ -8,6 +8,7 @@ import { hasEventStarted } from '../utils/eventStatus';
 import GameModeCard from '../components/GameModeCard';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
+import LoadingScreen from '../components/ui/LoadingScreen';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -77,28 +78,13 @@ const LockedText = styled.p`
   margin-bottom: ${({ theme }) => theme.spacing(6)};
 `;
 
-const LoadingText = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  text-align: center;
-  margin-top: ${({ theme }) => theme.spacing(8)};
-`;
-
 export default function EventsHub() {
     const navigate = useNavigate();
     const { eventId } = useParams();
     const { events, loading } = useEvent();
     const { isAdmin } = useAdmin();
 
-    if (loading) {
-        return (
-            <Container>
-                <PageHeader title="Eventos" onBack={() => navigate(-1)} />
-                <Content>
-                    <LoadingText>Cargando...</LoadingText>
-                </Content>
-            </Container>
-        );
-    }
+    if (loading) return <LoadingScreen />;
 
     const evento = events.find((e) => e.id === eventId);
 

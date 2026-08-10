@@ -7,6 +7,7 @@ import { getReports, sendNotice, setUserBlocked } from '../services/adminService
 import { deletePost, deleteReply, REPORT_REASONS } from '../services/salseosService';
 import { formatRelativeTime } from '../utils/relativeTime';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import IconButton from '../components/ui/IconButton';
 import Modal from '../components/ui/Modal';
@@ -181,13 +182,13 @@ export default function AdminReports() {
         }
     };
 
+    if (loading) return <LoadingScreen />;
+
     return (
         <Container>
             <PageHeader title="Administrar reportes" onBack={() => navigate(-1)} />
             <Content>
-                {loading ? (
-                    <EmptyText>Cargando...</EmptyText>
-                ) : reports.length === 0 ? (
+                {reports.length === 0 ? (
                     <EmptyText>No hay reportes pendientes.</EmptyText>
                 ) : (
                     <List>

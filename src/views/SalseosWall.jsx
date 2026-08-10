@@ -6,6 +6,7 @@ import { useSalseos } from '../contexts/SalseosContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { formatRelativeTime } from '../utils/relativeTime';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -221,13 +222,15 @@ export default function SalseosWall() {
         }
     };
 
+    if (loading) return <LoadingScreen />;
+
     return (
         <Container>
             <PageHeader
                 title="Salseo"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <IconButton variant="ghost" onClick={() => loadPosts(eventId)} aria-label="Recargar">
+                    <IconButton variant="ghost" onClick={() => loadPosts(eventId, { force: true })} aria-label="Recargar">
                         <RefreshCw size={18} />
                     </IconButton>
                 }
@@ -239,9 +242,7 @@ export default function SalseosWall() {
                     </Button>
                 </ActionsRow>
 
-                {loading ? (
-                    <EmptyText>Cargando...</EmptyText>
-                ) : posts.length === 0 ? (
+                {posts.length === 0 ? (
                     <EmptyText>Todavía no hay ningún mensaje en este evento. ¡Sé el primero!</EmptyText>
                 ) : (
                     <List>

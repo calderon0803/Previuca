@@ -8,6 +8,7 @@ import { useAdmin } from '../contexts/AdminContext';
 import { getRepliesByPost, createReply, deleteReply, reportReply as reportReplyService } from '../services/salseosService';
 import { formatRelativeTime } from '../utils/relativeTime';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
 import Textarea from '../components/ui/Textarea';
@@ -198,7 +199,7 @@ export default function SalseoDetail() {
         const result = await deleteReply(replyId);
         if (result.success) {
             refreshReplies();
-            loadPosts(eventId);
+            loadPosts(eventId, { force: true });
         } else {
             alert(result.error || 'No se pudo borrar la respuesta');
         }
@@ -244,22 +245,13 @@ export default function SalseoDetail() {
         if (result.success) {
             setReplyBody('');
             refreshReplies();
-            loadPosts(eventId);
+            loadPosts(eventId, { force: true });
         } else {
             setReplyError(result.error || 'No se pudo publicar la respuesta');
         }
     };
 
-    if (flechazoLoading || postsLoading) {
-        return (
-            <Container>
-                <PageHeader title="Salseo" onBack={() => navigate(-1)} />
-                <Content>
-                    <EmptyText>Cargando...</EmptyText>
-                </Content>
-            </Container>
-        );
-    }
+    if (flechazoLoading || postsLoading) return <LoadingScreen />;
 
     if (!post) {
         return (

@@ -9,11 +9,20 @@ export const PenasProvider = ({ children }) => {
     const [penas, setPenas] = useState([]);
     const [myPena, setMyPena] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadedEventId, setLoadedEventId] = useState(null);
 
-    const loadPenas = async (eventId) => {
+    // Igual que en Salseo: no repetir la petición solo por reentrar a la
+    // sección — { force: true } para recargar de verdad (tras crear/unirse/salir).
+    const loadPenas = async (eventId, { force = false } = {}) => {
         if (!user?.id || !eventId) {
             setPenas([]);
             setMyPena(null);
+            setLoadedEventId(null);
+            setLoading(false);
+            return;
+        }
+
+        if (!force && loadedEventId === eventId) {
             setLoading(false);
             return;
         }
@@ -25,6 +34,7 @@ export const PenasProvider = ({ children }) => {
         ]);
         setPenas(penasResult.penas);
         setMyPena(myPenaResult.pena);
+        setLoadedEventId(eventId);
         setLoading(false);
     };
 
@@ -35,7 +45,7 @@ export const PenasProvider = ({ children }) => {
 
         const result = await createPenaService({ eventId, userId: user.id, name, color, imageFile });
         if (result.success) {
-            await loadPenas(eventId);
+            await loadPenas(eventId, { force: true });
         }
         return result;
     };
@@ -47,7 +57,7 @@ export const PenasProvider = ({ children }) => {
 
         const result = await joinPenaByCode(eventId, user.id, code);
         if (result.success) {
-            await loadPenas(eventId);
+            await loadPenas(eventId, { force: true });
         }
         return result;
     };
@@ -58,7 +68,7 @@ export const PenasProvider = ({ children }) => {
 
         const result = await leavePenaService(user.id, eventId);
         if (result.success) {
-            await loadPenas(eventId);
+            await loadPenas(eventId, { force: true });
         }
         return result;
     };

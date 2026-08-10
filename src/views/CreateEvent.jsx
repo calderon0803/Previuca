@@ -47,6 +47,13 @@ const DateRow = styled.div`
 
   > div {
     flex: 1;
+    min-width: 0;
+  }
+
+  input[type="date"] {
+    min-width: 0;
+    padding: 0 ${({ theme }) => theme.spacing(2)};
+    font-size: ${({ theme }) => theme.typography.fontSize.sm};
   }
 `;
 

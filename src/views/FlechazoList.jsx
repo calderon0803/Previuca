@@ -5,6 +5,7 @@ import { useFlechazo } from '../contexts/FlechazoContext';
 import { IoAdd, IoClose, IoPerson } from 'react-icons/io5';
 import { Heart } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -129,12 +130,6 @@ const ButtonGroup = styled.div`
   gap: ${({ theme }) => theme.spacing(3)};
 `;
 
-const LoadingText = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  text-align: center;
-  margin-top: ${({ theme }) => theme.spacing(8)};
-`;
-
 export default function FlechazoList() {
   const navigate = useNavigate();
   const {
@@ -194,16 +189,7 @@ export default function FlechazoList() {
     }
   }
 
-  if (loading || loadingFlechazos) {
-    return (
-      <Container>
-        <PageHeader title="Mis Flechazos" onBack={handleBack} />
-        <Content>
-          <LoadingText>Cargando...</LoadingText>
-        </Content>
-      </Container>
-    );
-  }
+  if (loading || loadingFlechazos) return <LoadingScreen />;
 
   // Generate 5 slots
   const slots = Array(5).fill(null).map((_, i) => flechazos?.[i] || null);

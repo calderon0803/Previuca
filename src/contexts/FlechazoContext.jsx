@@ -21,6 +21,7 @@ export const FlechazoProvider = ({ children }) => {
     const [gender, setGender] = useState('');
     const [salseoUsername, setSalseoUsername] = useState('');
     const [isBlocked, setIsBlocked] = useState(false);
+    const [flechazosLoadedEventId, setFlechazosLoadedEventId] = useState(null);
     const hasLoadedData = useRef(false); // Track si ya cargamos la verificación de Instagram
 
     useEffect(() => {
@@ -56,6 +57,7 @@ export const FlechazoProvider = ({ children }) => {
                     setGender('');
                     setSalseoUsername('');
                     setIsBlocked(false);
+                    setFlechazosLoadedEventId(null);
                     hasLoadedData.current = false;
                 }
                 setLoading(false);
@@ -93,8 +95,9 @@ export const FlechazoProvider = ({ children }) => {
 
     // Los flechazos están enlazados al evento activo: se cargan explícitamente
     // desde la pantalla (que conoce el eventId via useEvent), no en el login.
-    const loadFlechazos = async (eventId) => {
+    const loadFlechazos = async (eventId, { force = false } = {}) => {
         if (!user || !eventId) return [];
+        if (!force && flechazosLoadedEventId === eventId) return flechazos;
 
         try {
             const { data, error } = await supabase
@@ -112,6 +115,7 @@ export const FlechazoProvider = ({ children }) => {
                 await loadMatchedByCount(instagramUsername, flechazoList, eventId);
             }
 
+            setFlechazosLoadedEventId(eventId);
             return flechazoList;
         } catch (error) {
             console.error('Error loading flechazos:', error);

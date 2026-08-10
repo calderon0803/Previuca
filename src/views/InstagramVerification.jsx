@@ -10,6 +10,7 @@ import {
     updateInstagramUsername
 } from '../services/instagramService';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
@@ -191,18 +192,7 @@ export default function InstagramVerification() {
         }
     };
 
-    if (contextLoading) {
-        return (
-            <Container>
-                <PageHeader title="Verificación Instagram" onBack={() => navigate(-1)} />
-                <Content>
-                    <Card>
-                        <p style={{ textAlign: 'center', color: '#7C818C', margin: 0 }}>Cargando...</p>
-                    </Card>
-                </Content>
-            </Container>
-        );
-    }
+    if (contextLoading) return <LoadingScreen />;
 
     return (
         <Container>

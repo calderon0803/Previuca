@@ -8,6 +8,7 @@ import { getEventStatus } from '../utils/eventStatus';
 import { deleteInstagramVerification } from '../services/instagramService';
 import { supabase } from '../config/supabase';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
@@ -37,12 +38,6 @@ const EmptyTitle = styled.h2`
 const EmptyText = styled.p`
     color: ${({ theme }) => theme.colors.text.secondary};
     margin-bottom: ${({ theme }) => theme.spacing(6)};
-`;
-
-const LoadingText = styled.div`
-    text-align: center;
-    color: ${({ theme }) => theme.colors.text.secondary};
-    padding: ${({ theme }) => theme.spacing(9)} ${({ theme }) => theme.spacing(5)};
 `;
 
 const Section = styled.div`
@@ -158,16 +153,7 @@ const Settings = () => {
     };
 
     // Si está cargando, mostrar pantalla de carga
-    if (contextLoading) {
-        return (
-            <Container>
-                <PageHeader title="Ajustes" onBack={handleBack} />
-                <Content>
-                    <LoadingText>Cargando...</LoadingText>
-                </Content>
-            </Container>
-        );
-    }
+    if (contextLoading) return <LoadingScreen />;
 
     // Si no hay usuario, mostrar mensaje para iniciar sesión
     if (!user) {

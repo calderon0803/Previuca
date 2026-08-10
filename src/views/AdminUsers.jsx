@@ -6,6 +6,7 @@ import { useFlechazo } from '../contexts/FlechazoContext';
 import { getAllProfiles, updateProfileAdmin, setUserBlocked, deleteUserAccount } from '../services/adminService';
 import { GENDER_OPTIONS, calculateAge } from '../services/profileService';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import IconButton from '../components/ui/IconButton';
 import Modal from '../components/ui/Modal';
@@ -194,13 +195,13 @@ export default function AdminUsers() {
         }
     };
 
+    if (loading) return <LoadingScreen />;
+
     return (
         <Container>
             <PageHeader title="Administrar usuarios" onBack={() => navigate(-1)} />
             <Content>
-                {loading ? (
-                    <EmptyText>Cargando...</EmptyText>
-                ) : profiles.length === 0 ? (
+                {profiles.length === 0 ? (
                     <EmptyText>No hay usuarios todavía.</EmptyText>
                 ) : (
                     <List>

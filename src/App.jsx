@@ -54,19 +54,7 @@ import AdminUsers from './views/AdminUsers';
 import AdminEvents from './views/AdminEvents';
 import AdminPenas from './views/AdminPenas';
 import AdminReports from './views/AdminReports';
-
-const LoadingScreenWrap = styled.div`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: ${({ theme }) => theme.colors.background};
-    color: ${({ theme }) => theme.colors.text.primary};
-`;
-
-const LoadingScreen = () => (
-    <LoadingScreenWrap>Cargando...</LoadingScreenWrap>
-);
+import LoadingScreen from './components/ui/LoadingScreen';
 
 const BlockedScreenWrap = styled.div`
     display: flex;

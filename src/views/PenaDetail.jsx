@@ -8,6 +8,7 @@ import { useFlechazo } from '../contexts/FlechazoContext';
 import { getPenaMembers } from '../services/penasService';
 import PenaStamp from '../components/PenaStamp';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 
@@ -217,16 +218,7 @@ export default function PenaDetail() {
         }
     };
 
-    if (flechazoLoading || penasLoading) {
-        return (
-            <Container>
-                <PageHeader title="Peña" onBack={() => navigate(-1)} />
-                <Content>
-                    <EmptyText>Cargando...</EmptyText>
-                </Content>
-            </Container>
-        );
-    }
+    if (flechazoLoading || penasLoading) return <LoadingScreen />;
 
     // Solo el perfil de tu propia peña es visible; el resto de peñas del
     // evento solo aparecen como nombre en el listado, sin poder entrar.

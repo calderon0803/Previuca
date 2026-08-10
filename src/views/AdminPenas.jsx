@@ -6,6 +6,7 @@ import { IoImageOutline, IoPeopleOutline } from 'react-icons/io5';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { getAllPenas, updatePena, deletePena } from '../services/adminService';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import IconButton from '../components/ui/IconButton';
 import Modal from '../components/ui/Modal';
@@ -230,13 +231,13 @@ export default function AdminPenas() {
         }
     };
 
+    if (loading) return <LoadingScreen />;
+
     return (
         <Container>
             <PageHeader title="Administrar peñas" onBack={() => navigate(-1)} />
             <Content>
-                {loading ? (
-                    <EmptyText>Cargando...</EmptyText>
-                ) : penas.length === 0 ? (
+                {penas.length === 0 ? (
                     <EmptyText>No hay peñas todavía.</EmptyText>
                 ) : (
                     <List>

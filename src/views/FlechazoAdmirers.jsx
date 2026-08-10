@@ -7,6 +7,7 @@ import { getPenasByEvent, getPenaAffiliationsByUserIds, getMyPena } from '../ser
 import { getUnlockedStamps } from '../services/stampService';
 import { getProfilesByUserIds, calculateAge } from '../services/profileService';
 import PageHeader from '../components/ui/PageHeader';
+import LoadingScreen from '../components/ui/LoadingScreen';
 
 // El evento necesita este mínimo de peñas para que la revelación progresiva
 // tenga sentido (con pocas peñas, los sellos disponibles no darían margen).
@@ -209,13 +210,13 @@ export default function FlechazoAdmirers() {
     const penaColorUnlocked = effectiveUnlocked >= penaColorRequired;
     const identityRevealed = effectiveUnlocked >= identityRequired;
 
+    if (loading) return <LoadingScreen />;
+
     return (
         <Container>
             <PageHeader title="Quién te tiene en su lista" onBack={() => navigate(-1)} />
             <Content>
-                {loading ? (
-                    <EmptyText>Cargando...</EmptyText>
-                ) : !hasEnoughPenas ? (
+                {!hasEnoughPenas ? (
                     <EmptyText>
                         Esta función se desbloquea cuando el evento tiene al menos {MIN_PENAS_REQUIRED} peñas
                         (ahora mismo hay {totalPenas}).
