@@ -36,9 +36,9 @@ export const getInstagramVerification = async (userId) => {
             .from('instagram_verification')
             .select('*')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no encontrado
+        if (error) throw error;
         return { success: true, data };
     } catch (error) {
         console.error('Error getting instagram verification:', error);

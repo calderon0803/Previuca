@@ -130,9 +130,9 @@ export const FlechazoProvider = ({ children }) => {
                 .from('instagram_verification')
                 .select('*')
                 .eq('user_id', userObj.id)
-                .single();
+                .maybeSingle();
 
-            if (error && error.code !== 'PGRST116') throw error;
+            if (error) throw error;
 
             const verified = data?.is_verified || false;
             const username = data?.instagram_username || userObj?.email?.split('@')[0] || 'Usuario';
@@ -188,9 +188,9 @@ export const FlechazoProvider = ({ children }) => {
                 .from('blocked_users')
                 .select('user_id')
                 .eq('user_id', userId)
-                .single();
+                .maybeSingle();
 
-            if (error && error.code !== 'PGRST116') throw error;
+            if (error) throw error;
             setIsBlocked(!!data);
         } catch (error) {
             console.error('Error checking blocked status:', error);

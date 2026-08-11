@@ -794,6 +794,39 @@ CREATE POLICY "Users can mark their own notices as read"
     USING (auth.uid() = user_id);
 
 -- -------------------------------------------------
+-- 16. Tabla: app_feedback
+-- -------------------------------------------------
+-- Reportes de fallos/sugerencias sobre la propia app (no sobre otros
+-- usuarios ni contenido), enviados desde Ajustes y revisados en el panel
+-- de administración.
+CREATE TABLE IF NOT EXISTS app_feedback (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('fallo', 'sugerencia', 'otro')),
+    message TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_feedback_user_id ON app_feedback(user_id);
+
+ALTER TABLE app_feedback ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can send app feedback" ON app_feedback;
+CREATE POLICY "Users can send app feedback"
+    ON app_feedback FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Admins can view app feedback" ON app_feedback;
+CREATE POLICY "Admins can view app feedback"
+    ON app_feedback FOR SELECT
+    USING (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can delete app feedback" ON app_feedback;
+CREATE POLICY "Admins can delete app feedback"
+    ON app_feedback FOR DELETE
+    USING (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
+
+-- -------------------------------------------------
 -- Success Notification
 -- -------------------------------------------------
 DO $$

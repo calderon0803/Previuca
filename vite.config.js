@@ -10,25 +10,33 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+            includeAssets: ['icons/favicon-32.png', 'icons/apple-touch-icon.png'],
             manifest: {
                 name: 'Previuca',
                 short_name: 'Previuca',
                 description: 'La mejor app de juegos de beber',
-                theme_color: '#667eea',
-                background_color: '#ffffff',
+                theme_color: '#B23A63',
+                background_color: '#F7ECE7',
                 display: 'standalone',
                 orientation: 'portrait',
                 icons: [
                     {
-                        src: '/logo.png',
+                        src: '/icons/icon-192.png',
                         sizes: '192x192',
-                        type: 'image/png'
+                        type: 'image/png',
+                        purpose: 'any'
                     },
                     {
-                        src: '/logo.png',
+                        src: '/icons/icon-512.png',
                         sizes: '512x512',
-                        type: 'image/png'
+                        type: 'image/png',
+                        purpose: 'any'
+                    },
+                    {
+                        src: '/icons/icon-maskable-512.png',
+                        sizes: '512x512',
+                        type: 'image/png',
+                        purpose: 'maskable'
                     }
                 ]
             }

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoImageOutline } from 'react-icons/io5';
 import { usePenas } from '../contexts/PenasContext';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
@@ -60,32 +59,6 @@ const ColorSwatch = styled.button`
   }
 `;
 
-const ImagePicker = styled.label`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(2)};
-  height: 160px;
-  border-radius: ${({ theme }) => theme.radii.md};
-  border: 1px dashed ${({ theme }) => theme.colors.border};
-  background: ${({ theme, $hasImage }) => ($hasImage ? 'transparent' : theme.colors.surface)};
-  background-image: ${({ $preview }) => ($preview ? `url(${$preview})` : 'none')};
-  background-size: cover;
-  background-position: center;
-  color: ${({ theme }) => theme.colors.text.secondary};
-  cursor: pointer;
-  overflow: hidden;
-
-  input {
-    display: none;
-  }
-`;
-
-const ImageHint = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-`;
-
 const ErrorText = styled.p`
   color: ${({ theme }) => theme.colors.error};
   font-size: ${({ theme }) => theme.typography.fontSize.sm};
@@ -99,24 +72,15 @@ export default function CreatePena() {
     const { createPena } = usePenas();
     const [name, setName] = useState('');
     const [color, setColor] = useState(COLORS[0]);
-    const [imageFile, setImageFile] = useState(null);
-    const [preview, setPreview] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
-
-    const handleImageChange = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setImageFile(file);
-        setPreview(URL.createObjectURL(file));
-    };
 
     const handleSubmit = async () => {
         if (!name.trim()) return;
         setSubmitting(true);
         setError('');
 
-        const result = await createPena({ eventId, name, color, imageFile });
+        const result = await createPena({ eventId, name, color });
 
         setSubmitting(false);
         if (result.success) {
@@ -154,19 +118,6 @@ export default function CreatePena() {
                             />
                         ))}
                     </ColorRow>
-                </Field>
-
-                <Field>
-                    <Label>Imagen</Label>
-                    <ImagePicker $preview={preview} $hasImage={!!preview}>
-                        {!preview && (
-                            <>
-                                <IoImageOutline size={28} />
-                                <ImageHint>Toca para elegir una foto</ImageHint>
-                            </>
-                        )}
-                        <input type="file" accept="image/*" onChange={handleImageChange} disabled={submitting} />
-                    </ImagePicker>
                 </Field>
 
                 {error && <ErrorText>{error}</ErrorText>}

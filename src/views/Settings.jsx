@@ -6,11 +6,13 @@ import { useFlechazo } from '../contexts/FlechazoContext';
 import { useEvent } from '../contexts/EventContext';
 import { getEventStatus } from '../utils/eventStatus';
 import { deleteInstagramVerification } from '../services/instagramService';
+import { submitFeedback } from '../services/feedbackService';
 import { supabase } from '../config/supabase';
 import PageHeader from '../components/ui/PageHeader';
 import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import FeedbackModal from '../components/FeedbackModal';
 
 const Container = styled.div`
     min-height: 100vh;
@@ -140,6 +142,9 @@ const Settings = () => {
     const [eventStatus, setEventStatus] = useState('');
     const [redeeming, setRedeeming] = useState(false);
     const [leavingEventId, setLeavingEventId] = useState(null);
+    const [showFeedback, setShowFeedback] = useState(false);
+    const [sendingFeedback, setSendingFeedback] = useState(false);
+    const [feedbackError, setFeedbackError] = useState('');
 
     // Construir objeto de datos de Instagram desde el contexto
     const instagramData = user && instagramUsername ? {
@@ -245,6 +250,17 @@ const Settings = () => {
             console.error('Error removing instagram:', error);
             alert('Error al desvincular Instagram');
         }
+    };
+
+    const handleSendFeedback = async (type, message) => {
+        setSendingFeedback(true);
+        setFeedbackError('');
+        const result = await submitFeedback({ userId: user.id, type, message });
+        setSendingFeedback(false);
+        if (!result.success) {
+            setFeedbackError(result.error || 'No se pudo enviar el mensaje');
+        }
+        return result;
     };
 
     const handleDeleteAccount = async () => {
@@ -401,6 +417,16 @@ const Settings = () => {
                 </Section>
 
                 <Section>
+                    <SectionTitle>Ayuda</SectionTitle>
+                    <SettingItem $interactive onClick={() => { setFeedbackError(''); setShowFeedback(true); }}>
+                        <SettingInfo>
+                            <SettingLabel>Reportar un problema o sugerencia</SettingLabel>
+                            <SettingValue>Fallos, ideas de mejora, lo que sea</SettingValue>
+                        </SettingInfo>
+                    </SettingItem>
+                </Section>
+
+                <Section>
                     <SectionTitle>Zona de riesgo</SectionTitle>
                     <SettingItem>
                         <SettingInfo>
@@ -413,6 +439,14 @@ const Settings = () => {
                     </SettingItem>
                 </Section>
             </Content>
+
+            <FeedbackModal
+                visible={showFeedback}
+                onClose={() => setShowFeedback(false)}
+                onSubmit={handleSendFeedback}
+                submitting={sendingFeedback}
+                error={feedbackError}
+            />
         </Container>
     );
 };

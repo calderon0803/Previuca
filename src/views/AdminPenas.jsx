@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Pencil, Trash2 } from 'lucide-react';
-import { IoImageOutline, IoPeopleOutline } from 'react-icons/io5';
-import { useFlechazo } from '../contexts/FlechazoContext';
+import { IoPeopleOutline } from 'react-icons/io5';
 import { getAllPenas, updatePena, deletePena } from '../services/adminService';
 import PageHeader from '../components/ui/PageHeader';
 import LoadingScreen from '../components/ui/LoadingScreen';
@@ -123,32 +122,6 @@ const ColorSwatch = styled.button`
   cursor: pointer;
 `;
 
-const ImagePicker = styled.label`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(2)};
-  height: 140px;
-  border-radius: ${({ theme }) => theme.radii.md};
-  border: 1px dashed ${({ theme }) => theme.colors.border};
-  background: ${({ theme, $hasImage }) => ($hasImage ? 'transparent' : theme.colors.surface)};
-  background-image: ${({ $preview }) => ($preview ? `url(${$preview})` : 'none')};
-  background-size: cover;
-  background-position: center;
-  color: ${({ theme }) => theme.colors.text.secondary};
-  cursor: pointer;
-  overflow: hidden;
-
-  input {
-    display: none;
-  }
-`;
-
-const ImageHint = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-`;
-
 const ModalTitle = styled.h3`
   color: ${({ theme }) => theme.colors.text.primary};
   margin-top: 0;
@@ -165,12 +138,10 @@ const ErrorText = styled.p`
 
 export default function AdminPenas() {
     const navigate = useNavigate();
-    const { user } = useFlechazo();
     const [penas, setPenas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingPena, setEditingPena] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', color: '', imageFile: null });
-    const [preview, setPreview] = useState(null);
+    const [editForm, setEditForm] = useState({ name: '', color: '' });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [busyPenaId, setBusyPenaId] = useState(null);
@@ -189,15 +160,7 @@ export default function AdminPenas() {
     const openEdit = (pena) => {
         setError('');
         setEditingPena(pena);
-        setEditForm({ name: pena.name || '', color: pena.color || COLORS[0], imageFile: null });
-        setPreview(pena.image_url || null);
-    };
-
-    const handleImageChange = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setEditForm((prev) => ({ ...prev, imageFile: file }));
-        setPreview(URL.createObjectURL(file));
+        setEditForm({ name: pena.name || '', color: pena.color || COLORS[0] });
     };
 
     const handleSaveEdit = async () => {
@@ -205,7 +168,7 @@ export default function AdminPenas() {
 
         setSaving(true);
         setError('');
-        const result = await updatePena(editingPena.id, { ...editForm, adminUserId: user.id });
+        const result = await updatePena(editingPena.id, editForm);
         setSaving(false);
         if (result.success) {
             setEditingPena(null);
@@ -292,18 +255,6 @@ export default function AdminPenas() {
                             />
                         ))}
                     </ColorRow>
-                </Field>
-                <Field>
-                    <Label>Imagen</Label>
-                    <ImagePicker $preview={preview} $hasImage={!!preview}>
-                        {!preview && (
-                            <>
-                                <IoImageOutline size={24} />
-                                <ImageHint>Toca para cambiar la foto</ImageHint>
-                            </>
-                        )}
-                        <input type="file" accept="image/*" onChange={handleImageChange} />
-                    </ImagePicker>
                 </Field>
                 {error && <ErrorText>{error}</ErrorText>}
                 <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>

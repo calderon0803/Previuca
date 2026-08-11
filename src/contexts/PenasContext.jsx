@@ -38,12 +38,12 @@ export const PenasProvider = ({ children }) => {
         setLoading(false);
     };
 
-    const createPena = async ({ eventId, name, color, imageFile }) => {
+    const createPena = async ({ eventId, name, color }) => {
         if (!user || !eventId) return { success: false, error: 'Debes tener un evento activo' };
         if (!hasProfile) return { success: false, error: 'Completa tu nombre y apellido en Ajustes antes de crear una peña' };
         if (myPena) return { success: false, error: 'Ya perteneces a una peña' };
 
-        const result = await createPenaService({ eventId, userId: user.id, name, color, imageFile });
+        const result = await createPenaService({ eventId, userId: user.id, name, color });
         if (result.success) {
             await loadPenas(eventId, { force: true });
         }

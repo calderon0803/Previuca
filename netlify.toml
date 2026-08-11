@@ -16,3 +16,21 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# El service worker y el manifest no llevan hash en el nombre — sin esto el
+# CDN de Netlify puede servir una versión cacheada vieja y la app no se
+# actualiza sola para quien ya la tiene instalada como PWA.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/registerSW.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache"

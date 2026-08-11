@@ -6,7 +6,11 @@ import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
-const COLORS = ['#000000', '#B23A63', '#D9A54B', '#3F8CD9', '#3FA772', '#8A5FD9', '#D95F5F', '#5F5F5F'];
+const COLORS = [
+    '#E5484D', '#D9455B', '#B23A63', '#D9377E', '#C23FA0', '#8A5FD9',
+    '#6E56CF', '#3F8CD9', '#3FA0D9', '#3FA9A0', '#3FA772', '#5FA83F',
+    '#8FB93F', '#D9C23F', '#D9A54B', '#D97C3F', '#D95F5F', '#7C818C', '#000000',
+];
 const DESCRIPTION_MAX_LENGTH = 80;
 
 const Container = styled.div`

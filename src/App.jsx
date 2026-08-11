@@ -54,6 +54,7 @@ import AdminUsers from './views/AdminUsers';
 import AdminEvents from './views/AdminEvents';
 import AdminPenas from './views/AdminPenas';
 import AdminReports from './views/AdminReports';
+import AdminFeedback from './views/AdminFeedback';
 import LoadingScreen from './components/ui/LoadingScreen';
 
 const BlockedScreenWrap = styled.div`
@@ -182,6 +183,7 @@ function AppRoutes() {
                     <Route path="/admin/eventos" element={<AdminRoute><AdminEvents /></AdminRoute>} />
                     <Route path="/admin/penas" element={<AdminRoute><AdminPenas /></AdminRoute>} />
                     <Route path="/admin/reportes" element={<AdminRoute><AdminReports /></AdminRoute>} />
+                    <Route path="/admin/feedback" element={<AdminRoute><AdminFeedback /></AdminRoute>} />
 
                     {/* Eventos Feature Routes */}
                     <Route

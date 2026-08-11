@@ -15,7 +15,7 @@ export const redeemEventCode = async (userId, code) => {
             .from('eventos')
             .select('*')
             .eq('code', cleanCode)
-            .single();
+            .maybeSingle();
 
         if (eventoError || !evento) {
             return { success: false, error: 'Código de evento no válido' };

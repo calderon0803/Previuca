@@ -7,41 +7,9 @@ const generatePenaCode = () => {
     return Array.from(array, byte => byte.toString(36)).join('').substring(0, 6).toUpperCase();
 };
 
-// Sube la imagen de la peña al bucket público y devuelve su URL
-export const uploadPenaImage = async (userId, imageFile) => {
-    // Validar tipo MIME
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowedTypes.includes(imageFile.type)) {
-        throw new Error('Tipo de archivo no permitido. Solo se aceptan imágenes (JPEG, PNG, WEBP, GIF).');
-    }
-
-    // Validar tamaño máximo (5MB)
-    const MAX_SIZE = 5 * 1024 * 1024;
-    if (imageFile.size > MAX_SIZE) {
-        throw new Error('La imagen no puede superar los 5MB.');
-    }
-
-    const extension = imageFile.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
-    const path = `${userId}/${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${extension}`;
-
-    const { error } = await supabase.storage
-        .from('pena-images')
-        .upload(path, imageFile, {
-            contentType: imageFile.type,
-            upsert: false
-        });
-
-    if (error) throw error;
-
-    const { data } = supabase.storage.from('pena-images').getPublicUrl(path);
-    return data.publicUrl;
-};
-
-// Crea una peña nueva (sube imagen, genera código único, crea la membership del creador)
-export const createPena = async ({ eventId, userId, name, color, imageFile }) => {
+// Crea una peña nueva (genera código único, crea la membership del creador)
+export const createPena = async ({ eventId, userId, name, color }) => {
     try {
-        const imageUrl = imageFile ? await uploadPenaImage(userId, imageFile) : null;
-
         let attempts = 0;
         let pena = null;
         let lastError = null;
@@ -56,7 +24,6 @@ export const createPena = async ({ eventId, userId, name, color, imageFile }) =>
                     event_id: eventId,
                     name: name.trim(),
                     color,
-                    image_url: imageUrl,
                     code,
                     created_by: userId,
                 }])
@@ -100,7 +67,7 @@ export const joinPenaByCode = async (eventId, userId, code) => {
             .select('*')
             .eq('event_id', eventId)
             .eq('code', cleanCode)
-            .single();
+            .maybeSingle();
 
         if (penaError || !pena) {
             return { success: false, error: 'Código de peña no válido' };
@@ -172,9 +139,9 @@ export const getMyPena = async (userId, eventId) => {
             .select('pena_id, penas(*)')
             .eq('user_id', userId)
             .eq('event_id', eventId)
-            .single();
+            .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error) throw error;
 
         return { success: true, pena: data?.penas || null };
     } catch (error) {

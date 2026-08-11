@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { css } from 'styled-components';
-import { Gamepad2, PartyPopper, Settings, ShieldCheck } from 'lucide-react';
+import { Gamepad2, PartyPopper, Settings, ShieldCheck, Download } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
@@ -9,7 +9,9 @@ import { getUnreadNotices, markNoticeRead } from '../services/adminService';
 import { isEventVisibleInMenu } from '../utils/eventStatus';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
+import IconButton from '../components/ui/IconButton';
 import TermsAndConditions from '../components/TermsAndConditions';
+import InstallPwaModal from '../components/InstallPwaModal';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -37,8 +39,15 @@ const Content = styled.div`
 const Kicker = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: ${({ theme }) => theme.spacing(2.5)};
   margin-bottom: ${({ theme }) => theme.spacing(7)};
+`;
+
+const KickerBrand = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
 const Logo = styled.img`
@@ -252,6 +261,7 @@ export default function MainMenu() {
   const visibleEvents = events.filter(isEventVisibleInMenu);
   const hasEvents = visibleEvents.length > 0;
   const [showTerms, setShowTerms] = useState(false);
+  const [showInstall, setShowInstall] = useState(false);
   const [pendingNotices, setPendingNotices] = useState([]);
 
   useEffect(() => {
@@ -268,8 +278,13 @@ export default function MainMenu() {
     <Container>
       <Content>
         <Kicker>
-          <Logo src="/logo.png" alt="Previuca" />
-          <Wordmark>Previuca</Wordmark>
+          <KickerBrand>
+            <Logo src="/logo.png" alt="Previuca" />
+            <Wordmark>Previuca</Wordmark>
+          </KickerBrand>
+          <IconButton variant="ghost" size="sm" onClick={() => setShowInstall(true)} aria-label="Instalar app">
+            <Download size={18} />
+          </IconButton>
         </Kicker>
 
         <Headline>¿Qué hacemos hoy?</Headline>
@@ -336,6 +351,8 @@ export default function MainMenu() {
       <Modal visible={showTerms} onClose={() => setShowTerms(false)}>
         <TermsAndConditions />
       </Modal>
+
+      <InstallPwaModal visible={showInstall} onClose={() => setShowInstall(false)} />
 
       <Modal visible={pendingNotices.length > 0} onClose={handleDismissNotices}>
         <NoticesTitle>Avisos del equipo organizador</NoticesTitle>

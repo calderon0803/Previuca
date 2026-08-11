@@ -32,9 +32,9 @@ export const getProfile = async (userId) => {
             .from('profiles')
             .select('first_name, last_name, birthdate, gender, salseo_username')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error) throw error;
 
         return { success: true, profile: data || null };
     } catch (error) {

@@ -1,6 +1,5 @@
 import { supabase } from '../config/supabase';
 import { deleteInstagramVerification } from './instagramService';
-import { uploadPenaImage } from './penasService';
 
 // Comprueba si el usuario tiene el rol de administrador (tabla admins gestionada a mano)
 export const checkIsAdmin = async (userId) => {
@@ -9,9 +8,9 @@ export const checkIsAdmin = async (userId) => {
             .from('admins')
             .select('user_id')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error) throw error;
 
         return { success: true, isAdmin: !!data };
     } catch (error) {
@@ -194,13 +193,9 @@ export const getAllPenas = async () => {
     }
 };
 
-export const updatePena = async (penaId, { name, color, imageFile, adminUserId }) => {
+export const updatePena = async (penaId, { name, color }) => {
     try {
         const updates = { name: name.trim(), color };
-
-        if (imageFile) {
-            updates.image_url = await uploadPenaImage(adminUserId, imageFile);
-        }
 
         const { error } = await supabase.from('penas').update(updates).eq('id', penaId);
         if (error) throw error;

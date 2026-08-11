@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Plus, Users, PartyPopper, Tent, Flag } from 'lucide-react';
+import { Plus, Users, PartyPopper, Tent, Flag, MessageSquareWarning } from 'lucide-react';
 import GameModeCard from '../components/GameModeCard';
 import PageHeader from '../components/ui/PageHeader';
 
@@ -38,6 +38,7 @@ const sections = [
     { id: 'eventos', name: 'Administrar eventos', icon: PartyPopper, route: '/admin/eventos' },
     { id: 'penas', name: 'Administrar peñas', icon: Tent, route: '/admin/penas' },
     { id: 'reportes', name: 'Administrar reportes', icon: Flag, route: '/admin/reportes' },
+    { id: 'feedback', name: 'Reportes de la app', icon: MessageSquareWarning, route: '/admin/feedback' },
 ];
 
 export default function AdminHub() {
