@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoRefresh } from 'react-icons/io5';
 import { HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
@@ -156,9 +155,9 @@ export default function DiceGame() {
         const isDouble = d1 === d2;
 
         if (isDouble) {
-            if (sum === 2) return "SNAKE EYES: ¡Bébete 2 chupitos ahora mismo!";
-            if (sum === 12) return "BOX CARS: ¡Todos los jugadores beben 1 chupito!";
-            return `DOBLES: Has sacado doble ${d1}. Crea una regla nueva para el resto de la partida.`;
+            if (sum === 2) return "Snake Eyes: ¡Bébete 2 tragos ahora mismo!";
+            if (sum === 12) return "Box Cars: ¡Todos los jugadores beben 1 trago!";
+            return `Dobles: Has sacado doble ${d1}. Crea una regla nueva para el resto de la partida.`;
         }
 
         if (sum === 7) return "7: El último en tocarse la nariz bebe.";
@@ -203,34 +202,23 @@ export default function DiceGame() {
         setResult(null);
     };
 
-    const resetGame = () => {
-        setDice([1, 1]);
-        setResult(null);
-        setCurrentPlayerIndex(0);
-    };
-
     return (
         <Container>
             <PageHeader
                 title="Dados de Beber"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                            <HelpCircle size={20} />
-                        </IconButton>
-                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-                            <IoRefresh size={20} />
-                        </IconButton>
-                    </div>
+                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                        <HelpCircle size={20} />
+                    </IconButton>
                 }
             />
 
             <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Dados de Beber">
                 <p>Turno por turno, cada uno lanza los dos dados. La suma decide qué toca:</p>
                 <ul>
-                    <li><strong>1-1:</strong> dos chupitos para ti</li>
-                    <li><strong>6-6:</strong> todos beben un chupito</li>
+                    <li><strong>1-1:</strong> dos tragos para ti</li>
+                    <li><strong>6-6:</strong> todos beben un trago</li>
                     <li><strong>Cualquier otro doble:</strong> te inventas una regla nueva que dura el resto de la partida</li>
                     <li><strong>Suma 7:</strong> el último en tocarse la nariz bebe</li>
                     <li><strong>Suma 3:</strong> bebes tú</li>

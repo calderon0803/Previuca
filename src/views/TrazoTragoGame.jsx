@@ -264,6 +264,12 @@ export default function TrazoTragoGame() {
         setShowResult(false);
     };
 
+    const startNewRound = () => {
+        clearCanvas();
+        selectNewWord();
+        setIsGameStarted(false);
+    };
+
     const handleStartGame = () => {
         setIsGameStarted(true);
         selectNewWord();
@@ -337,26 +343,21 @@ export default function TrazoTragoGame() {
                 title="Trazo & Trago"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                            <HelpCircle size={20} />
-                        </IconButton>
-                        <IconButton variant="ghost" onClick={selectNewWord} aria-label="Nueva palabra">
-                            <IoRefresh size={20} />
-                        </IconButton>
-                    </div>
+                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                        <HelpCircle size={20} />
+                    </IconButton>
                 }
             />
 
             <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Trazo & Trago">
                 <p>
-                    Te toca dibujar una palabra y que los demás la adivinen a gritos, sin hablar tú
-                    ni escribir letras o números. Tienes 90 segundos.
+                    Te toca dibujar una palabra y que los demás la adivinen, sin hablar tú ni
+                    escribir letras o números. Tienes 90 segundos.
                 </p>
                 <p>
-                    Cuanto más tardes en que la adivinen (o en pulsar «Finalizar» tú mismo), más
-                    tragos bebes: uno si acabas rápido, hasta tres si se te echa el tiempo encima. El
-                    que dibuja es quien paga, no los que adivinan.
+                    Cuanto más tardes en que la adivinen, más tragos bebes: uno si acabas rápido,
+                    hasta tres si se te echa el tiempo encima. El que dibuja es quien paga, no los
+                    que adivinan.
                 </p>
             </HowToPlayModal>
 
@@ -448,7 +449,7 @@ export default function TrazoTragoGame() {
                         Limpiar
                     </Button>
 
-                    <Button variant="secondary" size="sm" onClick={() => { clearCanvas(); selectNewWord(); }}>
+                    <Button variant="secondary" size="sm" onClick={startNewRound}>
                         <IoRefresh size={16} />
                         Nueva
                     </Button>

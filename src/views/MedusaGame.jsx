@@ -107,21 +107,16 @@ export default function MedusaGame() {
                 title="Medusa"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                            <HelpCircle size={20} />
-                        </IconButton>
-                        <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-                            <IoRefresh size={20} />
-                        </IconButton>
-                    </div>
+                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                        <HelpCircle size={20} />
+                    </IconButton>
                 }
             />
 
             <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Medusa">
                 <p>
                     Todos bajáis la cabeza. Cuando alguien pulse «Empezar», la app cuenta 3, 2, 1 y
-                    grita «¡Mirad!».
+                    muestra «¡Mirad!».
                 </p>
                 <p>
                     En ese momento levantáis la vista a la vez y elegís a quién mirar. Si te cruzas

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoRefresh } from 'react-icons/io5';
 import { HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
@@ -148,7 +147,7 @@ export default function ImpostorGame() {
   const [hasRevealed, setHasRevealed] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
-  const [clearedIndexes, setClearedIndexes] = useState([]);
+  const [eliminatedIndexes, setEliminatedIndexes] = useState([]);
   const [caughtIndex, setCaughtIndex] = useState(null);
 
   const helpModal = (
@@ -159,14 +158,14 @@ export default function ImpostorGame() {
       </p>
       <p>
         El móvil va pasando de mano en mano: cada jugador desliza su tarjeta para ver su palabra
-        (o descubrir que es el impostor) y se lo pasa al siguiente sin que nadie más mire. Cuando
+        (o descubrir que es el impostor) y se la pasa al siguiente sin que nadie más mire. Cuando
         todos la han visto, vais describiendo la palabra por turnos con pistas, sin decirla
         directamente. El impostor tiene que improvisar e intentar no delatarse.
       </p>
       <p>
         Cuando alguien quiera acusar a otro, toca su nombre en la pantalla y confirma. Si es el
-        impostor, ha caído y bebe; si no, la partida sigue igual y esa persona queda libre de
-        sospecha.
+        impostor, ha caído y bebe. Si no lo es, esa persona queda eliminada y la partida sigue con
+        el resto.
       </p>
     </HowToPlayModal>
   );
@@ -191,7 +190,7 @@ export default function ImpostorGame() {
     setIsRevealing(false);
     setHasRevealed(false);
     setSwipeOffset(0);
-    setClearedIndexes([]);
+    setEliminatedIndexes([]);
     setCaughtIndex(null);
   };
 
@@ -217,15 +216,15 @@ export default function ImpostorGame() {
       setCaughtIndex(index);
       setPhase('result');
     } else {
-      setClearedIndexes((prev) => [...prev, index]);
-      alert(`${player.name} no era el impostor. ¡Seguid jugando!`);
+      setEliminatedIndexes((prev) => [...prev, index]);
+      alert(`${player.name} no era el impostor y queda eliminado. ¡Seguid jugando!`);
     }
   };
 
   const resetGame = () => {
     setPhase('start');
     setGameState(null);
-    setClearedIndexes([]);
+    setEliminatedIndexes([]);
     setCaughtIndex(null);
   };
 
@@ -259,14 +258,9 @@ export default function ImpostorGame() {
         title="Impostor"
         onBack={() => navigate(-1)}
         rightAction={
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-              <HelpCircle size={20} />
-            </IconButton>
-            <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-              <IoRefresh size={20} />
-            </IconButton>
-          </div>
+          <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+            <HelpCircle size={20} />
+          </IconButton>
         }
       />
       {helpModal}
@@ -349,16 +343,16 @@ export default function ImpostorGame() {
 
               <PlayerGrid>
                 {players.map((player, index) => {
-                  const isCleared = clearedIndexes.includes(index);
+                  const isEliminated = eliminatedIndexes.includes(index);
                   return (
                     <Button
                       key={player.id ?? index}
                       variant="secondary"
                       fullWidth
-                      disabled={isCleared}
+                      disabled={isEliminated}
                       onClick={() => handleAccuse(index)}
                     >
-                      {isCleared ? `${player.name} (libre de sospecha)` : player.name}
+                      {isEliminated ? `${player.name} (eliminado)` : player.name}
                     </Button>
                   );
                 })}

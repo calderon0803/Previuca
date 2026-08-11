@@ -256,24 +256,19 @@ export default function ReyDeCopasGame() {
         title="Rey de Copas"
         onBack={() => navigate(-1)}
         rightAction={
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-              <HelpCircle size={20} />
-            </IconButton>
-            <IconButton variant="ghost" onClick={resetGame} aria-label="Reiniciar">
-              <IoRefresh size={20} />
-            </IconButton>
-          </div>
+          <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+            <HelpCircle size={20} />
+          </IconButton>
         }
       />
 
       <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Rey de Copas">
         <p>
           Cada uno saca una carta por turnos y hace lo que diga la regla de esa carta — la tienes
-          resumida en pantalla en cuanto la sacas.
+          explicada en pantalla en cuanto la sacas.
         </p>
         <p>
-          El chiste está en el Rey: cada vez que sale uno, quien lo sacó vierte un poco de su
+          El Rey es la carta especial: cada vez que sale uno, quien lo sacó vierte un poco de su
           bebida en el vaso central. El que saque el cuarto Rey se bebe el vaso entero. Ahí se
           acaba la partida.
         </p>

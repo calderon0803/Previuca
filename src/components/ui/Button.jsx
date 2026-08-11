@@ -23,7 +23,7 @@ const sizeStyles = {
 const variantStyles = {
   primary: css`
     background: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.colors.text.primary};
+    color: ${({ theme }) => theme.colors.surface};
 
     &:hover:not(:disabled) {
       background: ${({ theme }) => theme.colors.primaryHover};

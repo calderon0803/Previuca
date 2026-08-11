@@ -196,7 +196,7 @@ export default function AsesinoGame() {
             <p>
                 El Policía gana si señala correctamente al Asesino. El Asesino gana si elimina a la
                 mitad de los jugadores (redondeando hacia arriba). Todo esto se juega de palabra: la
-                app solo reparte los roles, el resto lo llevan vosotros.
+                app solo reparte los roles, el resto lo lleváis vosotros.
             </p>
         </HowToPlayModal>
     );

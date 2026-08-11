@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoRefresh, IoSettingsOutline } from 'react-icons/io5';
+import { IoSettingsOutline } from 'react-icons/io5';
 import { HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
@@ -312,19 +312,7 @@ export default function RouletteGame() {
       const angleAtTop = (360 - actualRotation) % 360;
       const index = Math.floor(angleAtTop / segmentSize);
 
-      let finalResult = options[index];
-
-      // Dynamic player integration
-      if (players.length > 0 && finalResult.toLowerCase().includes('manda')) {
-        const randomPlayer = players[Math.floor(Math.random() * players.length)].name;
-        if (finalResult === 'Manda Beber') {
-          finalResult = `Manda a ${randomPlayer} beber`;
-        } else {
-          finalResult = `${finalResult} a ${randomPlayer}`;
-        }
-      }
-
-      setResult(finalResult);
+      setResult(options[index]);
       setShowResult(true);
       setIsSpinning(false);
     }, 4100);
@@ -343,21 +331,13 @@ export default function RouletteGame() {
             <IconButton variant="ghost" onClick={() => setShowEditor(true)} aria-label="Opciones">
               <IoSettingsOutline size={20} />
             </IconButton>
-            <IconButton
-              variant="ghost"
-              onClick={() => { setRotation(0); setShowResult(false); setResult(null); }}
-              aria-label="Reiniciar"
-            >
-              <IoRefresh size={20} />
-            </IconButton>
           </HeaderActions>
         }
       />
 
       <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Ruleta">
         <p>
-          Gira la ruleta y bebe lo que te toque. Si sale «Manda X», la app elige a otro jugador al
-          azar y es esa persona quien bebe, no tú.
+          Gira la ruleta y bebe lo que te toque, tal cual pone en la casilla.
         </p>
         <p>
           Puedes tocar el icono de ajustes para cambiar el texto de las 10 casillas a tu gusto — el

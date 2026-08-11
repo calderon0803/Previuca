@@ -158,12 +158,12 @@ export default function YoNuncaGame() {
 
             <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Yo nunca...">
                 <p>
-                    Va saliendo una frase que empieza por «Yo nunca...». Si alguna vez has hecho eso,
+                    Va saliendo una frase que empieza por «Yo nunca...». Si alguna vez lo has hecho,
                     bebes — así de simple.
                 </p>
                 <p>
                     No hay turnos ni ganadores: es solo ir tirando frases hasta que a alguien se le
-                    acabe la vergüenza. Si las que trae la app no os convencen, dale al icono de
+                    acabe la vergüenza. Si las que trae la app no te convencen, dale al icono de
                     ajustes y edítalas a tu gusto.
                 </p>
             </HowToPlayModal>

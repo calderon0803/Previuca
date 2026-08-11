@@ -621,14 +621,9 @@ const PicoPaloGame = () => {
                 title="Pico Palo"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                            <HelpCircle size={20} />
-                        </IconButton>
-                        <IconButton variant="ghost" onClick={generateNewCard} aria-label="Nueva carta">
-                            <IoRefresh size={20} />
-                        </IconButton>
-                    </div>
+                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                        <HelpCircle size={20} />
+                    </IconButton>
                 }
             />
 
@@ -648,7 +643,7 @@ const PicoPaloGame = () => {
                     </li>
                 </ul>
                 <p>
-                    Fallar en las 4 primeras fases son solo tragos sueltos. La ronda final es la
+                    Fallar en las 4 primeras fases solo cuesta un trago suelto. La ronda final es la
                     que importa: si fallas ahí, bebes y tu secuencia se reinicia desde el principio.
                 </p>
             </HowToPlayModal>

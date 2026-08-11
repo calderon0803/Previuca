@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoRefresh } from 'react-icons/io5';
 import { ArrowUp, ArrowDown, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
 import HowToPlayModal from '../components/HowToPlayModal';
@@ -21,17 +20,16 @@ const Content = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: ${({ theme }) => theme.spacing(6)} ${({ theme }) => theme.spacing(3)};
-    gap: ${({ theme }) => theme.spacing(5)};
+    padding: ${({ theme }) => theme.spacing(4)} ${({ theme }) => theme.spacing(3)};
+    gap: ${({ theme }) => theme.spacing(3)};
     overflow-y: auto;
 `;
 
 const PlayerIndicator = styled.div`
     background: ${({ theme }) => theme.colors.surface};
     border: 1px solid ${({ theme }) => theme.colors.border};
-    padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(6)};
+    padding: ${({ theme }) => theme.spacing(2)} ${({ theme }) => theme.spacing(5)};
     border-radius: ${({ theme }) => theme.radii.md};
-    margin-bottom: ${({ theme }) => theme.spacing(5)};
     text-align: center;
 `;
 
@@ -54,19 +52,18 @@ const PyramidContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: ${({ theme }) => theme.spacing(2)};
-    margin: ${({ theme }) => theme.spacing(5)} 0;
+    gap: ${({ theme }) => theme.spacing(1.5)};
 `;
 
 const PyramidRow = styled.div`
     display: flex;
-    gap: ${({ theme }) => theme.spacing(2)};
+    gap: ${({ theme }) => theme.spacing(1.5)};
     justify-content: center;
 `;
 
 const Card = styled.div`
-    width: 50px;
-    height: 70px;
+    width: 42px;
+    height: 58px;
     background: ${({ theme, $revealed }) => $revealed
         ? '#fff'
         : `repeating-linear-gradient(45deg, ${theme.colors.primary}, ${theme.colors.primary} 10px, ${theme.colors.primaryActive} 10px, ${theme.colors.primaryActive} 20px)`};
@@ -106,7 +103,6 @@ const CardSuit = styled.div`
 const ButtonContainer = styled.div`
     display: flex;
     gap: ${({ theme }) => theme.spacing(3)};
-    margin: ${({ theme }) => theme.spacing(5)} 0;
     width: 100%;
     max-width: 400px;
 `;
@@ -255,8 +251,9 @@ export default function IlluminatiGame() {
         );
         setPyramid(newPyramid);
 
+        const isTie = card.numericValue === previousCard.numericValue;
         const isHigher = card.numericValue > previousCard.numericValue;
-        const isCorrect = guessHigher ? isHigher : !isHigher;
+        const isCorrect = !isTie && (guessHigher ? isHigher : !isHigher);
 
         if (isCorrect) {
             if (currentRow === 0) {
@@ -284,7 +281,7 @@ export default function IlluminatiGame() {
             }
         } else {
             const rowsLeft = currentRow + 1;
-            setMessage(`¡Fallaste! ${players[currentPlayerIndex].name} bebe ${rowsLeft} ${rowsLeft === 1 ? 'trago' : 'tragos'}`);
+            setMessage(`¡Fallaste! Bebe ${rowsLeft} ${rowsLeft === 1 ? 'trago' : 'tragos'}`);
             setMessageType('error');
             setGamePhase('roundEnd');
         }
@@ -365,14 +362,9 @@ export default function IlluminatiGame() {
                 title="Illuminati"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                            <HelpCircle size={20} />
-                        </IconButton>
-                        <IconButton variant="ghost" onClick={initializeGame} aria-label="Reiniciar">
-                            <IoRefresh size={20} />
-                        </IconButton>
-                    </div>
+                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
+                        <HelpCircle size={20} />
+                    </IconButton>
                 }
             />
             {helpModal}

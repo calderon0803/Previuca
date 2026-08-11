@@ -35,7 +35,7 @@ const CountBadge = styled.span`
   top: -6px;
   right: -6px;
   background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.text.primary};
+  color: ${({ theme }) => theme.colors.surface};
   border-radius: ${({ theme }) => theme.radii.pill};
   min-width: 18px;
   height: 18px;
