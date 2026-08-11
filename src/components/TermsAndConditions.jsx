@@ -47,7 +47,7 @@ export default function TermsAndConditions() {
         <Wrapper>
             <div>
                 <Title>Términos y condiciones de Previuca</Title>
-                <UpdatedAt>Última actualización: 10 de agosto de 2026</UpdatedAt>
+                <UpdatedAt>Última actualización: 11 de agosto de 2026</UpdatedAt>
             </div>
 
             <Section title="1. Aceptación">
@@ -119,12 +119,21 @@ export default function TermsAndConditions() {
                 perder el resto de tus datos del evento.
             </Section>
 
-            <Section title="10. Cambios en estos términos">
+            <Section title="10. Registro de actividad">
+                Por seguridad y para poder investigar incidencias (por ejemplo, un reporte de
+                contenido o una cuenta bloqueada), guardamos un registro interno de ciertas
+                acciones: cambios en tu perfil, tus peñas, tus flechazos, tus sellos, y tus mensajes
+                y respuestas de Salseo. Este registro incluye tu email y qué cambió, y no es visible
+                dentro de la propia app ni para otros participantes ni para el equipo organizador;
+                solo puede consultarlo quien administra la plataforma a nivel técnico.
+            </Section>
+
+            <Section title="11. Cambios en estos términos">
                 Podemos actualizar estos términos si la aplicación cambia. Si los cambios son
                 relevantes, te lo indicaremos dentro de la propia app antes de que sigas usándola.
             </Section>
 
-            <Section title="11. Contacto">
+            <Section title="12. Contacto">
                 Si tienes dudas sobre estos términos, puedes contactar con el equipo organizador del
                 evento a través de los canales habituales del mismo.
             </Section>

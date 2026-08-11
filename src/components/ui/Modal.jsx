@@ -34,7 +34,7 @@ const Sheet = styled(motion.div)`
   }
 `;
 
-export default function Modal({ visible, onClose, children }) {
+export default function Modal({ visible, onClose, closeOnOverlayClick = true, children }) {
   return (
     <AnimatePresence>
       {visible && (
@@ -43,7 +43,7 @@ export default function Modal({ visible, onClose, children }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          onClick={onClose}
+          onClick={closeOnOverlayClick ? onClose : undefined}
         >
           <Sheet
             initial={{ y: 24, opacity: 0 }}

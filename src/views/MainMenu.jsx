@@ -14,7 +14,7 @@ import TermsAndConditions from '../components/TermsAndConditions';
 import InstallPwaModal from '../components/InstallPwaModal';
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
@@ -241,6 +241,35 @@ const NoticeItem = styled.p`
   margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
 `;
 
+const LoginBanner = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing(3)};
+  width: 100%;
+  background: ${({ theme }) => theme.colors.primaryMuted};
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.spacing(4)};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
+  cursor: pointer;
+  text-align: left;
+`;
+
+const LoginBannerText = styled.span`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+`;
+
+const LoginBannerCta = styled.span`
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  flex-shrink: 0;
+  white-space: nowrap;
+`;
+
 const TermsFooter = styled.button`
   background: none;
   border: none;
@@ -257,7 +286,7 @@ export default function MainMenu() {
   const navigate = useNavigate();
   const { events, loading: eventsLoading } = useEvent();
   const { isAdmin } = useAdmin();
-  const { user } = useFlechazo();
+  const { user, loading: userLoading } = useFlechazo();
   const visibleEvents = events.filter(isEventVisibleInMenu);
   const hasEvents = visibleEvents.length > 0;
   const [showTerms, setShowTerms] = useState(false);
@@ -286,6 +315,13 @@ export default function MainMenu() {
             <Download size={18} />
           </IconButton>
         </Kicker>
+
+        {!userLoading && !user && (
+          <LoginBanner onClick={() => navigate('/flechazo', { state: { from: '/' } })}>
+            <LoginBannerText>Inicia sesión para participar en los eventos</LoginBannerText>
+            <LoginBannerCta>Entrar →</LoginBannerCta>
+          </LoginBanner>
+        )}
 
         <Headline>¿Qué hacemos hoy?</Headline>
 

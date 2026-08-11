@@ -5,7 +5,7 @@ import { FaHome, FaGamepad, FaUsers, FaCog } from 'react-icons/fa';
 const LayoutContainer = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
 `;
 

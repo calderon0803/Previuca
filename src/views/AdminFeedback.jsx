@@ -11,7 +11,7 @@ import IconButton from '../components/ui/IconButton';
 const typeLabel = (value) => FEEDBACK_TYPES.find((t) => t.value === value)?.label || value;
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;

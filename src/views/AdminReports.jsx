@@ -16,7 +16,7 @@ import Textarea from '../components/ui/Textarea';
 const reasonLabel = (value) => REPORT_REASONS.find((r) => r.value === value)?.label || value;
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
@@ -236,7 +236,7 @@ export default function AdminReports() {
                 )}
             </Content>
 
-            <Modal visible={!!noticeTarget} onClose={() => setNoticeTarget(null)}>
+            <Modal visible={!!noticeTarget} onClose={() => setNoticeTarget(null)} closeOnOverlayClick={false}>
                 <ModalTitle>Enviar aviso a {noticeTarget?.authorName}</ModalTitle>
                 <Textarea
                     placeholder="Explica por qué le avisas..."

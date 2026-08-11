@@ -16,7 +16,7 @@ import ReportModal from '../components/ReportModal';
 import SalseoUsernameModal from '../components/SalseoUsernameModal';
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;

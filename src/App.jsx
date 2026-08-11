@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import styled from 'styled-components';
 import { theme } from './styles/theme';
@@ -29,6 +29,7 @@ const Placeholder = ({ title }) => (
 );
 
 import SplashScreen from './components/SplashScreen';
+import UpdateBanner from './components/UpdateBanner';
 
 import { FlechazoProvider, useFlechazo } from './contexts/FlechazoContext';
 import { EventProvider } from './contexts/EventContext';
@@ -63,7 +64,7 @@ const BlockedScreenWrap = styled.div`
     align-items: center;
     justify-content: center;
     gap: ${({ theme }) => theme.spacing(4)};
-    min-height: 100vh;
+    min-height: 100dvh;
     padding: ${({ theme }) => theme.spacing(6)};
     text-align: center;
     background: ${({ theme }) => theme.colors.background};
@@ -104,13 +105,39 @@ const BlockedScreen = ({ onLogout }) => (
     </BlockedScreenWrap>
 );
 
+// Pantalla mostrada cuando una sección requiere sesión — antes esto era un
+// <Navigate> silencioso a /flechazo que además perdía el eventId, con lo
+// que el botón "volver" del login mandaba siempre a un destino genérico y
+// se formaba un bucle entre esa pantalla y "Ajustes". Ahora se explica por
+// qué se ha llegado aquí y se recuerda a dónde volver tras loguearse.
+const RequireLoginScreen = ({ loginPath }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    return (
+        <BlockedScreenWrap>
+            <BlockedTitle>Necesitas iniciar sesión</BlockedTitle>
+            <BlockedText>Esta sección solo está disponible si tienes una cuenta.</BlockedText>
+            <div style={{ display: 'flex', gap: '12px' }}>
+                <BlockedButton onClick={() => navigate(-1)}>Volver</BlockedButton>
+                <BlockedButton onClick={() => navigate(loginPath, { state: { from: location.pathname } })}>
+                    Iniciar sesión
+                </BlockedButton>
+            </div>
+        </BlockedScreenWrap>
+    );
+};
+
 // Protected Route specific for Flechazo
 const FlechazoRoute = ({ children }) => {
     const { user, loading } = useFlechazo();
+    const { eventId } = useParams();
 
     if (loading) return <LoadingScreen />;
+    if (user) return children;
 
-    return user ? children : <Navigate to="/flechazo" replace />;
+    const loginPath = eventId ? `/eventos/${eventId}/flechazo` : '/flechazo';
+    return <RequireLoginScreen loginPath={loginPath} />;
 };
 
 // Protected Route specific for admin-only screens
@@ -273,6 +300,7 @@ function App() {
     return (
         <ThemeProvider theme={theme}>
             <GlobalStyles />
+            <UpdateBanner />
             {loading && <SplashScreen onFinish={() => setLoading(false)} />}
             <FlechazoProvider>
                 <AppRoutes />

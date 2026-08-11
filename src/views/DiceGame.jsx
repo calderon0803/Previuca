@@ -10,7 +10,7 @@ import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;

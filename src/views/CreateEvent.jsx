@@ -5,6 +5,7 @@ import { useEvent } from '../contexts/EventContext';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import DateInput from '../components/ui/DateInput';
 
 const COLORS = [
     '#E5484D', '#D9455B', '#B23A63', '#D9377E', '#C23FA0', '#8A5FD9',
@@ -14,7 +15,7 @@ const COLORS = [
 const DESCRIPTION_MAX_LENGTH = 80;
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
@@ -47,17 +48,16 @@ const CharCount = styled.span`
 
 const DateRow = styled.div`
   display: flex;
+  flex-direction: column;
   gap: ${({ theme }) => theme.spacing(3)};
 
-  > div {
-    flex: 1;
-    min-width: 0;
+  @media (min-width: ${({ theme }) => theme.breakpoints.mobile}) {
+    flex-direction: row;
   }
 
-  input[type="date"] {
+  > * {
+    flex: 1;
     min-width: 0;
-    padding: 0 ${({ theme }) => theme.spacing(2)};
-    font-size: ${({ theme }) => theme.typography.fontSize.sm};
   }
 `;
 
@@ -159,23 +159,17 @@ export default function CreateEvent() {
                 <Field>
                     <Label>Fechas</Label>
                     <DateRow>
-                        <div>
-                            <Input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                disabled={submitting}
-                            />
-                        </div>
-                        <div>
-                            <Input
-                                type="date"
-                                value={endDate}
-                                min={startDate || undefined}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                disabled={submitting}
-                            />
-                        </div>
+                        <DateInput
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            disabled={submitting}
+                        />
+                        <DateInput
+                            value={endDate}
+                            min={startDate || undefined}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            disabled={submitting}
+                        />
                     </DateRow>
                 </Field>
 

@@ -21,7 +21,7 @@ const PENA_COLOR_UNLOCK_RATIO = 0.10;
 const IDENTITY_UNLOCK_RATIO = 0.50;
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;

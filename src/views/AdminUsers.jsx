@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Pencil, Ban, ShieldCheck, Trash2 } from 'lucide-react';
+import { Pencil, Ban, ShieldCheck, Trash2, Mail } from 'lucide-react';
 import { useFlechazo } from '../contexts/FlechazoContext';
-import { getAllProfiles, updateProfileAdmin, setUserBlocked, deleteUserAccount } from '../services/adminService';
+import { getAllProfiles, updateProfileAdmin, setUserBlocked, deleteUserAccount, sendNotice } from '../services/adminService';
 import { GENDER_OPTIONS, calculateAge } from '../services/profileService';
 import PageHeader from '../components/ui/PageHeader';
 import LoadingScreen from '../components/ui/LoadingScreen';
@@ -11,9 +11,11 @@ import Button from '../components/ui/Button';
 import IconButton from '../components/ui/IconButton';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
+import DateInput from '../components/ui/DateInput';
+import Textarea from '../components/ui/Textarea';
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
@@ -136,6 +138,10 @@ export default function AdminUsers() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [busyUserId, setBusyUserId] = useState(null);
+    const [noticeTarget, setNoticeTarget] = useState(null);
+    const [noticeMessage, setNoticeMessage] = useState('');
+    const [sendingNotice, setSendingNotice] = useState(false);
+    const [noticeError, setNoticeError] = useState('');
 
     const loadProfiles = async () => {
         setLoading(true);
@@ -195,6 +201,27 @@ export default function AdminUsers() {
         }
     };
 
+    const openNoticeModal = (profile) => {
+        setNoticeError('');
+        setNoticeMessage('');
+        setNoticeTarget(profile);
+    };
+
+    const handleSendNotice = async () => {
+        if (!noticeMessage.trim()) return;
+
+        setSendingNotice(true);
+        setNoticeError('');
+        const result = await sendNotice(noticeTarget.user_id, noticeMessage, null);
+        setSendingNotice(false);
+
+        if (result.success) {
+            setNoticeTarget(null);
+        } else {
+            setNoticeError(result.error || 'No se pudo enviar el aviso');
+        }
+    };
+
     if (loading) return <LoadingScreen />;
 
     return (
@@ -224,6 +251,14 @@ export default function AdminUsers() {
                                     <Actions>
                                         <IconButton variant="ghost" size="sm" onClick={() => openEdit(profile)} aria-label="Editar">
                                             <Pencil size={16} />
+                                        </IconButton>
+                                        <IconButton
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => openNoticeModal(profile)}
+                                            aria-label="Enviar aviso"
+                                        >
+                                            <Mail size={16} />
                                         </IconButton>
                                         <IconButton
                                             variant="ghost"
@@ -269,8 +304,7 @@ export default function AdminUsers() {
                 </Field>
                 <Field>
                     <Label>Fecha de nacimiento</Label>
-                    <Input
-                        type="date"
+                    <DateInput
                         value={editForm.birthdate || ''}
                         onChange={(e) => setEditForm({ ...editForm, birthdate: e.target.value })}
                     />
@@ -294,6 +328,24 @@ export default function AdminUsers() {
                     </Button>
                     <Button fullWidth onClick={handleSaveEdit} disabled={saving}>
                         {saving ? 'Guardando...' : 'Guardar'}
+                    </Button>
+                </div>
+            </Modal>
+
+            <Modal visible={!!noticeTarget} onClose={() => setNoticeTarget(null)} closeOnOverlayClick={false}>
+                <ModalTitle>Enviar aviso a {noticeTarget?.first_name}</ModalTitle>
+                <Textarea
+                    placeholder="Ej: tu nombre de usuario no es apropiado, cámbialo desde Ajustes..."
+                    value={noticeMessage}
+                    onChange={(e) => setNoticeMessage(e.target.value)}
+                />
+                {noticeError && <ErrorText>{noticeError}</ErrorText>}
+                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <Button variant="secondary" fullWidth onClick={() => setNoticeTarget(null)}>
+                        Cancelar
+                    </Button>
+                    <Button fullWidth onClick={handleSendNotice} disabled={!noticeMessage.trim() || sendingNotice}>
+                        {sendingNotice ? 'Enviando...' : 'Enviar'}
                     </Button>
                 </div>
             </Modal>

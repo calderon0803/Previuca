@@ -15,7 +15,7 @@ import Input from '../components/ui/Input';
 import FeedbackModal from '../components/FeedbackModal';
 
 const Container = styled.div`
-    min-height: 100vh;
+    min-height: 100dvh;
     background: ${({ theme }) => theme.colors.background};
     padding-bottom: ${({ theme }) => theme.spacing(10)};
 `;
@@ -172,7 +172,7 @@ const Settings = () => {
                         <EmptyText>
                             Inicia sesión para acceder a la configuración de tu cuenta
                         </EmptyText>
-                        <Button onClick={() => navigate('/flechazo')}>
+                        <Button onClick={() => navigate('/flechazo', { state: { from: '/ajustes' } })}>
                             Iniciar sesión
                         </Button>
                     </EmptyState>

@@ -9,6 +9,7 @@ import Button from '../components/ui/Button';
 import IconButton from '../components/ui/IconButton';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
+import DateInput from '../components/ui/DateInput';
 
 const COLORS = [
     '#E5484D', '#D9455B', '#B23A63', '#D9377E', '#C23FA0', '#8A5FD9',
@@ -18,7 +19,7 @@ const COLORS = [
 const DESCRIPTION_MAX_LENGTH = 80;
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
@@ -101,17 +102,16 @@ const CharCount = styled.span`
 
 const DateRow = styled.div`
   display: flex;
+  flex-direction: column;
   gap: ${({ theme }) => theme.spacing(3)};
 
-  > div {
-    flex: 1;
-    min-width: 0;
+  @media (min-width: ${({ theme }) => theme.breakpoints.mobile}) {
+    flex-direction: row;
   }
 
-  input[type="date"] {
+  > * {
+    flex: 1;
     min-width: 0;
-    padding: 0 ${({ theme }) => theme.spacing(2)};
-    font-size: ${({ theme }) => theme.typography.fontSize.sm};
   }
 `;
 
@@ -273,21 +273,15 @@ export default function AdminEvents() {
                 <Field>
                     <Label>Fechas</Label>
                     <DateRow>
-                        <div>
-                            <Input
-                                type="date"
-                                value={editForm.startDate || ''}
-                                onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <Input
-                                type="date"
-                                value={editForm.endDate || ''}
-                                min={editForm.startDate || undefined}
-                                onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
-                            />
-                        </div>
+                        <DateInput
+                            value={editForm.startDate || ''}
+                            onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+                        />
+                        <DateInput
+                            value={editForm.endDate || ''}
+                            min={editForm.startDate || undefined}
+                            onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
+                        />
                     </DateRow>
                 </Field>
                 <Field>

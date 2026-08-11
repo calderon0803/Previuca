@@ -1,24 +1,25 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useFlechazo } from '../contexts/FlechazoContext';
-import { IoArrowBack, IoLockClosed, IoMail, IoPersonOutline, IoCalendarOutline } from 'react-icons/io5';
+import { IoArrowBack, IoLockClosed, IoMail, IoPersonOutline } from 'react-icons/io5';
 import { Loader2 } from 'lucide-react';
 import { isAtLeastMinAge, MIN_AGE, GENDER_OPTIONS } from '../services/profileService';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import DateInput from '../components/ui/DateInput';
 import Modal from '../components/ui/Modal';
 import TermsAndConditions from '../components/TermsAndConditions';
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: ${({ theme }) => theme.spacing(5)};
+  padding: ${({ theme }) => theme.spacing(20)} ${({ theme }) => theme.spacing(5)} ${({ theme }) => theme.spacing(5)};
   position: relative;
 `;
 
@@ -139,16 +140,18 @@ export default function FlechazoLogin() {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const navigate = useNavigate();
   const { eventId } = useParams();
+  const location = useLocation();
   const { user, login, register, loading } = useFlechazo();
-  const flechazoListPath = eventId ? `/eventos/${eventId}/mis-flechazos` : '/ajustes';
-  const backPath = eventId ? `/eventos/${eventId}` : '/ajustes';
+  // Si venimos de una sección protegida (FlechazoRoute nos mandó aquí), al
+  // loguearnos hay que volver exactamente ahí, no a un destino genérico.
+  const redirectTarget = location.state?.from || (eventId ? `/eventos/${eventId}/mis-flechazos` : '/ajustes');
 
   // Redirigir si ya está autenticado
   React.useEffect(() => {
     if (!loading && user?.id) {
-      navigate(flechazoListPath, { replace: true });
+      navigate(redirectTarget, { replace: true });
     }
-  }, [user?.id, loading, navigate, flechazoListPath]);
+  }, [user?.id, loading, navigate, redirectTarget]);
 
   // Mostrar loading mientras verifica sesión
   if (loading) {
@@ -174,7 +177,7 @@ export default function FlechazoLogin() {
       if (result?.success) {
         setStatus('¡Bienvenido!');
         setTimeout(() => {
-          navigate(flechazoListPath);
+          navigate(redirectTarget);
         }, 500);
       } else {
         const errorMsg = typeof result?.error === 'string'
@@ -257,7 +260,7 @@ export default function FlechazoLogin() {
   return (
     <Container>
       <BackButtonWrap>
-        <IconButton onClick={() => navigate(backPath)} aria-label="Volver">
+        <IconButton onClick={() => navigate(-1)} aria-label="Volver">
           <IoArrowBack size={20} />
         </IconButton>
       </BackButtonWrap>
@@ -344,18 +347,11 @@ export default function FlechazoLogin() {
 
             <InputGroup>
               <Label>Fecha de nacimiento</Label>
-              <InputWrapper>
-                <InputIcon>
-                  <IoCalendarOutline size={18} />
-                </InputIcon>
-                <Input
-                  $hasIcon
-                  type="date"
-                  value={birthdate}
-                  onChange={(e) => setBirthdate(e.target.value)}
-                  disabled={isVerifying}
-                />
-              </InputWrapper>
+              <DateInput
+                value={birthdate}
+                onChange={(e) => setBirthdate(e.target.value)}
+                disabled={isVerifying}
+              />
             </InputGroup>
 
             <InputGroup>

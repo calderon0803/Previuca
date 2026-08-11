@@ -16,7 +16,7 @@ import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;

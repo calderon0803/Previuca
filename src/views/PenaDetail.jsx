@@ -13,7 +13,7 @@ import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;

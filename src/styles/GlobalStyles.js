@@ -13,6 +13,7 @@ export const GlobalStyles = createGlobalStyle`
     position: fixed;
     width: 100%;
     height: 100%;
+    height: 100dvh;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -27,12 +28,14 @@ export const GlobalStyles = createGlobalStyle`
     position: fixed;
     width: 100%;
     height: 100%;
+    height: 100dvh;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   #root {
     width: 100%;
     height: 100%;
+    height: 100dvh;
     overflow-y: auto;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
