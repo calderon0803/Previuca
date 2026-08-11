@@ -36,36 +36,49 @@ const withAuthorNames = async (rows) => {
     }));
 };
 
-// Todos los posts de un evento, con contadores de respuestas/likes y si el
-// usuario actual ya ha dado like a cada uno.
-export const getPostsByEvent = async (eventId, userId) => {
+// Tamaño de página del muro — con un evento activo y mucha gente, traer el
+// feed entero de golpe no escala (crece sin límite durante el evento).
+export const SALSEOS_PAGE_SIZE = 20;
+
+// Una página de posts de un evento, con contadores de respuestas/likes y si
+// el usuario actual ya ha dado like/reportado cada uno. Pasa `before` (el
+// created_at del último post ya cargado) para pedir la siguiente página.
+export const getPostsByEvent = async (eventId, userId, { before } = {}) => {
     try {
-        const { data, error } = await supabase
+        let query = supabase
             .from('salseos_posts')
             .select('*, salseos_replies(count), salseos_likes(count)')
             .eq('event_id', eventId)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(SALSEOS_PAGE_SIZE + 1); // +1 para saber si hay más sin una query de count aparte
 
+        if (before) {
+            query = query.lt('created_at', before);
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
 
-        const { data: myLikes } = await supabase
-            .from('salseos_likes')
-            .select('post_id')
-            .eq('event_id', eventId)
-            .eq('user_id', userId);
+        const rows = data || [];
+        const hasMore = rows.length > SALSEOS_PAGE_SIZE;
+        const pageRows = hasMore ? rows.slice(0, SALSEOS_PAGE_SIZE) : rows;
+        const postIds = pageRows.map((p) => p.id);
+
+        const [{ data: myLikes }, { data: myReports }] = postIds.length
+            ? await Promise.all([
+                  supabase.from('salseos_likes').select('post_id').eq('user_id', userId).in('post_id', postIds),
+                  supabase
+                      .from('salseos_reports')
+                      .select('post_id')
+                      .eq('reporter_id', userId)
+                      .in('post_id', postIds),
+              ])
+            : [{ data: [] }, { data: [] }];
 
         const likedPostIds = new Set((myLikes || []).map((like) => like.post_id));
-
-        const { data: myReports } = await supabase
-            .from('salseos_reports')
-            .select('post_id')
-            .eq('event_id', eventId)
-            .eq('reporter_id', userId)
-            .not('post_id', 'is', null);
-
         const reportedPostIds = new Set((myReports || []).map((report) => report.post_id));
 
-        const posts = (await withAuthorNames(data || [])).map((post) => ({
+        const posts = (await withAuthorNames(pageRows)).map((post) => ({
             ...post,
             replyCount: post.salseos_replies?.[0]?.count || 0,
             likeCount: post.salseos_likes?.[0]?.count || 0,
@@ -73,10 +86,12 @@ export const getPostsByEvent = async (eventId, userId) => {
             reportedByMe: reportedPostIds.has(post.id),
         }));
 
-        return { success: true, posts };
+        const nextCursor = pageRows.length ? pageRows[pageRows.length - 1].created_at : null;
+
+        return { success: true, posts, hasMore, nextCursor };
     } catch (error) {
         console.error('Error loading salseos posts:', error);
-        return { success: false, error: error.message, posts: [] };
+        return { success: false, error: error.message, posts: [], hasMore: false, nextCursor: null };
     }
 };
 

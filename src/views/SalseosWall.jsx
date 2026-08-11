@@ -40,6 +40,10 @@ const List = styled.div`
   gap: ${({ theme }) => theme.spacing(3)};
 `;
 
+const LoadMoreRow = styled.div`
+  margin-top: ${({ theme }) => theme.spacing(5)};
+`;
+
 const PostCard = styled.div`
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -119,7 +123,18 @@ const ErrorText = styled.p`
 export default function SalseosWall() {
     const navigate = useNavigate();
     const { eventId } = useParams();
-    const { posts, loading, loadPosts, createPost, toggleLike, reportPost, replyFromFeed } = useSalseos();
+    const {
+        posts,
+        loading,
+        loadingMore,
+        hasMorePosts,
+        loadPosts,
+        loadMorePosts,
+        createPost,
+        toggleLike,
+        reportPost,
+        replyFromFeed,
+    } = useSalseos();
     const { user, loading: flechazoLoading, salseoUsername } = useFlechazo();
     const [showUsernameModal, setShowUsernameModal] = useState(false);
     const [pendingIntent, setPendingIntent] = useState(null);
@@ -134,6 +149,7 @@ export default function SalseosWall() {
     const [replyBody, setReplyBody] = useState('');
     const [replyError, setReplyError] = useState('');
     const [sendingReply, setSendingReply] = useState(false);
+    const [likingPostIds, setLikingPostIds] = useState(() => new Set());
 
     useEffect(() => {
         if (flechazoLoading) return;
@@ -153,9 +169,20 @@ export default function SalseosWall() {
         }
     };
 
-    const handleLikeClick = (event, postId) => {
+    const handleLikeClick = async (event, postId) => {
         event.stopPropagation();
-        toggleLike(postId, eventId);
+        if (likingPostIds.has(postId)) return;
+
+        setLikingPostIds((prev) => new Set(prev).add(postId));
+        try {
+            await toggleLike(postId, eventId);
+        } finally {
+            setLikingPostIds((prev) => {
+                const next = new Set(prev);
+                next.delete(postId);
+                return next;
+            });
+        }
     };
 
     const handleComposeClick = () => {
@@ -254,7 +281,11 @@ export default function SalseosWall() {
                                 </AuthorRow>
                                 <BodyText>{post.body}</BodyText>
                                 <ActionsBar>
-                                    <ActionButton $active={post.likedByMe} onClick={(e) => handleLikeClick(e, post.id)}>
+                                    <ActionButton
+                                        $active={post.likedByMe}
+                                        disabled={likingPostIds.has(post.id)}
+                                        onClick={(e) => handleLikeClick(e, post.id)}
+                                    >
                                         <Heart size={16} fill={post.likedByMe ? 'currentColor' : 'none'} />
                                         {post.likeCount}
                                     </ActionButton>
@@ -279,6 +310,19 @@ export default function SalseosWall() {
                             </PostCard>
                         ))}
                     </List>
+                )}
+
+                {hasMorePosts && (
+                    <LoadMoreRow>
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            onClick={() => loadMorePosts(eventId)}
+                            disabled={loadingMore}
+                        >
+                            {loadingMore ? 'Cargando...' : 'Cargar más mensajes'}
+                        </Button>
+                    </LoadMoreRow>
                 )}
             </Content>
 

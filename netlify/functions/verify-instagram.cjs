@@ -72,7 +72,7 @@ exports.handler = async (event, context) => {
                 'Sec-Fetch-Site': 'none',
                 'Cache-Control': 'max-age=0'
             },
-            timeout: 15000
+            signal: AbortSignal.timeout(15000)
         });
 
         if (!response.ok) {
@@ -169,10 +169,21 @@ exports.handler = async (event, context) => {
 
     } catch (error) {
         console.error('Error in verify-instagram function:', error);
+
+        if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+            return {
+                statusCode: 504,
+                headers,
+                body: JSON.stringify({
+                    error: 'Instagram tardó demasiado en responder. Inténtalo de nuevo.'
+                })
+            };
+        }
+
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 error: 'Error al verificar el perfil de Instagram',
                 message: error.message
             })

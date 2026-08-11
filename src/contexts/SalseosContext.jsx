@@ -15,15 +15,19 @@ export const SalseosProvider = ({ children }) => {
     const { user, hasProfile, salseoUsername } = useFlechazo();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMorePosts, setHasMorePosts] = useState(false);
     const [loadedEventId, setLoadedEventId] = useState(null);
 
     // Si ya tenemos los posts de este evento cargados, no repetimos la
     // petición solo por volver a entrar a la sección — hay que pasar
     // { force: true } explícitamente (recargar, o tras crear/borrar).
+    // Siempre trae la primera página; para las siguientes usa loadMorePosts.
     const loadPosts = async (eventId, { force = false } = {}) => {
         if (!user?.id || !eventId) {
             setPosts([]);
             setLoadedEventId(null);
+            setHasMorePosts(false);
             setLoading(false);
             return;
         }
@@ -36,8 +40,22 @@ export const SalseosProvider = ({ children }) => {
         setLoading(true);
         const result = await getPostsByEvent(eventId, user.id);
         setPosts(result.posts);
+        setHasMorePosts(result.hasMore);
         setLoadedEventId(eventId);
         setLoading(false);
+    };
+
+    // Trae la siguiente página (posts más antiguos que el último cargado) y
+    // la añade al final de la lista ya en memoria.
+    const loadMorePosts = async (eventId) => {
+        if (!user?.id || !eventId || loadingMore || !hasMorePosts || posts.length === 0) return;
+
+        setLoadingMore(true);
+        const before = posts[posts.length - 1].created_at;
+        const result = await getPostsByEvent(eventId, user.id, { before });
+        setPosts((prev) => [...prev, ...result.posts]);
+        setHasMorePosts(result.hasMore);
+        setLoadingMore(false);
     };
 
     const createPost = async (eventId, body) => {
@@ -133,7 +151,10 @@ export const SalseosProvider = ({ children }) => {
             value={{
                 posts,
                 loading,
+                loadingMore,
+                hasMorePosts,
                 loadPosts,
+                loadMorePosts,
                 createPost,
                 deletePost,
                 toggleLike,
