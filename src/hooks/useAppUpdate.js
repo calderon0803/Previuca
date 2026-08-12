@@ -1,50 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
-// El service worker (vite-plugin-pwa, registerType:'autoUpdate') se
-// actualiza solo en segundo plano, pero la pestaña que ya está abierta
-// sigue con el JS viejo en memoria hasta que se recarga. 'controllerchange'
-// es el aviso de que un SW nuevo ya ha tomado el control — a partir de ahí
-// solo falta que el usuario recargue para usar la versión nueva de verdad.
+// Con registerType:'prompt', el service worker nuevo se queda "esperando"
+// hasta que el usuario confirma la actualización — a diferencia de
+// 'autoUpdate', que recarga la app solo, en segundo plano y sin avisar
+// (chocaba con este banner). useRegisterSW distingue la instalación
+// inicial de una actualización real, así que el aviso solo sale cuando
+// de verdad hay una versión nueva.
 const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 
 export function useAppUpdate() {
-    const [updateAvailable, setUpdateAvailable] = useState(false);
+    const {
+        needRefresh: [needRefresh],
+        updateServiceWorker,
+    } = useRegisterSW({
+        onRegisteredSW(swUrl, registration) {
+            if (!registration) return;
 
-    useEffect(() => {
-        if (!('serviceWorker' in navigator)) return;
+            const checkForUpdate = () => registration.update().catch(() => {});
 
-        let registration = null;
-        let refreshing = false;
+            setInterval(checkForUpdate, CHECK_INTERVAL_MS);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') checkForUpdate();
+            });
+        },
+    });
 
-        const checkForUpdate = () => {
-            registration?.update().catch(() => {});
-        };
-
-        navigator.serviceWorker.getRegistration().then((reg) => {
-            registration = reg;
-            checkForUpdate();
-        });
-
-        const onControllerChange = () => {
-            if (refreshing) return;
-            refreshing = true;
-            setUpdateAvailable(true);
-        };
-        navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
-
-        const onVisibilityChange = () => {
-            if (document.visibilityState === 'visible') checkForUpdate();
-        };
-        document.addEventListener('visibilitychange', onVisibilityChange);
-
-        const interval = setInterval(checkForUpdate, CHECK_INTERVAL_MS);
-
-        return () => {
-            navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
-            document.removeEventListener('visibilitychange', onVisibilityChange);
-            clearInterval(interval);
-        };
-    }, []);
-
-    return { updateAvailable, reloadApp: () => window.location.reload() };
+    return { updateAvailable: needRefresh, reloadApp: () => updateServiceWorker(true) };
 }

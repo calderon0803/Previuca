@@ -13,6 +13,7 @@ import LoadingScreen from '../components/ui/LoadingScreen';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import FeedbackModal from '../components/FeedbackModal';
+import { version as appVersion } from '../../package.json';
 
 const Container = styled.div`
     min-height: 100dvh;
@@ -436,6 +437,16 @@ const Settings = () => {
                         <Button variant="danger" onClick={handleDeleteAccount}>
                             Eliminar
                         </Button>
+                    </SettingItem>
+                </Section>
+
+                <Section>
+                    <SectionTitle>Información</SectionTitle>
+                    <SettingItem>
+                        <SettingInfo>
+                            <SettingLabel>Versión de la app</SettingLabel>
+                            <SettingValue>v{appVersion}</SettingValue>
+                        </SettingInfo>
                     </SettingItem>
                 </Section>
             </Content>

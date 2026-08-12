@@ -9,7 +9,8 @@ export default defineConfig({
     plugins: [
         react(),
         VitePWA({
-            registerType: 'autoUpdate',
+            registerType: 'prompt',
+            injectRegister: false,
             includeAssets: ['icons/favicon-32.png', 'icons/apple-touch-icon.png'],
             manifest: {
                 name: 'Previuca',
