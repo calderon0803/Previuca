@@ -515,9 +515,17 @@ CREATE POLICY "Users can delete their pena image"
 -- -------------------------------------------------
 -- 12. Audit Log (Historial de Auditoría)
 -- -------------------------------------------------
+-- user_id NO lleva foreign key a auth.users a propósito: cuando se borra
+-- un usuario de verdad (DELETE FROM auth.users), el borrado en cascada de
+-- sus datos (profiles, penas, flechazos, etc.) dispara este mismo trigger,
+-- que intentaría insertar una fila referenciando a un usuario que ya ha
+-- dejado de existir en ese mismo instante — con la FK puesta, esa
+-- inserción viola la restricción y aborta toda la transacción de borrado.
+-- Un registro de auditoría, por definición, tiene que poder sobrevivir a
+-- la entidad que audita.
 CREATE TABLE IF NOT EXISTS audit_log (
     id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    user_id UUID,
     user_email TEXT,
     action TEXT NOT NULL,
     table_name TEXT NOT NULL,
