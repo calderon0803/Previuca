@@ -15,13 +15,13 @@ const Wrap = styled.div`
   gap: ${({ theme }) => theme.spacing(3)};
   padding: ${({ theme }) => theme.spacing(4)};
   border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.primary};
-  color: #fff;
-  box-shadow: ${({ theme }) => theme.shadows.lg};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text.primary};
+  box-shadow: ${({ theme }) => theme.shadows.sheet};
 `;
 
 const Text = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-size: 14px;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
 `;
 
@@ -30,14 +30,19 @@ const ReloadButton = styled.button`
   align-items: center;
   gap: ${({ theme }) => theme.spacing(1.5)};
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.colors.accent};
   border-radius: ${({ theme }) => theme.radii.sm};
   padding: ${({ theme }) => theme.spacing(2)} ${({ theme }) => theme.spacing(3)};
-  color: #fff;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.accentText};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  font-size: 13.5px;
   cursor: pointer;
+  transition: background ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.accentTint};
+  }
 `;
 
 export default function UpdateBanner() {

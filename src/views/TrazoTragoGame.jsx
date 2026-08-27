@@ -1,465 +1,380 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoRefresh, IoEye, IoEyeOff, IoPlay, IoTrashOutline, IoCheckmark } from 'react-icons/io5';
-import { Palette, Beer, HelpCircle } from 'lucide-react';
+import { Eye, EyeOff, CircleQuestionMark } from 'lucide-react';
 import { trazoTragoWords } from '../data/trazoTragoWords';
-import HowToPlayModal from '../components/HowToPlayModal';
+import { gameById } from '../data/games';
 import PageHeader from '../components/ui/PageHeader';
 import IconButton from '../components/ui/IconButton';
+import Screen from '../components/ui/Screen';
 import Button from '../components/ui/Button';
+import HowToPlayModal from '../components/HowToPlayModal';
 
-const Container = styled.div`
-    min-height: 100dvh;
-    height: 100dvh;
-    background: ${({ theme }) => theme.colors.background};
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+const GAME = gameById.trazotrago;
+
+const PAPER = '#f3f5fe';
+const COLORS = ['#22242e', '#d94a4a', '#3f8cd9', '#3fa772', '#d98b3f', '#8a5fd9', '#c23fa0'];
+const BRUSHES = [2, 5, 10, 15];
+const ROUND_SECONDS = 90;
+
+const WordRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  padding: 4px ${({ theme }) => theme.spacing(4)} ${({ theme }) => theme.spacing(2.5)};
+  flex-shrink: 0;
 `;
 
-const StartOverlay = styled.div`
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(10, 11, 14, 0.92);
-    backdrop-filter: blur(8px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 20;
-    gap: ${({ theme }) => theme.spacing(5)};
-    padding: ${({ theme }) => theme.spacing(6)};
-    box-sizing: border-box;
+const WordToggle = styled.button`
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: ${({ theme }) => theme.radii.sm};
+  border: 1px solid ${({ theme }) => theme.colors.borderStrong};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.borderHover};
+  }
 `;
 
-// StartOverlay/ResultOverlay son siempre una cortina oscura fija (no
-// dependen del tema), así que su texto usa colores claros fijos en vez
-// de theme.colors.text.* — si no, con un tema claro el texto se volvería
-// invisible sobre este fondo oscuro.
-const StartTitle = styled.h2`
-    color: #F1EDF0;
-    font-size: ${({ theme }) => theme.typography.fontSize.xxl};
-    margin: 0;
-    text-align: center;
+const Word = styled.span`
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 18px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: 0.02em;
+  color: ${({ theme }) => theme.colors.text.primary};
 `;
 
-const StartDescription = styled.p`
-    color: #C7C0CB;
-    font-size: ${({ theme }) => theme.typography.fontSize.md};
-    text-align: center;
-    max-width: 320px;
-    margin: 0;
-    line-height: 1.5;
+const Clock = styled.span`
+  min-width: 52px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: ${({ theme }) => theme.radii.sm};
+  border: 1px solid ${({ theme }) => theme.colors.borderStrong};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  font-variant-numeric: tabular-nums;
+  color: ${({ theme }) => theme.colors.text.primary};
 `;
 
-const ResultOverlay = styled(StartOverlay)`
-    z-index: 25;
-`;
-
-const ResultTitle = styled(StartTitle)`
-    color: ${({ theme }) => theme.colors.primary};
-`;
-
-const ResultValue = styled.div`
-    font-size: ${({ theme }) => theme.typography.fontSize.display};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-    color: #F1EDF0;
-`;
-
-const ResultDetail = styled.p`
-    color: #F1EDF0;
-    font-size: ${({ theme }) => theme.typography.fontSize.md};
-    margin: 5px 0;
-`;
-
-const WordRevealBar = styled.div`
-    padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(5)};
-    background: ${({ theme }) => theme.colors.surface};
-    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: ${({ theme }) => theme.spacing(3)};
-`;
-
-const WordText = styled.div`
-    color: ${({ theme }) => theme.colors.text.primary};
-    font-size: ${({ theme }) => theme.typography.fontSize.lg};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-    flex: 1;
-    text-align: center;
-    user-select: ${props => props.$hidden ? 'none' : 'auto'};
-`;
-
-const TimerDisplay = styled.div`
-    background: ${({ theme }) => theme.colors.surfaceRaised};
-    border: 1px solid ${({ theme }) => theme.colors.border};
-    color: ${({ theme }) => theme.colors.text.primary};
-    min-width: 44px;
-    height: 42px;
-    padding: 0 ${({ theme }) => theme.spacing(2)};
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: ${({ theme }) => theme.radii.md};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-    font-size: ${({ theme }) => theme.typography.fontSize.sm};
-    font-variant-numeric: tabular-nums;
-`;
-
-const CanvasContainer = styled.div`
-    flex: 1;
-    position: relative;
-    background: #fff;
-    touch-action: none;
-    overflow: hidden;
+const CanvasArea = styled.div`
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: ${PAPER};
 `;
 
 const Canvas = styled.canvas`
-    display: block;
-    width: 100%;
-    height: 100%;
-    cursor: crosshair;
-    touch-action: none;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
 `;
 
-const Toolbar = styled.div`
-    padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(4)};
-    background: ${({ theme }) => theme.colors.surface};
-    border-top: 1px solid ${({ theme }) => theme.colors.border};
-    display: flex;
-    flex-direction: column;
-    gap: ${({ theme }) => theme.spacing(3)};
+const ResultVeil = styled.div`
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 11, 18, 0.9);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: ${({ theme }) => theme.spacing(3)};
+  padding: ${({ theme }) => theme.spacing(6.5)};
+  text-align: center;
 `;
 
-const ToolbarRow = styled.div`
-    display: flex;
-    align-items: center;
-    gap: ${({ theme }) => theme.spacing(3)};
-    justify-content: center;
-    flex-wrap: wrap;
+const ResultKicker = styled.p`
+  margin: 0;
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${GAME.kicker};
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 `;
 
-const BottomActionsRow = styled(ToolbarRow)`
-    flex-wrap: nowrap;
-    width: 100%;
-    justify-content: space-around;
+const ResultSips = styled.p`
+  margin: 0;
+  font-size: 34px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: -0.02em;
+  color: ${({ theme }) => theme.colors.text.primary};
 `;
 
-const ColorButton = styled.button`
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.accent : 'transparent')};
-    background: ${props => props.$color};
-    cursor: pointer;
-    transition: transform ${({ theme }) => theme.transitions.fast};
-    box-shadow: ${({ theme }) => theme.shadows.sm};
-
-    &:hover {
-        transform: scale(1.08);
-    }
+const ResultWord = styled.p`
+  margin: 0 0 ${({ theme }) => theme.spacing(2)};
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.text.muted};
 `;
 
-const BrushSizeButton = styled.button`
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.accent : theme.colors.border)};
-    background: ${({ theme }) => theme.colors.surfaceRaised};
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color ${({ theme }) => theme.transitions.fast};
-
-    &:hover {
-        border-color: ${({ theme }) => theme.colors.borderStrong};
-    }
+const Tools = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  padding: ${({ theme }) => theme.spacing(2.5)} ${({ theme }) => theme.spacing(3.5)}
+    calc(${({ theme }) => theme.spacing(5)} + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
-const BrushPreview = styled.div`
-    width: ${props => props.$size}px;
-    height: ${props => props.$size}px;
-    border-radius: 50%;
-    background: ${({ theme }) => theme.colors.text.primary};
+const Swatches = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing(2)};
+  justify-content: center;
 `;
 
-const COLORS = [
-    { name: 'Negro', value: '#000000' },
-    { name: 'Rojo', value: '#FF0000' },
-    { name: 'Azul', value: '#0000FF' },
-    { name: 'Verde', value: '#00FF00' },
-    { name: 'Naranja', value: '#FF8800' },
-    { name: 'Morado', value: '#8800FF' },
-    { name: 'Rosa', value: '#FF00FF' },
-];
+const Swatch = styled.button`
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: ${({ $color }) => $color};
+  border: 2px solid ${({ $on }) => ($on ? GAME.color : 'transparent')};
+`;
 
-const BRUSH_SIZES = [2, 5, 10, 15];
+const Brushes = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  justify-content: center;
+  align-items: center;
+`;
+
+const Brush = styled.button`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid ${({ theme, $on }) => ($on ? GAME.color : theme.colors.borderStrong)};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const BrushDot = styled.span`
+  width: ${({ $size }) => $size}px;
+  height: ${({ $size }) => $size}px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.text.primary};
+`;
+
+const Actions = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing(2)};
+
+  > * {
+    flex: 1;
+  }
+`;
+
+const randomWord = () => trazoTragoWords[Math.floor(Math.random() * trazoTragoWords.length)];
 
 export default function TrazoTragoGame() {
     const navigate = useNavigate();
+
+    const [word, setWord] = useState(randomWord);
+    const [shown, setShown] = useState(false);
+    const [seconds, setSeconds] = useState(0);
+    const [running, setRunning] = useState(false);
+    const [result, setResult] = useState(null);
+    const [color, setColor] = useState(COLORS[0]);
+    const [brush, setBrush] = useState(5);
+    const [helpOpen, setHelpOpen] = useState(false);
+
     const canvasRef = useRef(null);
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [currentWord, setCurrentWord] = useState('');
-    const [showWord, setShowWord] = useState(false);
-    const [currentColor, setCurrentColor] = useState('#000000');
-    const [brushSize, setBrushSize] = useState(5);
-    const [elapsedTime, setElapsedTime] = useState(0);
-    const [isTimerPaused, setIsTimerPaused] = useState(false);
-    const [isGameStarted, setIsGameStarted] = useState(false);
-    const [showResult, setShowResult] = useState(false);
-    const [showHelp, setShowHelp] = useState(false);
+    const ctxRef = useRef(null);
+    const drawing = useRef(false);
+    const timer = useRef(null);
+    const elapsed = useRef(0);
 
-    useEffect(() => {
-        selectNewWord();
-        setupCanvas();
-        window.addEventListener('resize', setupCanvas);
-        return () => window.removeEventListener('resize', setupCanvas);
-    }, []);
-
-    // Timer effect
-    useEffect(() => {
-        if (!isGameStarted || isTimerPaused) return;
-
-        const interval = setInterval(() => {
-            setElapsedTime(prev => prev + 1);
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [isGameStarted, isTimerPaused]);
-
-    // Time limit effect
-    useEffect(() => {
-        if (elapsedTime >= 90 && !isTimerPaused && isGameStarted) {
-            handleFinish();
-        }
-    }, [elapsedTime, isTimerPaused, isGameStarted]);
-
-    const setupCanvas = () => {
+    const paint = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-
-        const container = canvas.parentElement;
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = PAPER;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-    };
+        ctxRef.current = ctx;
+    }, []);
 
-    const selectNewWord = () => {
-        const randomWord = trazoTragoWords[Math.floor(Math.random() * trazoTragoWords.length)];
-        setCurrentWord(randomWord);
-        setShowWord(false);
-        setElapsedTime(0); // Reset timer
-        setIsTimerPaused(false); // Resume timer
-        setShowResult(false);
-    };
-
-    const startNewRound = () => {
-        clearCanvas();
-        selectNewWord();
-        setIsGameStarted(false);
-    };
-
-    const handleStartGame = () => {
-        setIsGameStarted(true);
-        selectNewWord();
-        // Canvas setup might need to be re-run or cleared
-        setTimeout(setupCanvas, 0);
-    };
-
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const clearCanvas = () => {
+    // El lienzo se dimensiona a píxeles reales; al redibujar se pierde el
+    // trazo, así que solo se hace al montar y al cambiar el tamaño.
+    useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+        const resize = () => {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = Math.max(1, Math.round(rect.width));
+            canvas.height = Math.max(1, Math.round(rect.height));
+            paint();
+        };
+        resize();
+        window.addEventListener('resize', resize);
+        return () => window.removeEventListener('resize', resize);
+    }, [paint]);
 
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    useEffect(() => () => clearInterval(timer.current), []);
+
+    // Los tragos salen del tiempo aguantado: uno por cada 30 s, mínimo uno.
+    const finish = useCallback(() => {
+        clearInterval(timer.current);
+        setRunning(false);
+        setShown(true);
+        setResult(Math.max(1, Math.floor(elapsed.current / 30)));
+    }, []);
+
+    const startTimer = () => {
+        if (running) return;
+        setRunning(true);
+        clearInterval(timer.current);
+        timer.current = setInterval(() => {
+            elapsed.current += 1;
+            setSeconds(elapsed.current);
+            if (elapsed.current >= ROUND_SECONDS) finish();
+        }, 1000);
     };
 
-    const startDrawing = (e) => {
-        setIsDrawing(true);
-        const canvas = canvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const ctx = canvas.getContext('2d');
-
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-
-        ctx.beginPath();
-        ctx.moveTo(x, y);
+    const point = (e) => {
+        const rect = canvasRef.current.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
 
-    const draw = (e) => {
-        if (!isDrawing) return;
-        e.preventDefault();
-
-        const canvas = canvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const ctx = canvas.getContext('2d');
-
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-
-        ctx.strokeStyle = currentColor;
-        ctx.lineWidth = brushSize;
-        ctx.lineTo(x, y);
-        ctx.stroke();
+    const down = (e) => {
+        if (!ctxRef.current || result !== null) return;
+        drawing.current = true;
+        const p = point(e);
+        ctxRef.current.beginPath();
+        ctxRef.current.moveTo(p.x, p.y);
+        // El cronómetro arranca con el primer trazo, no al entrar.
+        startTimer();
     };
 
-    const stopDrawing = () => {
-        setIsDrawing(false);
+    const move = (e) => {
+        if (!drawing.current || !ctxRef.current) return;
+        const p = point(e);
+        ctxRef.current.strokeStyle = color;
+        ctxRef.current.lineWidth = brush;
+        ctxRef.current.lineTo(p.x, p.y);
+        ctxRef.current.stroke();
     };
 
-    const handleFinish = () => {
-        setIsTimerPaused(true);
-        setShowWord(true);
-        setShowResult(true);
+    const up = () => {
+        drawing.current = false;
     };
 
-    const calculateSips = () => {
-        const sips = Math.floor(elapsedTime / 30);
-        return sips === 0 ? 1 : sips; // Minimum 1 sip if time < 30s
+    const newRound = () => {
+        clearInterval(timer.current);
+        paint();
+        elapsed.current = 0;
+        setWord(randomWord());
+        setShown(false);
+        setSeconds(0);
+        setRunning(false);
+        setResult(null);
     };
+
+    const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 
     return (
-        <Container>
+        <Screen>
             <PageHeader
-                title="Trazo & Trago"
+                kicker={GAME.name}
+                kickerColor={GAME.kicker}
+                status="90 s · el dibujante paga"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                        <HelpCircle size={20} />
+                    <IconButton onClick={() => setHelpOpen(true)} aria-label="Cómo se juega">
+                        <CircleQuestionMark size={21} />
                     </IconButton>
                 }
             />
 
-            <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Trazo & Trago">
-                <p>
-                    Te toca dibujar una palabra y que los demás la adivinen, sin hablar tú ni
-                    escribir letras o números. Tienes 90 segundos.
-                </p>
-                <p>
-                    Cuanto más tardes en que la adivinen, más tragos bebes: uno si acabas rápido,
-                    hasta tres si se te echa el tiempo encima. El que dibuja es quien paga, no los
-                    que adivinan.
-                </p>
-            </HowToPlayModal>
+            <WordRow>
+                <WordToggle
+                    onClick={() => setShown((prev) => !prev)}
+                    aria-label={shown ? 'Ocultar palabra' : 'Ver palabra'}
+                >
+                    {shown ? <EyeOff size={18} /> : <Eye size={18} />}
+                </WordToggle>
+                <Word>{shown ? word : '· · ·'}</Word>
+                <Clock>{clock}</Clock>
+            </WordRow>
 
-            <WordRevealBar>
-                <IconButton variant="ghost" size="sm" onClick={() => setShowWord(!showWord)} aria-label="Mostrar/ocultar palabra">
-                    {showWord ? <IoEyeOff size={20} /> : <IoEye size={20} />}
-                </IconButton>
-                <WordText $hidden={!showWord}>
-                    {showWord ? currentWord : '???'}
-                </WordText>
-                <TimerDisplay>
-                    {formatTime(elapsedTime)}
-                </TimerDisplay>
-            </WordRevealBar>
-
-            <CanvasContainer>
-                {!isGameStarted && (
-                    <StartOverlay>
-                        <StartTitle>
-                            Trazo & Trago <Palette size={26} style={{ verticalAlign: 'middle', marginLeft: 4 }} />
-                        </StartTitle>
-                        <StartDescription>
-                            Tienes 90 segundos. ¡Vamos!
-                        </StartDescription>
-                        <Button size="lg" onClick={handleStartGame}>
-                            <IoPlay size={20} />
-                            Jugar
-                        </Button>
-                    </StartOverlay>
-                )}
+            <CanvasArea>
                 <Canvas
                     ref={canvasRef}
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    onTouchStart={startDrawing}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDrawing}
+                    onPointerDown={down}
+                    onPointerMove={move}
+                    onPointerUp={up}
+                    onPointerLeave={up}
+                    onPointerCancel={up}
                 />
-
-                {showResult && (
-                    <ResultOverlay>
-                        <ResultTitle>¡Tiempo!</ResultTitle>
-                        <ResultDetail>Tiempo total: {formatTime(elapsedTime)}</ResultDetail>
-                        <StartDescription>
-                            Por tardar tanto, el dibujante bebe:
-                        </StartDescription>
-                        <ResultValue>
-                            {calculateSips()} {calculateSips() === 1 ? 'trago' : 'tragos'}{' '}
-                            <Beer size={28} style={{ verticalAlign: 'middle' }} />
-                        </ResultValue>
-                        <Button size="lg" onClick={() => setShowResult(false)}>
-                            Aceptar
+                {result !== null && (
+                    <ResultVeil>
+                        <ResultKicker>¡Tiempo!</ResultKicker>
+                        <ResultSips>{result === 1 ? '1 trago' : `${result} tragos`}</ResultSips>
+                        <ResultWord>La palabra era «{word}»</ResultWord>
+                        <Button size="md" color={GAME.color} onClick={newRound}>
+                            Nueva palabra
                         </Button>
-                    </ResultOverlay>
+                    </ResultVeil>
                 )}
-            </CanvasContainer>
+            </CanvasArea>
 
-            <Toolbar>
-                <ToolbarRow>
-                    {COLORS.map((color) => (
-                        <ColorButton
-                            key={color.value}
-                            $color={color.value}
-                            $active={currentColor === color.value}
-                            onClick={() => setCurrentColor(color.value)}
-                            title={color.name}
+            <Tools>
+                <Swatches>
+                    {COLORS.map((value) => (
+                        <Swatch
+                            key={value}
+                            $color={value}
+                            $on={color === value}
+                            onClick={() => setColor(value)}
+                            aria-label={`Color ${value}`}
                         />
                     ))}
-                </ToolbarRow>
-
-                <ToolbarRow>
-                    {BRUSH_SIZES.map((size) => (
-                        <BrushSizeButton
+                </Swatches>
+                <Brushes>
+                    {BRUSHES.map((size) => (
+                        <Brush
                             key={size}
-                            $active={brushSize === size}
-                            onClick={() => setBrushSize(size)}
-                            title={`Grosor ${size}`}
+                            $on={brush === size}
+                            onClick={() => setBrush(size)}
+                            aria-label={`Grosor ${size}`}
                         >
-                            <BrushPreview $size={size} />
-                        </BrushSizeButton>
+                            <BrushDot $size={size} />
+                        </Brush>
                     ))}
-                </ToolbarRow>
-
-                <BottomActionsRow>
-                    <Button variant="secondary" size="sm" onClick={clearCanvas}>
-                        <IoTrashOutline size={16} />
+                </Brushes>
+                <Actions>
+                    <Button variant="secondary" size="sm" onClick={paint}>
                         Limpiar
                     </Button>
-
-                    <Button variant="secondary" size="sm" onClick={startNewRound}>
-                        <IoRefresh size={16} />
+                    <Button variant="secondary" size="sm" onClick={newRound}>
                         Nueva
                     </Button>
-
-                    <Button size="sm" onClick={handleFinish} disabled={isTimerPaused}>
-                        <IoCheckmark size={16} />
+                    <Button size="sm" color={GAME.color} onClick={finish}>
                         Finalizar
                     </Button>
-                </BottomActionsRow>
-            </Toolbar>
-        </Container>
+                </Actions>
+            </Tools>
+
+            <HowToPlayModal
+                visible={helpOpen}
+                onClose={() => setHelpOpen(false)}
+                gameId="trazotrago"
+            />
+        </Screen>
     );
 }

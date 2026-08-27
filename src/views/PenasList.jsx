@@ -1,154 +1,138 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoPeopleOutline } from 'react-icons/io5';
+import { UsersRound } from 'lucide-react';
 import { usePenas } from '../contexts/PenasContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
+import { getUnlockedStamps } from '../services/stampService';
+import PenaStamp from '../components/PenaStamp';
 import PageHeader from '../components/ui/PageHeader';
-import LoadingScreen from '../components/ui/LoadingScreen';
+import Screen, { Content } from '../components/ui/Screen';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import Modal from '../components/ui/Modal';
+import BottomSheet, { SheetTitle } from '../components/ui/BottomSheet';
+import LoadingScreen from '../components/ui/LoadingScreen';
+import Kicker from '../components/ui/Kicker';
 
-// Tinte suave del color de la peña para el fondo de "Tu peña" — el color
-// completo se reserva para el borde y la etiqueta, así el texto principal
-// sigue siendo legible sea cual sea el color elegido.
-function hexToRgba(hex, alpha) {
-    const clean = (hex || '#B23A63').replace('#', '');
-    const full = clean.length === 3
-        ? clean.split('').map((ch) => ch + ch).join('')
-        : clean.padEnd(6, '0');
-    const r = parseInt(full.slice(0, 2), 16);
-    const g = parseInt(full.slice(2, 4), 16);
-    const b = parseInt(full.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-const Container = styled.div`
-  min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
+const OwnPena = styled.button`
+  position: relative;
+  overflow: hidden;
   display: flex;
-  flex-direction: column;
-`;
-
-const Content = styled.div`
-  flex: 1;
-  padding: ${({ theme }) => theme.spacing(5)};
-  max-width: 560px;
-  margin: 0 auto;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(3.5)};
   width: 100%;
-  box-sizing: border-box;
-`;
-
-const ActionsRow = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing(3)};
-  margin-bottom: ${({ theme }) => theme.spacing(6)};
-`;
-
-const OwnPenaBanner = styled.div`
-  background: ${({ $color }) => hexToRgba($color, 0.14)};
+  padding: ${({ theme }) => theme.spacing(4)};
+  margin-bottom: ${({ theme }) => theme.spacing(5.5)};
+  background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ $color }) => $color};
   border-radius: ${({ theme }) => theme.radii.md};
-  padding: ${({ theme }) => theme.spacing(4)};
-  margin-bottom: ${({ theme }) => theme.spacing(6)};
-  cursor: pointer;
+  text-align: left;
+  transition: transform ${({ theme }) => theme.transitions.base};
+
+  &:active {
+    transform: scale(0.995);
+  }
 `;
 
-const OwnPenaLabel = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+const Texts = styled.span`
+  flex: 1;
+  min-width: 0;
+`;
+
+const OwnKicker = styled.span`
+  display: block;
+  font-size: 11px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   color: ${({ $color }) => $color};
   text-transform: uppercase;
-  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  margin: 0 0 4px 0;
+  letter-spacing: 0.1em;
 `;
 
-const OwnPenaName = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.lg};
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  margin: 0;
-`;
-
-const SectionLabel = styled.span`
+const OwnName = styled.span`
   display: block;
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  text-transform: uppercase;
-  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
-  margin-bottom: ${({ theme }) => theme.spacing(3)};
+  margin-top: 3px;
+  font-size: 20px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: -0.02em;
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+const OwnMembers = styled.span`
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: ${({ theme }) => theme.colors.text.muted};
+`;
+
+const Actions = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  margin-bottom: ${({ theme }) => theme.spacing(5.5)};
+
+  > * {
+    flex: 1;
+  }
 `;
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(3)};
+  gap: ${({ theme }) => theme.spacing(2)};
 `;
 
-const PenaRow = styled.div`
+const Row = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing(3)};
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
-  padding: ${({ theme }) => theme.spacing(3)};
-`;
-
-const Thumb = styled.div`
-  width: 44px;
-  height: 44px;
+  height: 60px;
+  padding: 0 ${({ theme }) => theme.spacing(3.5)};
   border-radius: ${({ theme }) => theme.radii.sm};
-  background: ${({ $color, $image }) => ($image ? `url(${$image})` : $color)};
-  background-size: cover;
-  background-position: center;
-  flex-shrink: 0;
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.border};
 `;
 
-const PenaInfo = styled.div`
+const RowName = styled.span`
   flex: 1;
   min-width: 0;
-`;
-
-const PenaName = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
+  font-size: 15px;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
 
-const MemberCount = styled.span`
+const RowCount = styled.span`
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(1.5)};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  color: ${({ theme }) => theme.colors.text.secondary};
+  gap: 6px;
   flex-shrink: 0;
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.text.muted};
 `;
 
-const EmptyText = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  text-align: center;
-  margin-top: ${({ theme }) => theme.spacing(8)};
+const ListKicker = styled(Kicker)`
+  margin-bottom: ${({ theme }) => theme.spacing(3)};
+  color: ${({ theme }) => theme.colors.text.muted};
 `;
 
-const ModalTitle = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-top: 0;
-  margin-bottom: ${({ theme }) => theme.spacing(5)};
-  text-align: center;
+const Empty = styled.p`
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.text.faint};
+  margin: 0;
+`;
+
+const SheetText = styled.p`
+  margin: ${({ theme }) => theme.spacing(1.5)} 0 ${({ theme }) => theme.spacing(4)};
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.text.muted};
 `;
 
 const ErrorText = styled.p`
+  margin: ${({ theme }) => theme.spacing(2.5)} 0 0;
+  font-size: 13.5px;
   color: ${({ theme }) => theme.colors.error};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  text-align: center;
-  margin: ${({ theme }) => theme.spacing(3)} 0 0 0;
 `;
 
 export default function PenasList() {
@@ -156,17 +140,26 @@ export default function PenasList() {
     const { eventId } = useParams();
     const { penas, myPena, loading, loadPenas, joinPena } = usePenas();
     const { user, loading: flechazoLoading } = useFlechazo();
-    const [showJoinModal, setShowJoinModal] = useState(false);
+    const [joinOpen, setJoinOpen] = useState(false);
     const [joinCode, setJoinCode] = useState('');
     const [joinError, setJoinError] = useState('');
     const [joining, setJoining] = useState(false);
+    const [unlocked, setUnlocked] = useState([]);
 
     useEffect(() => {
         // Esperar a que FlechazoContext resuelva la sesión — si no, en una carga
         // en frío loadPenas se ejecuta con user aún sin cargar y no se repite.
         if (flechazoLoading) return;
         loadPenas(eventId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [eventId, user?.id, flechazoLoading]);
+
+    useEffect(() => {
+        if (!user?.id || !eventId) return;
+        getUnlockedStamps(user.id, eventId).then((result) =>
+            setUnlocked(result.penaIds || []),
+        );
+    }, [user?.id, eventId]);
 
     const otherPenas = penas.filter((pena) => pena.id !== myPena?.id);
 
@@ -179,72 +172,91 @@ export default function PenasList() {
         const result = await joinPena(eventId, joinCode);
         setJoining(false);
         if (result.success) {
-            setShowJoinModal(false);
+            setJoinOpen(false);
             setJoinCode('');
         } else {
             setJoinError(result.error || 'No se pudo unir a la peña');
         }
     };
 
+    const memberLabel = (count) =>
+        `${count ?? 0} ${count === 1 ? 'miembro' : 'miembros'}`;
+
     return (
-        <Container>
+        <Screen>
             <PageHeader title="Peñas" onBack={() => navigate(-1)} />
             <Content>
                 {myPena ? (
-                    <OwnPenaBanner $color={myPena.color} onClick={() => navigate(`/eventos/${eventId}/penas/${myPena.id}`)}>
-                        <OwnPenaLabel $color={myPena.color}>Tu peña</OwnPenaLabel>
-                        <OwnPenaName>{myPena.name}</OwnPenaName>
-                    </OwnPenaBanner>
+                    <OwnPena
+                        $color={myPena.color}
+                        onClick={() => navigate(`/eventos/${eventId}/penas/${myPena.id}`)}
+                    >
+                        <PenaStamp pena={myPena} size={56} />
+                        <Texts>
+                            <OwnKicker $color={myPena.color}>Tu peña</OwnKicker>
+                            <OwnName>{myPena.name}</OwnName>
+                            <OwnMembers>{memberLabel(myPena.memberCount ?? myPena.members?.length)}</OwnMembers>
+                        </Texts>
+                    </OwnPena>
                 ) : (
-                    <ActionsRow>
-                        <Button fullWidth onClick={() => navigate(`/eventos/${eventId}/penas/nueva`)}>
+                    <Actions>
+                        <Button
+                            size="md"
+                            onClick={() => navigate(`/eventos/${eventId}/penas/nueva`)}
+                        >
                             Crear peña
                         </Button>
-                        <Button variant="secondary" fullWidth onClick={() => setShowJoinModal(true)}>
-                            Unirme con código
+                        <Button variant="secondary" size="md" onClick={() => setJoinOpen(true)}>
+                            Con código
                         </Button>
-                    </ActionsRow>
+                    </Actions>
                 )}
 
-                <SectionLabel>Resto de peñas</SectionLabel>
+                <ListKicker>Resto de peñas del evento</ListKicker>
 
                 {otherPenas.length === 0 ? (
-                    <EmptyText>Todavía no hay ninguna otra peña en este evento.</EmptyText>
+                    <Empty>Todavía no hay ninguna otra peña en este evento.</Empty>
                 ) : (
                     <List>
                         {otherPenas.map((pena) => (
-                            <PenaRow key={pena.id}>
-                                <Thumb $color={pena.color} $image={pena.image_url} />
-                                <PenaInfo>
-                                    <PenaName>{pena.name}</PenaName>
-                                </PenaInfo>
-                                <MemberCount>
-                                    <IoPeopleOutline size={16} />
+                            <Row key={pena.id}>
+                                <PenaStamp
+                                    pena={pena}
+                                    size={36}
+                                    locked={!unlocked.includes(pena.id)}
+                                />
+                                <RowName>{pena.name}</RowName>
+                                <RowCount>
+                                    <UsersRound size={15} />
                                     {pena.memberCount}
-                                </MemberCount>
-                            </PenaRow>
+                                </RowCount>
+                            </Row>
                         ))}
                     </List>
                 )}
             </Content>
 
-            <Modal visible={showJoinModal} onClose={() => setShowJoinModal(false)}>
-                <ModalTitle>Unirme a una peña</ModalTitle>
+            <BottomSheet visible={joinOpen} onClose={() => setJoinOpen(false)}>
+                <SheetTitle>Unirte con código</SheetTitle>
+                <SheetText>
+                    Pídeselo a alguien de la peña: lo tienen en el detalle de su peña.
+                </SheetText>
                 <Input
                     placeholder="Código de la peña"
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 />
                 {joinError && <ErrorText>{joinError}</ErrorText>}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                    <Button variant="secondary" fullWidth onClick={() => setShowJoinModal(false)}>
-                        Cancelar
-                    </Button>
-                    <Button fullWidth onClick={handleJoin} disabled={!joinCode.trim() || joining}>
-                        {joining ? 'Uniendo...' : 'Unirme'}
-                    </Button>
-                </div>
-            </Modal>
-        </Container>
+                <div style={{ height: 20 }} />
+                <Button
+                    size="lg"
+                    fullWidth
+                    onClick={handleJoin}
+                    disabled={!joinCode.trim() || joining}
+                >
+                    {joining ? 'Uniéndote...' : 'Unirme'}
+                </Button>
+            </BottomSheet>
+        </Screen>
     );
 }

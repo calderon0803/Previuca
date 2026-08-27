@@ -1,55 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { Heart, MessageCircle, Reply, Flag, RefreshCw } from 'lucide-react';
+import { Heart, MessageCircle, Flag, Pencil } from 'lucide-react';
 import { useSalseos } from '../contexts/SalseosContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { formatRelativeTime } from '../utils/relativeTime';
+import { activityColors } from '../styles/theme';
 import PageHeader from '../components/ui/PageHeader';
-import LoadingScreen from '../components/ui/LoadingScreen';
+import Screen, { Content } from '../components/ui/Screen';
 import IconButton from '../components/ui/IconButton';
 import Button from '../components/ui/Button';
-import Modal from '../components/ui/Modal';
 import Textarea from '../components/ui/Textarea';
+import BottomSheet, { SheetTitle } from '../components/ui/BottomSheet';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import ReportModal from '../components/ReportModal';
 import SalseoUsernameModal from '../components/SalseoUsernameModal';
 
-const Container = styled.div`
-  min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
-  display: flex;
-  flex-direction: column;
-`;
-
-const Content = styled.div`
-  flex: 1;
-  padding: ${({ theme }) => theme.spacing(5)};
-  max-width: 560px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-`;
-
-const ActionsRow = styled.div`
-  margin-bottom: ${({ theme }) => theme.spacing(6)};
-`;
+const SALSEO = activityColors.salseo;
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(3)};
-`;
-
-const LoadMoreRow = styled.div`
-  margin-top: ${({ theme }) => theme.spacing(5)};
+  gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
 const PostCard = styled.div`
+  border-radius: ${({ theme }) => theme.radii.sm};
   background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
-  padding: ${({ theme }) => theme.spacing(4)};
+  box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing(3.5)} ${({ theme }) => theme.spacing(4)};
   cursor: pointer;
+  transition: box-shadow ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.borderStrong};
+  }
 `;
 
 const AuthorRow = styled.div`
@@ -59,65 +44,74 @@ const AuthorRow = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing(2)};
 `;
 
-const AuthorName = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+const Author = styled.span`
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${({ theme }) => theme.colors.accentText};
+`;
+
+const Time = styled.span`
+  font-size: 11.5px;
+  color: ${({ theme }) => theme.colors.text.faint};
+`;
+
+const Body = styled.p`
+  margin: 0 0 ${({ theme }) => theme.spacing(3)};
+  font-size: 15px;
+  line-height: 1.45;
   color: ${({ theme }) => theme.colors.text.primary};
+  text-wrap: pretty;
 `;
 
-const TimeText = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  color: ${({ theme }) => theme.colors.text.disabled};
-`;
-
-const BodyText = styled.p`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
-  line-height: 1.4;
-  margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
-  white-space: pre-wrap;
-`;
-
-const ActionsBar = styled.div`
+const Bar = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing(5)};
 `;
 
-const ActionButton = styled.button`
+const BarAction = styled.button`
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(1.5)};
+  gap: 6px;
   background: none;
-  border: none;
   padding: 0;
-  cursor: pointer;
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  color: ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.text.secondary)};
+  font-size: 13px;
+  color: ${({ theme, $active }) =>
+        $active ? theme.colors.accentText : theme.colors.text.muted};
 
   &:disabled {
-    cursor: not-allowed;
+    cursor: default;
   }
 `;
 
-const EmptyText = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  text-align: center;
-  margin-top: ${({ theme }) => theme.spacing(8)};
+const ReportAction = styled(BarAction)`
+  margin-left: auto;
+  font-size: 12.5px;
+  color: ${({ theme }) => theme.colors.text.faint};
 `;
 
-const ModalTitle = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-top: 0;
-  margin-bottom: ${({ theme }) => theme.spacing(4)};
-  text-align: center;
+const Empty = styled.p`
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.text.faint};
+`;
+
+const LoadMore = styled.div`
+  margin-top: ${({ theme }) => theme.spacing(4)};
 `;
 
 const ErrorText = styled.p`
+  margin: ${({ theme }) => theme.spacing(2.5)} 0 0;
+  font-size: 13.5px;
   color: ${({ theme }) => theme.colors.error};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  text-align: center;
-  margin: ${({ theme }) => theme.spacing(3)} 0 0 0;
+`;
+
+const Actions = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  margin-top: ${({ theme }) => theme.spacing(5)};
 `;
 
 export default function SalseosWall() {
@@ -133,27 +127,23 @@ export default function SalseosWall() {
         createPost,
         toggleLike,
         reportPost,
-        replyFromFeed,
     } = useSalseos();
     const { user, loading: flechazoLoading, salseoUsername } = useFlechazo();
     const [showUsernameModal, setShowUsernameModal] = useState(false);
     const [pendingIntent, setPendingIntent] = useState(null);
-    const [showComposeModal, setShowComposeModal] = useState(false);
+    const [composeOpen, setComposeOpen] = useState(false);
     const [newBody, setNewBody] = useState('');
     const [composeError, setComposeError] = useState('');
     const [publishing, setPublishing] = useState(false);
     const [reportingPostId, setReportingPostId] = useState(null);
     const [reportError, setReportError] = useState('');
     const [reporting, setReporting] = useState(false);
-    const [replyingPostId, setReplyingPostId] = useState(null);
-    const [replyBody, setReplyBody] = useState('');
-    const [replyError, setReplyError] = useState('');
-    const [sendingReply, setSendingReply] = useState(false);
     const [likingPostIds, setLikingPostIds] = useState(() => new Set());
 
     useEffect(() => {
         if (flechazoLoading) return;
         loadPosts(eventId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [eventId, user?.id, flechazoLoading]);
 
     const handlePublish = async () => {
@@ -162,7 +152,7 @@ export default function SalseosWall() {
         const result = await createPost(eventId, newBody);
         setPublishing(false);
         if (result.success) {
-            setShowComposeModal(false);
+            setComposeOpen(false);
             setNewBody('');
         } else {
             setComposeError(result.error || 'No se pudo publicar el mensaje');
@@ -191,44 +181,14 @@ export default function SalseosWall() {
             setShowUsernameModal(true);
             return;
         }
-        setShowComposeModal(true);
-    };
-
-    const handleReplyClick = (event, postId) => {
-        event.stopPropagation();
-        if (!salseoUsername) {
-            setPendingIntent({ type: 'reply', postId });
-            setShowUsernameModal(true);
-            return;
-        }
-        setReplyError('');
-        setReplyBody('');
-        setReplyingPostId(postId);
+        setComposeOpen(true);
     };
 
     const handleUsernameChosen = () => {
         setShowUsernameModal(false);
-        if (pendingIntent?.type === 'compose') {
-            setShowComposeModal(true);
-        } else if (pendingIntent?.type === 'reply') {
-            setReplyError('');
-            setReplyBody('');
-            setReplyingPostId(pendingIntent.postId);
-        }
+        // Responder vive en el detalle del salseo, no en el muro.
+        if (pendingIntent?.type === 'compose') setComposeOpen(true);
         setPendingIntent(null);
-    };
-
-    const handleReplySubmit = async () => {
-        setSendingReply(true);
-        setReplyError('');
-        const result = await replyFromFeed(replyingPostId, eventId, replyBody);
-        setSendingReply(false);
-        if (result.success) {
-            setReplyingPostId(null);
-            setReplyBody('');
-        } else {
-            setReplyError(result.error || 'No se pudo enviar la respuesta');
-        }
     };
 
     const handleReportClick = (event, postId) => {
@@ -252,103 +212,111 @@ export default function SalseosWall() {
     if (loading) return <LoadingScreen />;
 
     return (
-        <Container>
+        <Screen>
             <PageHeader
-                title="Salseo"
+                kicker="Salseo"
+                kickerColor={SALSEO.kicker}
+                status="Anónimo, dentro del evento"
                 onBack={() => navigate(-1)}
                 rightAction={
-                    <IconButton variant="ghost" onClick={() => loadPosts(eventId, { force: true })} aria-label="Recargar">
-                        <RefreshCw size={18} />
+                    <IconButton variant="outline" onClick={handleComposeClick} aria-label="Escribir">
+                        <Pencil size={19} />
                     </IconButton>
                 }
             />
             <Content>
-                <ActionsRow>
-                    <Button fullWidth onClick={handleComposeClick}>
-                        Nuevo mensaje
-                    </Button>
-                </ActionsRow>
-
                 {posts.length === 0 ? (
-                    <EmptyText>Todavía no hay ningún mensaje en este evento. ¡Sé el primero!</EmptyText>
+                    <Empty>Todavía no hay ningún mensaje en este evento. Sé el primero.</Empty>
                 ) : (
                     <List>
                         {posts.map((post) => (
-                            <PostCard key={post.id} onClick={() => navigate(`/eventos/${eventId}/salseos/${post.id}`)}>
+                            <PostCard
+                                key={post.id}
+                                onClick={() => navigate(`/eventos/${eventId}/salseos/${post.id}`)}
+                            >
                                 <AuthorRow>
-                                    <AuthorName>{post.authorName}</AuthorName>
-                                    <TimeText>{formatRelativeTime(post.created_at)}</TimeText>
+                                    <Author>{post.authorName}</Author>
+                                    <Time>{formatRelativeTime(post.created_at)}</Time>
                                 </AuthorRow>
-                                <BodyText>{post.body}</BodyText>
-                                <ActionsBar>
-                                    <ActionButton
+                                <Body>{post.body}</Body>
+                                <Bar>
+                                    <BarAction
                                         $active={post.likedByMe}
                                         disabled={likingPostIds.has(post.id)}
                                         onClick={(e) => handleLikeClick(e, post.id)}
+                                        aria-label="Me gusta"
                                     >
-                                        <Heart size={16} fill={post.likedByMe ? 'currentColor' : 'none'} />
+                                        <Heart
+                                            size={16}
+                                            fill={post.likedByMe ? 'currentColor' : 'none'}
+                                        />
                                         {post.likeCount}
-                                    </ActionButton>
-                                    <ActionButton onClick={(e) => handleReplyClick(e, post.id)} aria-label="Responder">
-                                        <Reply size={16} />
-                                    </ActionButton>
-                                    <ActionButton>
+                                    </BarAction>
+                                    <BarAction as="span">
                                         <MessageCircle size={16} />
                                         {post.replyCount}
-                                    </ActionButton>
+                                    </BarAction>
                                     {post.author_id !== user?.id && (
-                                        <ActionButton
-                                            $active={post.reportedByMe}
+                                        <ReportAction
                                             disabled={post.reportedByMe}
                                             onClick={(e) => handleReportClick(e, post.id)}
                                         >
-                                            <Flag size={16} fill={post.reportedByMe ? 'currentColor' : 'none'} />
+                                            <Flag
+                                                size={15}
+                                                fill={post.reportedByMe ? 'currentColor' : 'none'}
+                                            />
                                             {post.reportedByMe ? 'Reportado' : 'Reportar'}
-                                        </ActionButton>
+                                        </ReportAction>
                                     )}
-                                </ActionsBar>
+                                </Bar>
                             </PostCard>
                         ))}
                     </List>
                 )}
 
                 {hasMorePosts && (
-                    <LoadMoreRow>
+                    <LoadMore>
                         <Button
                             variant="secondary"
+                            size="md"
                             fullWidth
                             onClick={() => loadMorePosts(eventId)}
                             disabled={loadingMore}
                         >
                             {loadingMore ? 'Cargando...' : 'Cargar más mensajes'}
                         </Button>
-                    </LoadMoreRow>
+                    </LoadMore>
                 )}
             </Content>
 
-            <Modal
-                visible={showComposeModal}
+            <BottomSheet
+                visible={composeOpen}
                 onClose={() => {
-                    setShowComposeModal(false);
+                    setComposeOpen(false);
                     setComposeError('');
                 }}
             >
-                <ModalTitle>Nuevo mensaje</ModalTitle>
+                <SheetTitle>Nuevo salseo</SheetTitle>
+                <div style={{ height: 14 }} />
                 <Textarea
                     placeholder="¿Qué está pasando?"
                     value={newBody}
                     onChange={(e) => setNewBody(e.target.value)}
                 />
                 {composeError && <ErrorText>{composeError}</ErrorText>}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                    <Button variant="secondary" fullWidth onClick={() => setShowComposeModal(false)}>
+                <Actions>
+                    <Button variant="secondary" size="md" onClick={() => setComposeOpen(false)}>
                         Cancelar
                     </Button>
-                    <Button fullWidth onClick={handlePublish} disabled={!newBody.trim() || publishing}>
+                    <Button
+                        size="md"
+                        onClick={handlePublish}
+                        disabled={!newBody.trim() || publishing}
+                    >
                         {publishing ? 'Publicando...' : 'Publicar'}
                     </Button>
-                </div>
-            </Modal>
+                </Actions>
+            </BottomSheet>
 
             <ReportModal
                 visible={reportingPostId !== null}
@@ -358,30 +326,6 @@ export default function SalseosWall() {
                 error={reportError}
             />
 
-            <Modal
-                visible={replyingPostId !== null}
-                onClose={() => {
-                    setReplyingPostId(null);
-                    setReplyError('');
-                }}
-            >
-                <ModalTitle>Responder</ModalTitle>
-                <Textarea
-                    placeholder="Escribe una respuesta..."
-                    value={replyBody}
-                    onChange={(e) => setReplyBody(e.target.value)}
-                />
-                {replyError && <ErrorText>{replyError}</ErrorText>}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                    <Button variant="secondary" fullWidth onClick={() => setReplyingPostId(null)}>
-                        Cancelar
-                    </Button>
-                    <Button fullWidth onClick={handleReplySubmit} disabled={!replyBody.trim() || sendingReply}>
-                        {sendingReply ? 'Enviando...' : 'Responder'}
-                    </Button>
-                </div>
-            </Modal>
-
             <SalseoUsernameModal
                 visible={showUsernameModal}
                 onClose={() => {
@@ -390,6 +334,6 @@ export default function SalseosWall() {
                 }}
                 onSuccess={handleUsernameChosen}
             />
-        </Container>
+        </Screen>
     );
 }

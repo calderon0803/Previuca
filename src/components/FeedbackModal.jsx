@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FEEDBACK_TYPES } from '../services/feedbackService';
-import Modal from './ui/Modal';
+import BottomSheet, { SheetTitle } from './ui/BottomSheet';
 import Button from './ui/Button';
 import Textarea from './ui/Textarea';
 
-const ModalTitle = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-top: 0;
+const ModalTitle = styled(SheetTitle)`
   margin-bottom: ${({ theme }) => theme.spacing(4)};
-  text-align: center;
 `;
 
 const TypeList = styled.div`
@@ -21,28 +18,42 @@ const TypeList = styled.div`
 
 const TypeOption = styled.button`
   text-align: left;
-  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(4)};
+  min-height: 48px;
+  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(3.5)};
   border-radius: ${({ theme }) => theme.radii.sm};
-  border: 1px solid ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.border)};
-  background: ${({ theme, $active }) => ($active ? theme.colors.primaryMuted : theme.colors.surfaceRaised)};
+  border: 1px solid
+    ${({ theme, $active }) => ($active ? theme.colors.accent : theme.colors.borderStrong)};
+  background: ${({ theme, $active }) => ($active ? theme.colors.accentTint : 'transparent')};
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
+  font-size: 15px;
   cursor: pointer;
+  transition: border-color ${({ theme }) => theme.transitions.fast},
+    background ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    border-color: ${({ theme, $active }) =>
+        $active ? theme.colors.accent : theme.colors.borderHover};
+  }
 `;
 
 const ErrorText = styled.p`
   color: ${({ theme }) => theme.colors.error};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  text-align: center;
-  margin: ${({ theme }) => theme.spacing(3)} 0 0 0;
+  font-size: 13.5px;
+  margin: ${({ theme }) => theme.spacing(3)} 0 0;
 `;
 
 const SuccessText = styled.p`
   color: ${({ theme }) => theme.colors.success};
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
-  text-align: center;
-  padding: ${({ theme }) => theme.spacing(4)} 0;
+  font-size: 16px;
+  padding: ${({ theme }) => theme.spacing(2)} 0 ${({ theme }) => theme.spacing(5)};
   margin: 0;
+`;
+
+const Actions = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  margin-top: ${({ theme }) => theme.spacing(5)};
 `;
 
 export default function FeedbackModal({ visible, onClose, onSubmit, submitting, error }) {
@@ -64,11 +75,11 @@ export default function FeedbackModal({ visible, onClose, onSubmit, submitting, 
     };
 
     return (
-        <Modal visible={visible} onClose={onClose}>
+        <BottomSheet visible={visible} onClose={onClose}>
             {sent ? (
                 <>
                     <SuccessText>¡Gracias! Hemos recibido tu mensaje.</SuccessText>
-                    <Button fullWidth onClick={onClose}>Cerrar</Button>
+                    <Button size="lg" fullWidth onClick={onClose}>Cerrar</Button>
                 </>
             ) : (
                 <>
@@ -92,20 +103,20 @@ export default function FeedbackModal({ visible, onClose, onSubmit, submitting, 
                         disabled={submitting}
                     />
                     {error && <ErrorText>{error}</ErrorText>}
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                        <Button variant="secondary" fullWidth onClick={onClose}>
+                    <Actions>
+                        <Button variant="secondary" size="md" onClick={onClose}>
                             Cancelar
                         </Button>
                         <Button
-                            fullWidth
+                            size="md"
                             disabled={!type || !message.trim() || submitting}
                             onClick={handleSubmit}
                         >
                             {submitting ? 'Enviando...' : 'Enviar'}
                         </Button>
-                    </div>
+                    </Actions>
                 </>
             )}
-        </Modal>
+        </BottomSheet>
     );
 }

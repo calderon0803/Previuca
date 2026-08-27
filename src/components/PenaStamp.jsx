@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { IoLockClosed } from 'react-icons/io5';
 
 // Parámetros deterministas a partir del UUID de la peña: no hace falta
 // hashear nada, un UUID v4 ya es hex aleatorio uniforme, así que basta con
@@ -123,9 +122,8 @@ const StampWrapper = styled.div`
   flex-shrink: 0;
 `;
 
-// El filtro/opacidad de "bloqueado" va aquí, no en StampWrapper, porque un
-// hijo no puede "escapar" del filter/opacity de un ancestro: si el candado
-// fuera hijo de un elemento con grayscale, también saldría gris.
+// Un sello no coleccionado se apaga en vez de llevar candado: la propia
+// escala de grises ya dice que falta.
 const StampVisual = styled.div`
   width: 100%;
   height: 100%;
@@ -138,15 +136,6 @@ const StampVisual = styled.div`
   }
 `;
 
-const LockBadge = styled.div`
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
-`;
 
 export default function PenaStamp({ pena, size = 96, locked = false }) {
     const { id = '', name = '', color = '#B23A63' } = pena || {};
@@ -159,7 +148,7 @@ export default function PenaStamp({ pena, size = 96, locked = false }) {
         Math.min(1, baseHsl.s + 0.15),
         Math.min(0.62, Math.max(0.38, baseHsl.l))
     );
-    const textColor = (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#0A0B0E' : '#FFFFFF';
+    const textColor = (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#161826' : '#f3f5fe';
     const initial = (name.trim()[0] || '?').toUpperCase();
 
     const cx = 50;
@@ -189,11 +178,6 @@ export default function PenaStamp({ pena, size = 96, locked = false }) {
                     </text>
                 </svg>
             </StampVisual>
-            {locked && (
-                <LockBadge>
-                    <IoLockClosed size={Math.max(14, size * 0.22)} />
-                </LockBadge>
-            )}
         </StampWrapper>
     );
 }

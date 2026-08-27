@@ -1,38 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { REPORT_REASONS } from '../services/salseosService';
-import Modal from './ui/Modal';
+import BottomSheet, { SheetTitle } from './ui/BottomSheet';
 import Button from './ui/Button';
 
-const ModalTitle = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-top: 0;
-  margin-bottom: ${({ theme }) => theme.spacing(4)};
-  text-align: center;
+// El rediseño pide una hoja de confirmación para reportar. Se mantiene la
+// elección de motivo que ya existía (el equipo organizador la necesita) con el
+// lenguaje de la hoja: título, texto explicativo y dos acciones al 50%.
+
+const Text = styled.p`
+  margin: ${({ theme }) => theme.spacing(2)} 0 ${({ theme }) => theme.spacing(4)};
+  font-size: 14px;
+  line-height: 1.55;
+  color: ${({ theme }) => theme.colors.text.muted};
 `;
 
-const ReasonList = styled.div`
+const Reasons = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(2)};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
 `;
 
-const ReasonOption = styled.button`
+const Reason = styled.button`
   text-align: left;
-  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(4)};
+  min-height: 48px;
+  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(3.5)};
   border-radius: ${({ theme }) => theme.radii.sm};
-  border: 1px solid ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.border)};
-  background: ${({ theme, $active }) => ($active ? theme.colors.primaryMuted : theme.colors.surfaceRaised)};
+  border: 1px solid
+    ${({ theme, $active }) => ($active ? theme.colors.accent : theme.colors.borderStrong)};
+  background: ${({ theme, $active }) => ($active ? theme.colors.accentTint : 'transparent')};
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
-  cursor: pointer;
+  font-size: 15px;
+  transition: border-color ${({ theme }) => theme.transitions.fast},
+    background ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    border-color: ${({ theme, $active }) =>
+        $active ? theme.colors.accent : theme.colors.borderHover};
+  }
 `;
 
 const ErrorText = styled.p`
+  margin: 0 0 ${({ theme }) => theme.spacing(3)};
+  font-size: 13.5px;
   color: ${({ theme }) => theme.colors.error};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  text-align: center;
-  margin: ${({ theme }) => theme.spacing(3)} 0 0 0;
+`;
+
+const Actions = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
 export default function ReportModal({ visible, onClose, onSubmit, submitting, error }) {
@@ -43,29 +61,37 @@ export default function ReportModal({ visible, onClose, onSubmit, submitting, er
     }, [visible]);
 
     return (
-        <Modal visible={visible} onClose={onClose}>
-            <ModalTitle>¿Por qué reportas este mensaje?</ModalTitle>
-            <ReasonList>
+        <BottomSheet visible={visible} onClose={onClose}>
+            <SheetTitle>¿Reportar este mensaje?</SheetTitle>
+            <Text>
+                El equipo organizador lo revisará. No se avisa a quien lo escribió.
+            </Text>
+            <Reasons>
                 {REPORT_REASONS.map((option) => (
-                    <ReasonOption
+                    <Reason
                         key={option.value}
                         type="button"
                         $active={reason === option.value}
                         onClick={() => setReason(option.value)}
                     >
                         {option.label}
-                    </ReasonOption>
+                    </Reason>
                 ))}
-            </ReasonList>
+            </Reasons>
             {error && <ErrorText>{error}</ErrorText>}
-            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                <Button variant="secondary" fullWidth onClick={onClose}>
+            <Actions>
+                <Button variant="secondary" size="md" onClick={onClose}>
                     Cancelar
                 </Button>
-                <Button fullWidth disabled={!reason || submitting} onClick={() => onSubmit(reason)}>
+                <Button
+                    variant="danger"
+                    size="md"
+                    disabled={!reason || submitting}
+                    onClick={() => onSubmit(reason)}
+                >
                     {submitting ? 'Enviando...' : 'Reportar'}
                 </Button>
-            </div>
-        </Modal>
+            </Actions>
+        </BottomSheet>
     );
 }

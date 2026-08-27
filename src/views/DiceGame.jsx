@@ -1,287 +1,178 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { HelpCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayers } from '../contexts/PlayersContext';
-import HowToPlayModal from '../components/HowToPlayModal';
-import PageHeader from '../components/ui/PageHeader';
-import IconButton from '../components/ui/IconButton';
+import { gameById } from '../data/games';
+import GameShell from '../components/GameShell';
 import Button from '../components/ui/Button';
+import { SignatureLine } from '../components/ui/Signature';
 
-const Container = styled.div`
-  min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-`;
+const GAME = gameById.dados;
 
-const Content = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: ${({ theme }) => theme.spacing(6)};
-  align-items: center;
-  max-width: 560px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-`;
-
-const PlayerIndicator = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(6)};
-  border-radius: ${({ theme }) => theme.radii.md};
-  margin-bottom: ${({ theme }) => theme.spacing(5)};
-  text-align: center;
-`;
-
-const PlayerLabel = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  margin: 0 0 4px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-`;
-
-const PlayerName = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.xl};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-`;
-
-const DiceContainer = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing(6)};
-  margin: ${({ theme }) => theme.spacing(8)} 0;
-  perspective: 1000px;
-`;
-
-const Die = styled(motion.div)`
-  width: 76px;
-  height: 76px;
-  background: #fff;
-  border-radius: ${({ theme }) => theme.radii.md};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: ${({ theme }) => theme.shadows.md};
-  position: relative;
-`;
-
-// Dice dot layouts using a simple component
-const DiceFace = ({ value }) => {
-    const dots = {
-        1: [4],
-        2: [0, 8],
-        3: [0, 4, 8],
-        4: [0, 2, 6, 8],
-        5: [0, 2, 4, 6, 8],
-        6: [0, 3, 6, 2, 5, 8]
-    };
-
-    return (
-        <DotGrid>
-            {[...Array(9)].map((_, i) => (
-                <Dot key={i} $active={dots[value].includes(i)} />
-            ))}
-        </DotGrid>
-    );
+// Qué casillas de la rejilla 3×3 llevan punto en cada cara.
+const DOTS = {
+    1: [4],
+    2: [0, 8],
+    3: [0, 4, 8],
+    4: [0, 2, 6, 8],
+    5: [0, 2, 4, 6, 8],
+    6: [0, 3, 6, 2, 5, 8],
 };
 
-const DotGrid = styled.div`
+const Dice = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing(5.5)};
+`;
+
+const Face = styled.div`
+  width: 82px;
+  height: 82px;
+  border-radius: ${({ theme }) => theme.radii.sm};
+  background: ${({ theme }) => theme.colors.text.primary};
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  width: 56px;
-  height: 56px;
-  gap: 4px;
+  gap: 5px;
+  padding: 12px;
+  box-sizing: border-box;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
 `;
 
-const Dot = styled.div`
+const Dot = styled.span`
   width: 11px;
   height: 11px;
-  background: #262626;
   border-radius: 50%;
-  opacity: ${props => props.$active ? 1 : 0};
+  background: #22242e;
   justify-self: center;
   align-self: center;
+  opacity: ${({ $on }) => ($on ? 1 : 0)};
 `;
 
-const ResultOverlay = styled(motion.div)`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  margin-top: ${({ theme }) => theme.spacing(8)};
-  padding: ${({ theme }) => theme.spacing(6)};
-  border-radius: ${({ theme }) => theme.radii.lg};
+const RuleCard = styled.div`
+  position: relative;
+  overflow: hidden;
   width: 100%;
-  max-width: 480px;
-  text-align: center;
-  box-shadow: ${({ theme }) => theme.shadows.md};
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  padding: ${({ theme }) => theme.spacing(5)};
+  box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.borderStrong};
+  animation: pv-pop 0.2s ease;
 `;
 
-const ResultTitle = styled.h2`
-  color: ${({ theme }) => theme.colors.accent};
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  letter-spacing: 0.12em;
-  margin: 0 0 ${({ theme }) => theme.spacing(2)} 0;
-  text-transform: uppercase;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-`;
-
-const ResultRule = styled.p`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+const RuleKicker = styled.p`
+  position: relative;
+  margin: 0 0 ${({ theme }) => theme.spacing(2)};
+  font-size: 12px;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  margin: 0;
-  line-height: 1.4;
+  color: ${GAME.kicker};
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 `;
+
+const RuleText = styled.p`
+  position: relative;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  text-wrap: pretty;
+`;
+
+function ruleFor(d1, d2) {
+    const sum = d1 + d2;
+    if (d1 === d2) {
+        if (sum === 2) return 'Ojos de serpiente: bébete dos tragos ahora mismo.';
+        if (sum === 12) return 'Doble seis: todos beben un trago.';
+        return `Doble ${d1}: te inventas una regla nueva para el resto de la partida.`;
+    }
+    if (sum === 7) return 'El último en tocarse la nariz bebe.';
+    if (sum === 3) return 'Bebes tú, un trago.';
+    if (sum === 11) return 'Eliges a alguien para que beba dos tragos.';
+    if (sum === 9) return 'Bebe el de tu izquierda.';
+    if (sum === 10) return 'Bebe el de tu derecha.';
+    return `Reparte ${Math.floor(sum / 2)} tragos a quien quieras.`;
+}
 
 export default function DiceGame() {
-    const navigate = useNavigate();
     const { players } = usePlayers();
+
     const [dice, setDice] = useState([1, 1]);
-    const [isRolling, setIsRolling] = useState(false);
-    const [result, setResult] = useState(null);
-    const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-    const [showHelp, setShowHelp] = useState(false);
+    const [rolling, setRolling] = useState(false);
+    const [rule, setRule] = useState(null);
+    const [turn, setTurn] = useState(0);
+    const interval = useRef(null);
 
-    const getRule = (d1, d2) => {
-        const sum = d1 + d2;
-        const isDouble = d1 === d2;
+    useEffect(() => () => clearInterval(interval.current), []);
 
-        if (isDouble) {
-            if (sum === 2) return "Snake Eyes: ¡Bébete 2 tragos ahora mismo!";
-            if (sum === 12) return "Box Cars: ¡Todos los jugadores beben 1 trago!";
-            return `Dobles: Has sacado doble ${d1}. Crea una regla nueva para el resto de la partida.`;
-        }
+    useEffect(() => {
+        if (players.length > 0 && turn >= players.length) setTurn(0);
+    }, [players, turn]);
 
-        if (sum === 7) return "7: El último en tocarse la nariz bebe.";
-        if (sum === 3) return "3: Tú bebes un trago.";
-        if (sum === 11) return "11: ¡Elige a alguien para que beba 2 tragos!";
-        if (sum === 9) return "9: Bebe el de tu izquierda.";
-        if (sum === 10) return "10: Bebe el de tu derecha.";
-
-        const drinkCount = Math.floor(sum / 2);
-        return `Suma ${sum}: Reparte ${drinkCount} tragos a quien quieras.`;
-    };
-
-    const rollDice = () => {
-        if (isRolling) return;
-        setIsRolling(true);
-        setResult(null);
-
-        let rollsCount = 0;
-        const rollInterval = setInterval(() => {
-            setDice([
-                Math.floor(Math.random() * 6) + 1,
-                Math.floor(Math.random() * 6) + 1
-            ]);
-            rollsCount++;
-            if (rollsCount > 10) {
-                clearInterval(rollInterval);
-                const finalDice = [
-                    Math.floor(Math.random() * 6) + 1,
-                    Math.floor(Math.random() * 6) + 1
-                ];
-                setDice(finalDice);
-                setResult(getRule(finalDice[0], finalDice[1]));
-                setIsRolling(false);
+    const roll = () => {
+        if (rolling) return;
+        setRolling(true);
+        setRule(null);
+        let frames = 0;
+        clearInterval(interval.current);
+        // 10 marcos a 90ms: el dado "rueda" sin pasarse de tiempo.
+        interval.current = setInterval(() => {
+            const next = [
+                1 + Math.floor(Math.random() * 6),
+                1 + Math.floor(Math.random() * 6),
+            ];
+            frames += 1;
+            setDice(next);
+            if (frames > 9) {
+                clearInterval(interval.current);
+                setRule(ruleFor(next[0], next[1]));
+                setRolling(false);
             }
-        }, 100);
+        }, 90);
     };
 
     const nextTurn = () => {
-        if (players.length > 0) {
-            setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-        }
-        setResult(null);
+        setRule(null);
+        if (players.length > 0) setTurn((prev) => (prev + 1) % players.length);
     };
 
+    const status =
+        players.length > 0
+            ? `${players[turn % players.length]?.name} lanza`
+            : 'Lanza quien quiera';
+
     return (
-        <Container>
-            <PageHeader
-                title="Dados de Beber"
-                onBack={() => navigate(-1)}
-                rightAction={
-                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                        <HelpCircle size={20} />
-                    </IconButton>
-                }
-            />
-
-            <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Dados de Beber">
-                <p>Turno por turno, cada uno lanza los dos dados. La suma decide qué toca:</p>
-                <ul>
-                    <li><strong>1-1:</strong> dos tragos para ti</li>
-                    <li><strong>6-6:</strong> todos beben un trago</li>
-                    <li><strong>Cualquier otro doble:</strong> te inventas una regla nueva que dura el resto de la partida</li>
-                    <li><strong>Suma 7:</strong> el último en tocarse la nariz bebe</li>
-                    <li><strong>Suma 3:</strong> bebes tú</li>
-                    <li><strong>Suma 9:</strong> bebe el de tu izquierda</li>
-                    <li><strong>Suma 10:</strong> bebe el de tu derecha</li>
-                    <li><strong>Suma 11:</strong> eliges a alguien para que beba 2</li>
-                    <li><strong>El resto de sumas:</strong> repartes algunos tragos a quien quieras</li>
-                </ul>
-            </HowToPlayModal>
-
-            <Content>
-                {players.length > 0 && (
-                    <PlayerIndicator>
-                        <PlayerLabel>Turno de</PlayerLabel>
-                        <PlayerName>{players[currentPlayerIndex]?.name}</PlayerName>
-                    </PlayerIndicator>
-                )}
-
-                <DiceContainer>
-                    <Die
-                        animate={isRolling ? {
-                            rotate: [0, 90, 180, 270, 360],
-                            x: [0, 20, -20, 20, 0],
-                            y: [0, -20, 20, -20, 0]
-                        } : { rotate: 0 }}
-                        transition={{ duration: 0.5, repeat: isRolling ? Infinity : 0 }}
-                    >
-                        <DiceFace value={dice[0]} />
-                    </Die>
-                    <Die
-                        animate={isRolling ? {
-                            rotate: [0, -90, -180, -270, -360],
-                            x: [0, -20, 20, -20, 0],
-                            y: [0, 20, -20, 20, 0]
-                        } : { rotate: 0 }}
-                        transition={{ duration: 0.5, repeat: isRolling ? Infinity : 0 }}
-                    >
-                        <DiceFace value={dice[1]} />
-                    </Die>
-                </DiceContainer>
-
-                <AnimatePresence>
-                    {result && (
-                        <ResultOverlay
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 12 }}
-                        >
-                            <ResultTitle>Regla</ResultTitle>
-                            <ResultRule>{result}</ResultRule>
-                        </ResultOverlay>
-                    )}
-                </AnimatePresence>
-
+        <GameShell
+            gameId="dados"
+            status={status}
+            stageGap={6.5}
+            footer={
                 <Button
                     size="lg"
-                    onClick={result ? nextTurn : rollDice}
-                    disabled={isRolling}
-                    style={{ marginTop: '32px' }}
+                    color={GAME.color}
+                    fullWidth
+                    disabled={rolling}
+                    onClick={rule ? nextTurn : roll}
                 >
-                    {isRolling ? 'Lanzando...' : result ? 'Siguiente' : 'Lanzar dados'}
+                    {rolling ? 'Lanzando...' : rule ? 'Siguiente jugador' : 'Lanzar dados'}
                 </Button>
-            </Content>
-        </Container>
+            }
+        >
+            <Dice>
+                {dice.map((value, i) => (
+                    <Face key={i} aria-label={`Dado ${value}`}>
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((cell) => (
+                            <Dot key={cell} $on={DOTS[value].includes(cell)} />
+                        ))}
+                    </Face>
+                ))}
+            </Dice>
+
+            {rule && (
+                <RuleCard>
+                    <SignatureLine $color={GAME.color} aria-hidden="true" />
+                    <RuleKicker>Suma {dice[0] + dice[1]}</RuleKicker>
+                    <RuleText>{rule}</RuleText>
+                </RuleCard>
+            )}
+        </GameShell>
     );
 }

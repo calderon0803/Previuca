@@ -16,8 +16,8 @@ export default defineConfig({
                 name: 'Previuca',
                 short_name: 'Previuca',
                 description: 'La mejor app de juegos de beber',
-                theme_color: '#B23A63',
-                background_color: '#F7ECE7',
+                theme_color: '#161826',
+                background_color: '#161826',
                 display: 'standalone',
                 orientation: 'portrait',
                 icons: [

@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoLockClosed, IoPersonCircleOutline, IoCheckmarkCircle } from 'react-icons/io5';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { getPenasByEvent, getPenaAffiliationsByUserIds, getMyPena } from '../services/penasService';
 import { getUnlockedStamps } from '../services/stampService';
 import { getProfilesByUserIds, calculateAge } from '../services/profileService';
+import { activityColors } from '../styles/theme';
 import PageHeader from '../components/ui/PageHeader';
+import Screen, { Content } from '../components/ui/Screen';
 import LoadingScreen from '../components/ui/LoadingScreen';
+
+const FLECHAZO = activityColors.flechazo;
 
 // El evento necesita este mínimo de peñas para que la revelación progresiva
 // tenga sentido (con pocas peñas, los sellos disponibles no darían margen).
@@ -20,124 +23,121 @@ const AGE_UNLOCK_RATIO = 0.05;
 const PENA_COLOR_UNLOCK_RATIO = 0.10;
 const IDENTITY_UNLOCK_RATIO = 0.50;
 
-const Container = styled.div`
-  min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
+const StepsCard = styled.div`
+  border-radius: ${({ theme }) => theme.radii.sm};
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.borderStrong};
+  padding: ${({ theme }) => theme.spacing(4)};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
+`;
+
+const StepsLede = styled.p`
+  margin: 0 0 ${({ theme }) => theme.spacing(3)};
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.text.muted};
+`;
+
+const Steps = styled.div`
   display: flex;
   flex-direction: column;
+  gap: 9px;
 `;
 
-const Content = styled.div`
-  flex: 1;
-  padding: ${({ theme }) => theme.spacing(5)};
-  max-width: 560px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-`;
-
-const ProgressCard = styled.div`
-  background: ${({ theme }) => theme.colors.primaryMuted};
-  border: 1px solid ${({ theme }) => theme.colors.primary};
-  border-radius: ${({ theme }) => theme.radii.md};
-  padding: ${({ theme }) => theme.spacing(4)};
-  margin-bottom: ${({ theme }) => theme.spacing(6)};
-`;
-
-const ProgressText = styled.p`
+const Step = styled.div`
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(2)};
-  color: ${({ theme, $done }) => ($done ? theme.colors.success : theme.colors.text.primary)};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  margin: 0 0 ${({ theme }) => theme.spacing(1)} 0;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
+  gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
-const ProgressIcon = ({ done }) => (done ? <IoCheckmarkCircle size={14} /> : <IoLockClosed size={14} />);
+const Mark = styled.span`
+  width: 16px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme, $done }) => ($done ? theme.colors.success : theme.colors.text.faint)};
+`;
+
+const StepLabel = styled.span`
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  color: ${({ theme, $done }) => ($done ? theme.colors.success : theme.colors.text.muted)};
+`;
+
+const StepReq = styled.span`
+  flex-shrink: 0;
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.text.faint};
+`;
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(3)};
+  gap: 9px;
 `;
 
-const Row = styled.div`
+const Card = styled.div`
+  border-radius: ${({ theme }) => theme.radii.sm};
   background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
-  padding: ${({ theme }) => theme.spacing(4)};
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing(4)};
+  box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing(3.5)} ${({ theme }) => theme.spacing(4)};
 `;
 
-const RowIcon = styled.div`
-  color: ${({ theme }) => theme.colors.text.disabled};
-  flex-shrink: 0;
-`;
-
-const RowLabel = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+const CardTitle = styled.p`
+  margin: 0 0 ${({ theme }) => theme.spacing(3)};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 ${({ theme }) => theme.spacing(2)} 0;
-  flex-basis: 100%;
 `;
 
-const StatsRow = styled.div`
+const Stats = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing(5)};
-  flex: 1;
-  min-width: 0;
-`;
-
-const Stat = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: ${({ theme }) => theme.spacing(5.5)};
+  flex-wrap: wrap;
 `;
 
 const StatLabel = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  color: ${({ theme }) => theme.colors.text.secondary};
+  display: block;
+  font-size: 10.5px;
+  color: ${({ theme }) => theme.colors.text.faint};
   text-transform: uppercase;
-  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
+  letter-spacing: 0.1em;
 `;
 
 const StatValue = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  color: ${({ theme }) => theme.colors.text.primary};
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing(2)};
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  color: ${({ theme, $locked }) => ($locked ? theme.colors.text.disabled : theme.colors.text.primary)};
 `;
 
-const LockedValue = styled.span`
+const PenaValue = styled.span`
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(1.5)};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  color: ${({ theme }) => theme.colors.text.disabled};
+  gap: 7px;
+  margin-top: 5px;
 `;
 
-const ColorDot = styled.span`
-  display: inline-block;
-  width: 16px;
-  height: 16px;
+const Dot = styled.span`
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: ${({ $color }) => $color};
-  border: 1px solid ${({ theme }) => theme.colors.borderStrong};
+  flex-shrink: 0;
+  background: ${({ theme, $color }) => $color || theme.colors.borderStrong};
 `;
 
-const EmptyText = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  text-align: center;
-  margin-top: ${({ theme }) => theme.spacing(8)};
+const PenaName = styled.span`
+  font-size: 14px;
+  color: ${({ theme, $locked }) => ($locked ? theme.colors.text.disabled : theme.colors.text.primary)};
+`;
+
+const Empty = styled.p`
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.text.faint};
 `;
 
 export default function FlechazoAdmirers() {
@@ -154,6 +154,7 @@ export default function FlechazoAdmirers() {
     useEffect(() => {
         if (!user?.id || !eventId) return;
         loadFlechazos(eventId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [eventId, user?.id]);
 
     useEffect(() => {
@@ -178,7 +179,9 @@ export default function FlechazoAdmirers() {
             setLoading(false);
         });
 
-        return () => { active = false; };
+        return () => {
+            active = false;
+        };
     }, [eventId, user?.id, matchedByUserIds]);
 
     const hasEnoughPenas = totalPenas >= MIN_PENAS_REQUIRED;
@@ -212,41 +215,48 @@ export default function FlechazoAdmirers() {
 
     if (loading) return <LoadingScreen />;
 
+    const steps = [
+        { label: 'Género', done: genderUnlocked, req: genderRequired },
+        { label: 'Edad', done: ageUnlocked, req: ageRequired },
+        { label: 'Color de su peña', done: penaColorUnlocked, req: penaColorRequired },
+        { label: 'Nombre de su peña', done: identityRevealed, req: identityRequired },
+    ];
+
     return (
-        <Container>
-            <PageHeader title="Quién te tiene en su lista" onBack={() => navigate(-1)} />
+        <Screen>
+            <PageHeader
+                kicker="Quién te tiene en su lista"
+                kickerColor={FLECHAZO.kicker}
+                status={`${effectiveUnlocked} de ${effectiveTotal} sellos ajenos`}
+                onBack={() => navigate(-1)}
+            />
             <Content>
                 {!hasEnoughPenas ? (
-                    <EmptyText>
-                        Esta función se desbloquea cuando el evento tiene al menos {MIN_PENAS_REQUIRED} peñas
+                    <Empty>
+                        Esto se abre cuando el evento tiene al menos {MIN_PENAS_REQUIRED} peñas
                         (ahora mismo hay {totalPenas}).
-                    </EmptyText>
+                    </Empty>
                 ) : (
                     <>
-                        <ProgressCard>
-                            <ProgressText>
-                                Sellos coleccionados: {effectiveUnlocked} de {effectiveTotal} (sin contar el de tu propia peña)
-                            </ProgressText>
-                            <ProgressText $done={genderUnlocked}>
-                                <ProgressIcon done={genderUnlocked} />
-                                Género — se desbloquea con el {Math.round(GENDER_UNLOCK_RATIO * 100)}% de los sellos ({genderRequired})
-                            </ProgressText>
-                            <ProgressText $done={ageUnlocked}>
-                                <ProgressIcon done={ageUnlocked} />
-                                Edad — se desbloquea con el {Math.round(AGE_UNLOCK_RATIO * 100)}% de los sellos ({ageRequired})
-                            </ProgressText>
-                            <ProgressText $done={penaColorUnlocked}>
-                                <ProgressIcon done={penaColorUnlocked} />
-                                Color de su peña — se desbloquea con el {Math.round(PENA_COLOR_UNLOCK_RATIO * 100)}% de los sellos ({penaColorRequired})
-                            </ProgressText>
-                            <ProgressText $done={identityRevealed}>
-                                <ProgressIcon done={identityRevealed} />
-                                Nombre de su peña — se desbloquea con el {Math.round(IDENTITY_UNLOCK_RATIO * 100)}% de los sellos ({identityRequired})
-                            </ProgressText>
-                        </ProgressCard>
+                        <StepsCard>
+                            <StepsLede>
+                                Cada sello que coleccionas revela un dato más de cada admirador.
+                            </StepsLede>
+                            <Steps>
+                                {steps.map((step) => (
+                                    <Step key={step.label}>
+                                        <Mark $done={step.done}>{step.done ? '✓' : '·'}</Mark>
+                                        <StepLabel $done={step.done}>{step.label}</StepLabel>
+                                        <StepReq>
+                                            {step.req} {step.req === 1 ? 'sello' : 'sellos'}
+                                        </StepReq>
+                                    </Step>
+                                ))}
+                            </Steps>
+                        </StepsCard>
 
                         {matchedByUserIds.length === 0 ? (
-                            <EmptyText>Todavía nadie te ha añadido a su lista.</EmptyText>
+                            <Empty>Todavía nadie te ha añadido a su lista.</Empty>
                         ) : (
                             <List>
                                 {matchedByUserIds.map((uid, index) => {
@@ -255,54 +265,50 @@ export default function FlechazoAdmirers() {
                                     const age = calculateAge(profile?.birthdate);
 
                                     return (
-                                        <Row key={uid}>
-                                            <RowIcon>
-                                                <IoPersonCircleOutline size={28} />
-                                            </RowIcon>
-                                            <RowLabel>Admirador/a #{index + 1}</RowLabel>
-                                            <StatsRow>
-                                                <Stat>
+                                        <Card key={uid}>
+                                            <CardTitle>Admirador/a #{index + 1}</CardTitle>
+                                            <Stats>
+                                                <span>
                                                     <StatLabel>Género</StatLabel>
-                                                    {genderUnlocked ? (
-                                                        <StatValue>{profile?.gender || 'Sin datos'}</StatValue>
-                                                    ) : (
-                                                        <LockedValue>
-                                                            <IoLockClosed size={12} />
-                                                            {Math.round(GENDER_UNLOCK_RATIO * 100)}%
-                                                        </LockedValue>
-                                                    )}
-                                                </Stat>
-                                                <Stat>
+                                                    <StatValue $locked={!genderUnlocked}>
+                                                        {genderUnlocked
+                                                            ? profile?.gender || 'Sin datos'
+                                                            : 'bloqueado'}
+                                                    </StatValue>
+                                                </span>
+                                                <span>
                                                     <StatLabel>Edad</StatLabel>
-                                                    {ageUnlocked ? (
-                                                        <StatValue>{age !== null ? `${age} años` : 'Sin datos'}</StatValue>
-                                                    ) : (
-                                                        <LockedValue>
-                                                            <IoLockClosed size={12} />
-                                                            {Math.round(AGE_UNLOCK_RATIO * 100)}%
-                                                        </LockedValue>
-                                                    )}
-                                                </Stat>
-                                                <Stat>
+                                                    <StatValue $locked={!ageUnlocked}>
+                                                        {ageUnlocked
+                                                            ? age !== null
+                                                                ? `${age} años`
+                                                                : 'Sin datos'
+                                                            : 'bloqueado'}
+                                                    </StatValue>
+                                                </span>
+                                                <span>
                                                     <StatLabel>Peña</StatLabel>
-                                                    {penaColorUnlocked ? (
-                                                        affiliation ? (
-                                                            <StatValue>
-                                                                <ColorDot $color={affiliation.color} />
-                                                                {identityRevealed ? affiliation.name : null}
-                                                            </StatValue>
-                                                        ) : (
-                                                            <StatValue>Sin peña</StatValue>
-                                                        )
-                                                    ) : (
-                                                        <LockedValue>
-                                                            <IoLockClosed size={12} />
-                                                            {Math.round(PENA_COLOR_UNLOCK_RATIO * 100)}%
-                                                        </LockedValue>
-                                                    )}
-                                                </Stat>
-                                            </StatsRow>
-                                        </Row>
+                                                    <PenaValue>
+                                                        <Dot
+                                                            $color={
+                                                                penaColorUnlocked
+                                                                    ? affiliation?.color
+                                                                    : undefined
+                                                            }
+                                                        />
+                                                        <PenaName $locked={!identityRevealed}>
+                                                            {!penaColorUnlocked
+                                                                ? 'bloqueado'
+                                                                : !affiliation
+                                                                    ? 'Sin peña'
+                                                                    : identityRevealed
+                                                                        ? affiliation.name
+                                                                        : 'bloqueado'}
+                                                        </PenaName>
+                                                    </PenaValue>
+                                                </span>
+                                            </Stats>
+                                        </Card>
                                     );
                                 })}
                             </List>
@@ -310,6 +316,6 @@ export default function FlechazoAdmirers() {
                     </>
                 )}
             </Content>
-        </Container>
+        </Screen>
     );
 }

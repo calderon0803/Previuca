@@ -1,42 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { Heart, Flag, Trash2 } from 'lucide-react';
+import { Heart, Flag, Trash2, SendHorizontal } from 'lucide-react';
 import { useSalseos } from '../contexts/SalseosContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { getRepliesByPost, createReply, deleteReply, reportReply as reportReplyService } from '../services/salseosService';
 import { formatRelativeTime } from '../utils/relativeTime';
 import PageHeader from '../components/ui/PageHeader';
+import Screen, { Content } from '../components/ui/Screen';
 import LoadingScreen from '../components/ui/LoadingScreen';
-import IconButton from '../components/ui/IconButton';
-import Button from '../components/ui/Button';
-import Textarea from '../components/ui/Textarea';
+import Input from '../components/ui/Input';
+import ConfirmSheet from '../components/ui/ConfirmSheet';
+import Kicker from '../components/ui/Kicker';
 import ReportModal from '../components/ReportModal';
 import SalseoUsernameModal from '../components/SalseoUsernameModal';
 
-const Container = styled.div`
-  min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
-  display: flex;
-  flex-direction: column;
-`;
-
-const Content = styled.div`
-  flex: 1;
-  padding: ${({ theme }) => theme.spacing(5)};
-  max-width: 560px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-`;
-
 const PostCard = styled.div`
+  border-radius: ${({ theme }) => theme.radii.sm};
   background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
+  box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.borderStrong};
   padding: ${({ theme }) => theme.spacing(4)};
-  margin-bottom: ${({ theme }) => theme.spacing(6)};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
+`;
+
+const ReplyCard = styled.div`
+  border-radius: ${({ theme }) => theme.radii.sm};
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(3.5)};
 `;
 
 const AuthorRow = styled.div`
@@ -44,102 +36,142 @@ const AuthorRow = styled.div`
   align-items: baseline;
   justify-content: space-between;
   gap: ${({ theme }) => theme.spacing(2)};
-  margin-bottom: ${({ theme }) => theme.spacing(3)};
+  margin-bottom: ${({ theme }) => theme.spacing(2)};
 `;
 
-const AuthorNameGroup = styled.div`
+const AuthorGroup = styled.div`
   display: flex;
   align-items: baseline;
   gap: ${({ theme }) => theme.spacing(2)};
+  min-width: 0;
 `;
 
-const AuthorName = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+const Author = styled.span`
+  font-size: ${({ $small }) => ($small ? '12.5px' : '13px')};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${({ theme }) => theme.colors.accentText};
+`;
+
+const Time = styled.span`
+  font-size: ${({ $small }) => ($small ? '11px' : '11.5px')};
+  color: ${({ theme }) => theme.colors.text.faint};
+`;
+
+const PostBody = styled.p`
+  margin: 0 0 ${({ theme }) => theme.spacing(3.5)};
+  font-size: 16px;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.text.primary};
+  text-wrap: pretty;
+`;
+
+const ReplyBody = styled.p`
+  margin: 5px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
   color: ${({ theme }) => theme.colors.text.primary};
 `;
 
-const TimeText = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  color: ${({ theme }) => theme.colors.text.disabled};
-`;
-
-const BodyText = styled.p`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
-  line-height: 1.4;
-  margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
-  white-space: pre-wrap;
-`;
-
-const ActionsBar = styled.div`
+const Bar = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing(5)};
 `;
 
-const ActionButton = styled.button`
+const BarAction = styled.button`
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(1.5)};
+  gap: 6px;
   background: none;
-  border: none;
   padding: 0;
-  cursor: pointer;
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  color: ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.text.secondary)};
+  font-size: 13px;
+  color: ${({ theme, $active }) =>
+        $active ? theme.colors.accentText : theme.colors.text.muted};
 
   &:disabled {
+    cursor: default;
+  }
+`;
+
+const ReportAction = styled(BarAction)`
+  margin-left: auto;
+  font-size: 12.5px;
+  color: ${({ theme }) => theme.colors.text.faint};
+`;
+
+const DeleteAction = styled.button`
+  width: 32px;
+  height: 32px;
+  margin: -6px -6px 0 0;
+  flex-shrink: 0;
+  border-radius: ${({ theme }) => theme.radii.sm};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.colors.text.faint};
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.danger};
+  }
+`;
+
+const RepliesKicker = styled(Kicker)`
+  margin-bottom: ${({ theme }) => theme.spacing(3)};
+  color: ${({ theme }) => theme.colors.text.muted};
+`;
+
+const Replies = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(2)};
+`;
+
+const Empty = styled.p`
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  color: ${({ theme }) => theme.colors.text.faint};
+`;
+
+// Pie fijo con el campo de respuesta, separado del contenido por un hairline.
+const ComposeBar = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  gap: 9px;
+  padding: ${({ theme }) => theme.spacing(2.5)} ${({ theme }) => theme.spacing(5)}
+    calc(${({ theme }) => theme.spacing(6.5)} + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  box-sizing: border-box;
+`;
+
+const SendButton = styled.button`
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: ${({ theme }) => theme.radii.sm};
+  border: 1px solid ${({ theme }) => theme.colors.accent};
+  color: ${({ theme }) => theme.colors.accentText};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background ${({ theme }) => theme.transitions.fast};
+
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.colors.accentTint};
+  }
+
+  &:disabled {
+    opacity: 0.45;
     cursor: not-allowed;
   }
 `;
 
-const SectionEyebrow = styled.span`
-  display: block;
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  text-transform: uppercase;
-  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
-  margin-bottom: ${({ theme }) => theme.spacing(3)};
-`;
-
-const ReplyList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(3)};
-  margin-bottom: ${({ theme }) => theme.spacing(6)};
-`;
-
-const ReplyCard = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
-  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(4)};
-`;
-
-const ReplyBody = styled.p`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  line-height: 1.4;
-  margin: ${({ theme }) => theme.spacing(1)} 0 0 0;
-  white-space: pre-wrap;
-`;
-
-const EmptyText = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-`;
-
-const ComposeRow = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(3)};
-`;
-
 const ErrorText = styled.p`
+  margin: ${({ theme }) => theme.spacing(2.5)} 0 0;
+  font-size: 13.5px;
   color: ${({ theme }) => theme.colors.error};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  margin: 0;
 `;
 
 export default function SalseoDetail() {
@@ -157,12 +189,14 @@ export default function SalseoDetail() {
     const [reportError, setReportError] = useState('');
     const [reporting, setReporting] = useState(false);
     const [showUsernameModal, setShowUsernameModal] = useState(false);
+    const [confirm, setConfirm] = useState(null);
 
     const post = posts.find((p) => p.id === postId);
 
     useEffect(() => {
         if (flechazoLoading) return;
         loadPosts(eventId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [eventId, user?.id, flechazoLoading]);
 
     const refreshReplies = () => {
@@ -176,34 +210,43 @@ export default function SalseoDetail() {
     useEffect(() => {
         if (!postId) return;
         refreshReplies();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [postId]);
 
     const canDelete = (authorId) => user?.id === authorId || isAdmin;
 
-    const handleDeletePost = async () => {
-        const confirmed = window.confirm('¿Seguro que quieres borrar este mensaje? No se puede deshacer.');
-        if (!confirmed) return;
+    const askDeletePost = () =>
+        setConfirm({
+            title: '¿Borrar este mensaje?',
+            text: 'Desaparece del muro con sus respuestas. No se puede deshacer.',
+            cta: 'Borrar',
+            tone: 'danger',
+            run: async () => {
+                const result = await deletePost(postId, eventId);
+                if (result.success) {
+                    navigate(`/eventos/${eventId}/salseos`, { replace: true });
+                } else {
+                    setReplyError(result.error || 'No se pudo borrar el mensaje');
+                }
+            },
+        });
 
-        const result = await deletePost(postId, eventId);
-        if (result.success) {
-            navigate(`/eventos/${eventId}/salseos`, { replace: true });
-        } else {
-            alert(result.error || 'No se pudo borrar el mensaje');
-        }
-    };
-
-    const handleDeleteReply = async (replyId) => {
-        const confirmed = window.confirm('¿Seguro que quieres borrar esta respuesta?');
-        if (!confirmed) return;
-
-        const result = await deleteReply(replyId);
-        if (result.success) {
-            refreshReplies();
-            loadPosts(eventId, { force: true });
-        } else {
-            alert(result.error || 'No se pudo borrar la respuesta');
-        }
-    };
+    const askDeleteReply = (replyId) =>
+        setConfirm({
+            title: '¿Borrar esta respuesta?',
+            text: 'Desaparece del hilo. No se puede deshacer.',
+            cta: 'Borrar',
+            tone: 'danger',
+            run: async () => {
+                const result = await deleteReply(replyId);
+                if (result.success) {
+                    refreshReplies();
+                    loadPosts(eventId, { force: true });
+                } else {
+                    setReplyError(result.error || 'No se pudo borrar la respuesta');
+                }
+            },
+        });
 
     const handleReportSubmit = async (reason) => {
         if (!reportingTarget) return;
@@ -255,112 +298,121 @@ export default function SalseoDetail() {
 
     if (!post) {
         return (
-            <Container>
+            <Screen>
                 <PageHeader title="Salseo" onBack={() => navigate(-1)} />
                 <Content>
-                    <EmptyText>No se encontró este mensaje.</EmptyText>
+                    <Empty>No se encontró este mensaje.</Empty>
                 </Content>
-            </Container>
+            </Screen>
         );
     }
 
     return (
-        <Container>
+        <Screen>
             <PageHeader title="Salseo" onBack={() => navigate(-1)} />
             <Content>
                 <PostCard>
                     <AuthorRow>
-                        <AuthorNameGroup>
-                            <AuthorName>{post.authorName}</AuthorName>
-                            <TimeText>{formatRelativeTime(post.created_at)}</TimeText>
-                        </AuthorNameGroup>
+                        <AuthorGroup>
+                            <Author>{post.authorName}</Author>
+                            <Time>{formatRelativeTime(post.created_at)}</Time>
+                        </AuthorGroup>
                         {canDelete(post.author_id) && (
-                            <IconButton variant="ghost" size="sm" onClick={handleDeletePost} aria-label="Borrar mensaje">
+                            <DeleteAction onClick={askDeletePost} aria-label="Borrar mensaje">
                                 <Trash2 size={16} />
-                            </IconButton>
+                            </DeleteAction>
                         )}
                     </AuthorRow>
-                    <BodyText>{post.body}</BodyText>
-                    <ActionsBar>
-                        <ActionButton $active={post.likedByMe} onClick={() => toggleLike(post.id, eventId)}>
+                    <PostBody>{post.body}</PostBody>
+                    <Bar>
+                        <BarAction
+                            $active={post.likedByMe}
+                            onClick={() => toggleLike(post.id, eventId)}
+                            aria-label="Me gusta"
+                        >
                             <Heart size={16} fill={post.likedByMe ? 'currentColor' : 'none'} />
                             {post.likeCount}
-                        </ActionButton>
+                        </BarAction>
                         {post.author_id !== user?.id && (
-                            <ActionButton
-                                $active={post.reportedByMe}
+                            <ReportAction
                                 disabled={post.reportedByMe}
                                 onClick={() => {
                                     setReportError('');
                                     setReportingTarget({ type: 'post', id: post.id });
                                 }}
                             >
-                                <Flag size={16} fill={post.reportedByMe ? 'currentColor' : 'none'} />
+                                <Flag size={15} fill={post.reportedByMe ? 'currentColor' : 'none'} />
                                 {post.reportedByMe ? 'Reportado' : 'Reportar'}
-                            </ActionButton>
+                            </ReportAction>
                         )}
-                    </ActionsBar>
+                    </Bar>
                 </PostCard>
 
-                <SectionEyebrow>Respuestas ({replies.length})</SectionEyebrow>
+                <RepliesKicker>Respuestas ({replies.length})</RepliesKicker>
 
                 {loadingReplies ? (
-                    <EmptyText>Cargando...</EmptyText>
+                    <Empty>Cargando...</Empty>
                 ) : replies.length === 0 ? (
-                    <EmptyText>Todavía no hay respuestas.</EmptyText>
+                    <Empty>Todavía no hay respuestas.</Empty>
                 ) : (
-                    <ReplyList>
+                    <Replies>
                         {replies.map((reply) => (
                             <ReplyCard key={reply.id}>
-                                <AuthorRow>
-                                    <AuthorNameGroup>
-                                        <AuthorName>{reply.authorName}</AuthorName>
-                                        <TimeText>{formatRelativeTime(reply.created_at)}</TimeText>
-                                    </AuthorNameGroup>
+                                <AuthorRow style={{ marginBottom: 0 }}>
+                                    <AuthorGroup>
+                                        <Author $small>{reply.authorName}</Author>
+                                        <Time $small>{formatRelativeTime(reply.created_at)}</Time>
+                                    </AuthorGroup>
                                     {canDelete(reply.author_id) && (
-                                        <IconButton
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleDeleteReply(reply.id)}
+                                        <DeleteAction
+                                            onClick={() => askDeleteReply(reply.id)}
                                             aria-label="Borrar respuesta"
                                         >
                                             <Trash2 size={14} />
-                                        </IconButton>
+                                        </DeleteAction>
                                     )}
                                 </AuthorRow>
                                 <ReplyBody>{reply.body}</ReplyBody>
                                 {reply.author_id !== user?.id && (
-                                    <ActionsBar style={{ marginTop: '8px' }}>
-                                        <ActionButton
-                                            $active={reply.reportedByMe}
+                                    <Bar style={{ marginTop: 10 }}>
+                                        <ReportAction
                                             disabled={reply.reportedByMe}
                                             onClick={() => {
                                                 setReportError('');
                                                 setReportingTarget({ type: 'reply', id: reply.id });
                                             }}
                                         >
-                                            <Flag size={14} fill={reply.reportedByMe ? 'currentColor' : 'none'} />
+                                            <Flag
+                                                size={14}
+                                                fill={reply.reportedByMe ? 'currentColor' : 'none'}
+                                            />
                                             {reply.reportedByMe ? 'Reportado' : 'Reportar'}
-                                        </ActionButton>
-                                    </ActionsBar>
+                                        </ReportAction>
+                                    </Bar>
                                 )}
                             </ReplyCard>
                         ))}
-                    </ReplyList>
+                    </Replies>
                 )}
 
-                <ComposeRow>
-                    <Textarea
-                        placeholder="Escribe una respuesta..."
-                        value={replyBody}
-                        onChange={(e) => setReplyBody(e.target.value)}
-                    />
-                    {replyError && <ErrorText>{replyError}</ErrorText>}
-                    <Button onClick={handleSubmitReply} disabled={!replyBody.trim() || submittingReply}>
-                        {submittingReply ? 'Enviando...' : 'Responder'}
-                    </Button>
-                </ComposeRow>
+                {replyError && <ErrorText>{replyError}</ErrorText>}
             </Content>
+
+            <ComposeBar>
+                <Input
+                    placeholder="Escribe una respuesta..."
+                    value={replyBody}
+                    onChange={(e) => setReplyBody(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSubmitReply()}
+                />
+                <SendButton
+                    onClick={handleSubmitReply}
+                    disabled={!replyBody.trim() || submittingReply}
+                    aria-label="Enviar respuesta"
+                >
+                    <SendHorizontal size={19} />
+                </SendButton>
+            </ComposeBar>
 
             <ReportModal
                 visible={reportingTarget !== null}
@@ -370,6 +422,8 @@ export default function SalseoDetail() {
                 error={reportError}
             />
 
+            <ConfirmSheet confirm={confirm} onClose={() => setConfirm(null)} />
+
             <SalseoUsernameModal
                 visible={showUsernameModal}
                 onClose={() => setShowUsernameModal(false)}
@@ -378,6 +432,6 @@ export default function SalseoDetail() {
                     handleSubmitReply();
                 }}
             />
-        </Container>
+        </Screen>
     );
 }

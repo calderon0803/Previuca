@@ -1,232 +1,222 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { IoClose, IoTrashOutline, IoAddCircle } from 'react-icons/io5';
-import { Users, User } from 'lucide-react';
+import { X, Plus, CircleMinus } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
-import Modal from './ui/Modal';
-import IconButton from './ui/IconButton';
+import BottomSheet, { SheetTitle } from './ui/BottomSheet';
 import Button from './ui/Button';
 import Input from './ui/Input';
 
+// Hoja de jugadores. Es el único sitio donde se editan: se abre desde el chip
+// de la cabecera, y ninguna pantalla de partida repite la lista al pie.
+//
+// Cuando se abre porque a un juego le faltan jugadores, `message` explica el
+// motivo y se resalta en el color de acento.
+
+const DEFAULT_MESSAGE =
+    'Se guardan en el móvil: los juegos por turnos los usan para saber a quién le toca.';
+
 const Header = styled.div`
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: ${({ theme }) => theme.spacing(5)};
+  gap: ${({ theme }) => theme.spacing(3)};
+  margin-bottom: 4px;
 `;
 
-const Title = styled.h2`
-  font-size: ${({ theme }) => theme.typography.fontSize.xl};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-`;
-
-const CounterContainer = styled.div`
-  margin-bottom: ${({ theme }) => theme.spacing(5)};
-  padding: ${({ theme }) => theme.spacing(3)};
-  background: ${({ theme }) => theme.colors.surfaceRaised};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
-  text-align: center;
-`;
-
-const CounterText = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  margin: 0;
-`;
-
-const PlayersList = styled.div`
-  overflow-y: auto;
-  max-height: 300px;
-  margin-bottom: ${({ theme }) => theme.spacing(5)};
-  padding-right: ${({ theme }) => theme.spacing(2)};
-`;
-
-const PlayerItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  padding: ${({ theme }) => theme.spacing(4)};
-  border-radius: ${({ theme }) => theme.radii.md};
-  margin-bottom: ${({ theme }) => theme.spacing(3)};
-`;
-
-const PlayerInfo = styled.div`
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
-`;
-
-const PlayerIcon = styled.span`
-  font-size: 18px;
-  margin-right: ${({ theme }) => theme.spacing(3)};
-`;
-
-const PlayerName = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-`;
-
-const DeleteButton = styled.button`
-  background: rgba(229, 72, 77, 0.1);
-  border: none;
+const CloseButton = styled.button`
+  width: 40px;
+  height: 40px;
+  margin: -6px -8px 0 0;
+  flex-shrink: 0;
   border-radius: ${({ theme }) => theme.radii.sm};
-  cursor: pointer;
-  width: 34px;
-  height: 34px;
-  color: ${({ theme }) => theme.colors.error};
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background ${({ theme }) => theme.transitions.fast},
-    color ${({ theme }) => theme.transitions.fast};
-  flex-shrink: 0;
+  color: ${({ theme }) => theme.colors.text.muted};
 
   &:hover {
-    background: ${({ theme }) => theme.colors.error};
-    color: #fff;
+    color: ${({ theme }) => theme.colors.text.primary};
   }
 `;
 
-const AddSection = styled.div`
+const Message = styled.p`
+  margin: 0 0 ${({ theme }) => theme.spacing(4)};
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: ${({ theme, $highlight }) =>
+        $highlight ? theme.colors.accentText : theme.colors.text.muted};
+`;
+
+const List = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(2)};
+  max-height: 230px;
+  overflow-y: auto;
+  margin-bottom: ${({ theme }) => theme.spacing(3.5)};
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+`;
+
+const Row = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: ${({ theme }) => theme.spacing(5)};
   gap: ${({ theme }) => theme.spacing(3)};
+  height: 50px;
+  flex-shrink: 0;
+  padding: 0 ${({ theme }) => theme.spacing(2)} 0 ${({ theme }) => theme.spacing(3.5)};
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  border-radius: ${({ theme }) => theme.radii.sm};
+`;
+
+const Name = styled.span`
+  flex: 1;
+  min-width: 0;
+  font-size: 15.5px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${({ theme }) => theme.colors.text.primary};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const RowAction = styled.button`
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: ${({ theme }) => theme.radii.sm};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.colors.text.muted};
+  transition: background ${({ theme }) => theme.transitions.fast},
+    color ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.border};
+    color: ${({ theme }) => theme.colors.text.primary};
+  }
+`;
+
+const Empty = styled.p`
+  margin: ${({ theme }) => theme.spacing(3.5)} 0 ${({ theme }) => theme.spacing(4.5)};
+  text-align: center;
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.text.faint};
+`;
+
+const AddRow = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  margin-bottom: ${({ theme }) => theme.spacing(3.5)};
 `;
 
 const AddButton = styled.button`
-  background: ${({ theme }) => theme.colors.primary};
-  border: none;
-  border-radius: ${({ theme }) => theme.radii.md};
-  cursor: pointer;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
-  color: #fff;
+  border-radius: ${({ theme }) => theme.radii.sm};
+  border: 1px solid ${({ theme }) => theme.colors.accent};
+  color: ${({ theme }) => theme.colors.accentText};
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background ${({ theme }) => theme.transitions.fast};
 
-  &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.colors.accentTint};
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 `;
 
-const EmptyState = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: ${({ theme }) => theme.spacing(8)} ${({ theme }) => theme.spacing(5)};
-  text-align: center;
-`;
+export default function PlayersModal({
+    visible,
+    onClose,
+    message,
+    primaryLabel = 'Listo',
+    onPrimary,
+}) {
+    const { players, addPlayer, removePlayer } = usePlayers();
+    const [newPlayerName, setNewPlayerName] = useState('');
 
-const EmptyIcon = styled.div`
-  font-size: 40px;
-  margin-bottom: ${({ theme }) => theme.spacing(4)};
-`;
+    const handleAddPlayer = () => {
+        if (newPlayerName.trim()) {
+            addPlayer(newPlayerName);
+            setNewPlayerName('');
+        }
+    };
 
-const EmptyText = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  margin: 0 0 ${({ theme }) => theme.spacing(2)} 0;
-`;
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') handleAddPlayer();
+    };
 
-const EmptySubtext = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  margin: 0;
-`;
+    const handleClose = () => {
+        setNewPlayerName('');
+        onClose();
+    };
 
-export default function PlayersModal({ visible, onClose }) {
-  const { players, addPlayer, removePlayer } = usePlayers();
-  const [newPlayerName, setNewPlayerName] = useState('');
+    const handlePrimary = () => {
+        setNewPlayerName('');
+        if (onPrimary) onPrimary();
+        else onClose();
+    };
 
-  const handleAddPlayer = () => {
-    if (newPlayerName.trim()) {
-      addPlayer(newPlayerName);
-      setNewPlayerName('');
-    }
-  };
+    return (
+        <BottomSheet visible={visible} onClose={handleClose}>
+            <Header>
+                <SheetTitle>Jugadores</SheetTitle>
+                <CloseButton onClick={handleClose} aria-label="Cerrar">
+                    <X size={20} />
+                </CloseButton>
+            </Header>
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleAddPlayer();
-    }
-  };
+            <Message $highlight={!!message}>{message || DEFAULT_MESSAGE}</Message>
 
-  const handleClose = () => {
-    setNewPlayerName('');
-    onClose();
-  };
+            <List>
+                {players.length === 0 ? (
+                    <Empty>Todavía no hay nadie. Añade a quien esté en la mesa.</Empty>
+                ) : (
+                    players.map((player) => (
+                        <Row key={player.id}>
+                            <Name>{player.name}</Name>
+                            <RowAction
+                                onClick={() => removePlayer(player.id)}
+                                aria-label={`Quitar a ${player.name}`}
+                            >
+                                <CircleMinus size={18} />
+                            </RowAction>
+                        </Row>
+                    ))
+                )}
+            </List>
 
-  return (
-    <Modal visible={visible} onClose={handleClose}>
-      <Header>
-        <Title>Jugadores</Title>
-        <IconButton variant="ghost" onClick={handleClose} aria-label="Cerrar">
-          <IoClose size={22} />
-        </IconButton>
-      </Header>
+            <AddRow>
+                <Input
+                    placeholder="Nombre"
+                    value={newPlayerName}
+                    onChange={(e) => setNewPlayerName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                />
+                <AddButton
+                    onClick={handleAddPlayer}
+                    disabled={!newPlayerName.trim()}
+                    aria-label="Añadir jugador"
+                >
+                    <Plus size={20} />
+                </AddButton>
+            </AddRow>
 
-      <CounterContainer>
-        <CounterText>
-          {players.length} {players.length === 1 ? 'jugador' : 'jugadores'}
-        </CounterText>
-      </CounterContainer>
-
-      <PlayersList>
-        {players.length === 0 ? (
-          <EmptyState>
-            <EmptyIcon><Users size={40} /></EmptyIcon>
-            <EmptyText>No hay jugadores</EmptyText>
-            <EmptySubtext>Agrega jugadores para comenzar</EmptySubtext>
-          </EmptyState>
-        ) : (
-          players.map((player) => (
-            <PlayerItem key={player.id}>
-              <PlayerInfo>
-                <PlayerIcon><User size={18} /></PlayerIcon>
-                <PlayerName>{player.name}</PlayerName>
-              </PlayerInfo>
-              <DeleteButton onClick={() => removePlayer(player.id)}>
-                <IoTrashOutline size={18} />
-              </DeleteButton>
-            </PlayerItem>
-          ))
-        )}
-      </PlayersList>
-
-      <AddSection>
-        <Input
-          placeholder="Nombre del jugador"
-          value={newPlayerName}
-          onChange={(e) => setNewPlayerName(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        <AddButton onClick={handleAddPlayer} disabled={!newPlayerName.trim()}>
-          <IoAddCircle size={26} />
-        </AddButton>
-      </AddSection>
-
-      <Button size="lg" fullWidth onClick={handleClose}>
-        Listo
-      </Button>
-    </Modal>
-  );
+            <Button size="lg" fullWidth onClick={handlePrimary}>
+                {primaryLabel}
+            </Button>
+        </BottomSheet>
+    );
 }

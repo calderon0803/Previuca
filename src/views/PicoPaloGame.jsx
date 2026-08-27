@@ -1,173 +1,141 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoRefresh } from 'react-icons/io5';
-import { Circle, ArrowDownToLine, ArrowUpFromLine, ArrowUp, ArrowDown, Hash, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
+import { Circle, ArrowDownToLine, ArrowUpFromLine, ArrowUp, ArrowDown, Hash, Spade } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
-import HowToPlayModal from '../components/HowToPlayModal';
-import PageHeader from '../components/ui/PageHeader';
-import IconButton from '../components/ui/IconButton';
+import { gameById } from '../data/games';
+import GameShell from '../components/GameShell';
 import Button from '../components/ui/Button';
 
-const Container = styled.div`
-    min-height: 100dvh;
-    background: ${({ theme }) => theme.colors.background};
-    display: flex;
-    flex-direction: column;
+const GAME = gameById.picopalo;
+
+// Las cinco fases, en orden, para el indicador de la cabecera.
+const PHASES = ['pico', 'par-impar', 'dentro-fuera', 'palo', 'mayor-menor'];
+const PHASE_NAMES = {
+    'pico': 'Fase 1 · color',
+    'par-impar': 'Fase 2 · par o impar',
+    'dentro-fuera': 'Fase 3 · dentro o fuera',
+    'palo': 'Fase 4 · el palo',
+    'mayor-menor': 'Ronda final · mayor o menor',
+};
+
+// El palo llega como emoji desde la baraja; para pintarlo en rojo o negro
+// sobre el papel claro de la carta hace falta el glifo monocromo.
+const glyph = (suit) => String(suit || '').replace('️', '');
+const ink = (red) => (red ? '#b0343c' : '#22242e');
+
+const PhaseKicker = styled.p`
+    margin: 0 0 2px;
+    font-size: 12px;
+    color: ${({ theme }) => theme.colors.text.muted};
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
 `;
 
-const Content = styled.div`
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: ${({ theme }) => theme.spacing(6)} ${({ theme }) => theme.spacing(3)};
-    gap: ${({ theme }) => theme.spacing(3)};
+const Question = styled.p`
+    margin: 0 0 ${({ theme }) => theme.spacing(4.5)};
+    font-size: 22px;
+    line-height: 1.3;
+    font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+    letter-spacing: -0.02em;
+    text-align: center;
+    max-width: 300px;
 `;
 
 const Card = styled.div`
-    width: 140px;
-    height: 200px;
-    background: ${props => props.$hidden ? props.theme.colors.background : '#fff'};
-    border-radius: ${({ theme }) => theme.radii.md};
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: ${({ theme }) => theme.spacing(2)};
-    box-shadow: ${({ theme }) => theme.shadows.md};
-    transition: transform ${({ theme }) => theme.transitions.fast};
-    cursor: ${props => props.$hidden ? 'default' : 'pointer'};
     position: relative;
-
-    ${props => props.$hidden && `
-        background: repeating-linear-gradient(
-            45deg,
-            ${props.theme.colors.primary},
-            ${props.theme.colors.primary} 10px,
-            ${props.theme.colors.primaryActive} 10px,
-            ${props.theme.colors.primaryActive} 20px
-        );
-        &::after {
-            content: '';
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            right: 8px;
-            bottom: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.35);
-            border-radius: 4px;
-        }
-    `}
-
-    ${props => !props.$hidden && `
-        &:hover {
-            transform: scale(1.03);
-        }
-    `}
-`;
-
-const CardValue = styled.div`
-    font-size: 44px;
-    color: ${props => props.$red ? '#C0392B' : '#262626'};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-    z-index: 2;
-`;
-
-const CardSuit = styled.div`
-    font-size: 56px;
-    z-index: 2;
-`;
-
-const ButtonsContainer = styled.div`
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: ${({ theme }) => theme.spacing(3)};
-    width: 100%;
-    max-width: 400px;
-`;
-
-const ControlsWrapper = styled.div`
-    width: 100%;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: ${({ theme }) => theme.spacing(3)};
-    margin-top: auto;
-    margin-bottom: ${({ theme }) => theme.spacing(5)};
-`;
-
-const Message = styled.div`
-    font-size: ${({ theme }) => theme.typography.fontSize.md};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-    color: ${({ theme, $success }) => $success ? theme.colors.success : theme.colors.error};
-    text-align: center;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: ${({ theme }) => theme.spacing(2)};
-`;
-
-const Instructions = styled.div`
-    text-align: center;
-    color: ${({ theme }) => theme.colors.text.secondary};
-    font-size: ${({ theme }) => theme.typography.fontSize.sm};
-    max-width: 400px;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-`;
-
-const PlayerIndicator = styled.div`
-    background: ${({ theme }) => theme.colors.surface};
-    border: 1px solid ${({ theme }) => theme.colors.border};
-    padding: ${({ theme }) => theme.spacing(2)} ${({ theme }) => theme.spacing(4)};
-    border-radius: ${({ theme }) => theme.radii.md};
-    text-align: center;
-`;
-
-const PlayerLabel = styled.p`
-    font-size: ${({ theme }) => theme.typography.fontSize.xs};
-    color: ${({ theme }) => theme.colors.text.secondary};
-    margin: 0 0 4px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-`;
-
-const PlayerName = styled.p`
-    font-size: ${({ theme }) => theme.typography.fontSize.lg};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-    color: ${({ theme }) => theme.colors.text.primary};
-    margin: 0;
-`;
-
-const PlayerCardsContainer = styled.div`
-    display: flex;
-    gap: ${({ theme }) => theme.spacing(1.5)};
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: ${({ theme }) => theme.spacing(2)};
-    max-width: 400px;
-`;
-
-const MiniCard = styled.div`
-    width: 38px;
-    height: 52px;
-    background: #fff;
+    width: 132px;
+    height: 188px;
+    flex-shrink: 0;
     border-radius: ${({ theme }) => theme.radii.sm};
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: ${({ theme }) => theme.shadows.sm};
+    background: ${({ theme, $hidden }) => ($hidden ? theme.colors.surface : theme.colors.text.primary)};
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+
+    ${({ $hidden }) =>
+        $hidden &&
+        `
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 9px;
+            border: 1px solid rgba(63, 93, 158, 0.45);
+            border-radius: 4px;
+        }
+    `}
+`;
+
+const CardValue = styled.span`
+    font-size: 46px;
+    line-height: 1;
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+    color: ${({ $red }) => ink($red)};
+`;
+
+const CardSuit = styled.span`
+    font-size: 38px;
+    margin-top: 4px;
+    color: ${({ $red }) => ink($red)};
+`;
+
+const BackGlyph = styled.span`
+    display: flex;
+    opacity: 0.5;
+    color: ${GAME.color};
+`;
+
+const Message = styled.p`
+    margin: ${({ theme }) => theme.spacing(4)} 0 0;
+    min-height: 22px;
+    font-size: 15px;
+    font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+    text-align: center;
+    color: ${({ theme, $tone }) =>
+        $tone === 'success' ? theme.colors.success : $tone === 'error' ? theme.colors.error : theme.colors.text.muted};
+`;
+
+const MiniCards = styled.div`
+    display: flex;
+    gap: 6px;
+    margin-top: ${({ theme }) => theme.spacing(3.5)};
+    flex-wrap: wrap;
+    justify-content: center;
+`;
+
+const MiniCard = styled.span`
+    width: 34px;
+    height: 46px;
+    border-radius: 4px;
+    background: ${({ theme }) => theme.colors.text.primary};
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     font-size: 12px;
-    color: ${props => props.$red ? '#C0392B' : '#262626'};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+    color: ${({ $red }) => ink($red)};
+`;
+
+const Steps = styled.div`
+    display: flex;
+    gap: 5px;
+    padding: 0 ${({ theme }) => theme.spacing(5)} 4px;
+    flex-shrink: 0;
+`;
+
+const Step = styled.span`
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: ${({ theme, $on }) => ($on ? GAME.color : theme.colors.border)};
+`;
+
+const Options = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
 const suits = ['♠️', '♥️', '♦️', '♣️'];
@@ -191,7 +159,6 @@ const MessageIcon = ({ tone }) => {
 };
 
 const PicoPaloGame = () => {
-    const navigate = useNavigate();
     const { players } = usePlayers();
 
     // Crear baraja completa al inicio
@@ -483,72 +450,42 @@ const PicoPaloGame = () => {
         generateNewCard();
     };
 
-    const renderButtons = () => {
-        if (!revealed) {
-            if (gameState === 'pico') {
-                return (
-                    <>
-                        <Button variant="secondary" onClick={() => handleChoice('rojo')}>
-                            <Circle size={16} fill="#C0392B" color="#C0392B" /> Rojo
-                        </Button>
-                        <Button variant="secondary" onClick={() => handleChoice('negro')}>
-                            <Circle size={16} fill="#262626" color="#262626" /> Negro
-                        </Button>
-                    </>
-                );
-            } else if (gameState === 'par-impar') {
-                return (
-                    <>
-                        <Button variant="secondary" onClick={() => handleChoice('par')}>
-                            <Hash size={16} /> Par
-                        </Button>
-                        <Button variant="secondary" onClick={() => handleChoice('impar')}>
-                            <Hash size={16} /> Impar
-                        </Button>
-                    </>
-                );
-            } else if (gameState === 'dentro-fuera') {
-                return (
-                    <>
-                        <Button variant="secondary" onClick={() => handleChoice('dentro')}>
-                            <ArrowDownToLine size={16} /> Dentro
-                        </Button>
-                        <Button variant="secondary" onClick={() => handleChoice('fuera')}>
-                            <ArrowUpFromLine size={16} /> Fuera
-                        </Button>
-                    </>
-                );
-            } else if (gameState === 'palo') {
-                return (
-                    <>
-                        <Button variant="secondary" onClick={() => handleChoice('Pica')}>
-                            ♠️ Pica
-                        </Button>
-                        <Button variant="secondary" onClick={() => handleChoice('Corazón')}>
-                            ♥️ Corazón
-                        </Button>
-                        <Button variant="secondary" onClick={() => handleChoice('Diamante')}>
-                            ♦️ Diamante
-                        </Button>
-                        <Button variant="secondary" onClick={() => handleChoice('Trébol')}>
-                            ♣️ Trébol
-                        </Button>
-                    </>
-                );
-            } else if (gameState === 'mayor-menor') {
-                return (
-                    <>
-                        <Button variant="secondary" onClick={() => handleChoice('mayor')}>
-                            <ArrowUp size={16} /> Mayor
-                        </Button>
-                        <Button variant="secondary" onClick={() => handleChoice('menor')}>
-                            <ArrowDown size={16} /> Menor
-                        </Button>
-                    </>
-                );
-            }
+    // Las opciones de la fase actual; el pie las pinta en dos columnas.
+    const currentOptions = () => {
+        if (revealed) return [];
+        if (gameState === 'pico') {
+            return [
+                { label: 'Rojo', value: 'rojo', icon: <Circle size={15} fill="#b0343c" color="#b0343c" /> },
+                { label: 'Negro', value: 'negro', icon: <Circle size={15} fill="#9397ab" color="#9397ab" /> },
+            ];
         }
-        return null;
+        if (gameState === 'par-impar') {
+            return [
+                { label: 'Par', value: 'par', icon: <Hash size={15} /> },
+                { label: 'Impar', value: 'impar', icon: <Hash size={15} /> },
+            ];
+        }
+        if (gameState === 'dentro-fuera') {
+            return [
+                { label: 'Dentro', value: 'dentro', icon: <ArrowDownToLine size={15} /> },
+                { label: 'Fuera', value: 'fuera', icon: <ArrowUpFromLine size={15} /> },
+            ];
+        }
+        if (gameState === 'palo') {
+            return [
+                { label: '♠ Pica', value: 'Pica' },
+                { label: '♥ Corazón', value: 'Corazón' },
+                { label: '♦ Diamante', value: 'Diamante' },
+                { label: '♣ Trébol', value: 'Trébol' },
+            ];
+        }
+        if (gameState === 'mayor-menor') {
+            return [
+                { label: 'Mayor', value: 'mayor', icon: <ArrowUp size={15} /> },
+                { label: 'Menor', value: 'menor', icon: <ArrowDown size={15} /> },
+            ];
+        }
+        return [];
     };
 
     const handleNextPlayerInMayorMenor = () => {
@@ -613,104 +550,91 @@ const PicoPaloGame = () => {
     const isLastPhaseFinished = gameState === 'palo' && revealed && playersWhoAnswered >= totalPlayers;
     const canAdvancePlayer = revealed && playersWhoAnswered < totalPlayers && gameState !== 'mayor-menor';
     const currentPlayerCardsList = playerCards[currentPlayerIndex] || [];
-    const completedMayorMenorSequence = gameState === 'mayor-menor' && revealed && currentCardIndexInSequence >= currentPlayerCardsList.length - 1 && message.includes('Completaste');
+    const completedMayorMenorSequence =
+        gameState === 'mayor-menor' &&
+        revealed &&
+        currentCardIndexInSequence >= currentPlayerCardsList.length - 1 &&
+        message.includes('Completaste');
+
+    const options = currentOptions();
+    const phaseIndex = PHASES.indexOf(gameState);
+
+    const status = currentPlayer
+        ? `Turno de ${currentPlayer.name} · ${Math.min(playersWhoAnswered + 1, totalPlayers)} de ${totalPlayers}`
+        : `${PHASE_NAMES[gameState]}`;
+
+    const footer = options.length > 0 ? (
+        <Options>
+            {options.map((option) => (
+                <Button
+                    key={option.value}
+                    size="lg"
+                    color={GAME.color}
+                    onClick={() => handleChoice(option.value)}
+                >
+                    {option.icon}
+                    {option.label}
+                </Button>
+            ))}
+        </Options>
+    ) : canAdvancePlayer && players.length > 0 ? (
+        <Button size="lg" fullWidth onClick={advanceToNextPlayer}>
+            {playersWhoAnswered + 1 < totalPlayers ? 'Siguiente jugador' : 'Siguiente fase'}
+        </Button>
+    ) : completedMayorMenorSequence ? (
+        <Button size="lg" fullWidth onClick={handleNextPlayerInMayorMenor}>
+            Siguiente jugador
+        </Button>
+    ) : isLastPhaseFinished ? (
+        <Button size="lg" fullWidth onClick={handleNext}>
+            Nueva ronda
+        </Button>
+    ) : null;
 
     return (
-        <Container>
-            <PageHeader
-                title="Pico Palo"
-                onBack={() => navigate(-1)}
-                rightAction={
-                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                        <HelpCircle size={20} />
-                    </IconButton>
-                }
-            />
+        <GameShell
+            gameId="picopalo"
+            status={status}
+            footer={footer}
+            stageGap={0}
+            stageJustify="flex-start"
+            belowHeader={
+                <Steps aria-label={`Fase ${phaseIndex + 1} de 5`}>
+                    {PHASES.map((phase, i) => (
+                        <Step key={phase} $on={i <= phaseIndex} />
+                    ))}
+                </Steps>
+            }
+        >
+            <PhaseKicker>{PHASE_NAMES[gameState]}</PhaseKicker>
+            <Question>{getInstructions()}</Question>
 
-            <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Pico Palo">
-                <p>
-                    Vas pasando por 5 fases con cada carta que sale, y en cada una toca adivinar
-                    algo distinto:
-                </p>
-                <ul>
-                    <li>Rojo o negro</li>
-                    <li>Par o impar</li>
-                    <li>Si la siguiente carta está dentro o fuera del rango de las dos anteriores</li>
-                    <li>El palo exacto</li>
-                    <li>
-                        Ronda final: con las 4 cartas que ya tienes, hay que ir adivinando si cada
-                        carta nueva es mayor o menor que la correspondiente
-                    </li>
-                </ul>
-                <p>
-                    Fallar en las 4 primeras fases solo cuesta un trago suelto. La ronda final es la
-                    que importa: si fallas ahí, bebes y tu secuencia se reinicia desde el principio.
-                </p>
-            </HowToPlayModal>
-
-            <Content>
-                {currentPlayer && (
-                    <PlayerIndicator>
-                        <PlayerLabel>Turno de</PlayerLabel>
-                        <PlayerName>{currentPlayer.name}</PlayerName>
-                        {playerCards[currentPlayerIndex] && playerCards[currentPlayerIndex].length > 0 && (
-                            <PlayerCardsContainer>
-                                {playerCards[currentPlayerIndex].map((card, index) => (
-                                    <MiniCard key={index} $red={card.isRed}>
-                                        {card.value}
-                                        <span style={{ fontSize: '16px' }}>{card.suit}</span>
-                                    </MiniCard>
-                                ))}
-                            </PlayerCardsContainer>
-                        )}
-                    </PlayerIndicator>
-                )}
-
-                <Instructions>{getInstructions()}</Instructions>
-
-                {currentCard && (
-                    <Card $hidden={!revealed}>
-                        {revealed && (
-                            <>
-                                <CardValue $red={currentCard.isRed}>
-                                    {currentCard.value}
-                                </CardValue>
-                                <CardSuit>{currentCard.suit}</CardSuit>
-                            </>
-                        )}
-                    </Card>
-                )}
-
-                <Message $success={messageTone === 'success'}>
-                    <MessageIcon tone={messageTone} />
-                    {message}
-                </Message>
-
-                <ControlsWrapper>
-                    <ButtonsContainer>
-                        {renderButtons()}
-                    </ButtonsContainer>
-
-                    {canAdvancePlayer && players.length > 0 && (
-                        <Button fullWidth onClick={advanceToNextPlayer}>
-                            {playersWhoAnswered + 1 < totalPlayers ? 'Siguiente jugador' : 'Siguiente pregunta'}
-                        </Button>
+            {currentCard && (
+                <Card $hidden={!revealed}>
+                    {revealed ? (
+                        <>
+                            <CardValue $red={currentCard.isRed}>{currentCard.value}</CardValue>
+                            <CardSuit $red={currentCard.isRed}>{glyph(currentCard.suit)}</CardSuit>
+                        </>
+                    ) : (
+                        <BackGlyph aria-hidden="true"><Spade size={26} /></BackGlyph>
                     )}
+                </Card>
+            )}
 
-                    {completedMayorMenorSequence && (
-                        <Button fullWidth onClick={handleNextPlayerInMayorMenor}>
-                            Siguiente jugador
-                        </Button>
-                    )}
+            <Message $tone={messageTone}>{message}</Message>
 
-                    {isLastPhaseFinished && (
-                        <Button fullWidth onClick={handleNext}>
-                            Nueva ronda <IoRefresh size={18} />
-                        </Button>
-                    )}
-                </ControlsWrapper>
-            </Content>
-        </Container>
+            {currentPlayerCardsList.length > 0 && (
+                <MiniCards>
+                    {currentPlayerCardsList.map((card, index) => (
+                        <MiniCard key={index} $red={card.isRed}>
+                            {card.value}
+                            <span style={{ fontSize: 13 }}>{glyph(card.suit)}</span>
+                        </MiniCard>
+                    ))}
+                </MiniCards>
+            )}
+        </GameShell>
     );
 };
 

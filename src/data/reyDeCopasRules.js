@@ -85,15 +85,25 @@ export const cardRules = {
     },
 };
 
-export const suits = ['♠️', '♥️', '♦️', '♣️'];
+// Glifos monocromos (no emoji) para poder pintarlos en rojo o negro sobre
+// el papel claro de la carta, como el resto del rediseno.
+export const suits = [
+    { symbol: '♠', red: false },
+    { symbol: '♥', red: true },
+    { symbol: '♦', red: true },
+    { symbol: '♣', red: false },
+];
 export const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+// Rojo y negro de las cartas sobre papel claro.
+export const cardInk = (red) => (red ? '#b0343c' : '#22242e');
 
 // Generar baraja completa
 export const generateDeck = () => {
     const deck = [];
-    suits.forEach(suit => {
-        values.forEach(value => {
-            deck.push({ value, suit });
+    suits.forEach(({ symbol, red }) => {
+        values.forEach((value, index) => {
+            deck.push({ value, suit: symbol, red, n: index + 1 });
         });
     });
     return deck;

@@ -1,200 +1,154 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
-import { IoRefresh } from 'react-icons/io5';
-import { Flame, HelpCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import HowToPlayModal from '../components/HowToPlayModal';
-import PageHeader from '../components/ui/PageHeader';
-import IconButton from '../components/ui/IconButton';
+import styled from 'styled-components';
+import { gameById } from '../data/games';
+import GameShell from '../components/GameShell';
 import Button from '../components/ui/Button';
 
-const Container = styled.div`
-  min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
-  display: flex;
-  flex-direction: column;
-`;
+const GAME = gameById.medusa;
 
-const GameContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: ${({ theme }) => theme.spacing(6)};
-  text-align: center;
-`;
-
-const pulse = keyframes`
-  0% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.06); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.6; }
-`;
-
-const MainCircle = styled(motion.div)`
-  width: 220px;
-  height: 220px;
+const Circle = styled.div`
+  position: relative;
+  width: ${({ $size }) => $size}px;
+  height: ${({ $size }) => $size}px;
   border-radius: 50%;
   background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.border)};
+  border: 1px solid ${({ theme, $lit }) => ($lit ? GAME.color : theme.colors.borderStrong)};
   display: flex;
-  justify-content: center;
   align-items: center;
-  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
-  box-shadow: ${({ theme }) => theme.shadows.md};
-  position: relative;
+  justify-content: center;
   overflow: hidden;
+  animation: ${({ $lit }) => ($lit ? 'pv-pop 0.2s ease' : 'none')};
+  transition: border-color ${({ theme }) => theme.transitions.fast};
 
   &::before {
     content: '';
     position: absolute;
-    width: 100%;
-    height: 100%;
-    background: ${({ theme }) => `radial-gradient(circle, ${theme.colors.primaryMuted} 0%, transparent 70%)`};
-    animation: ${pulse} 2.4s infinite ease-in-out;
+    inset: 0;
+    background: radial-gradient(
+      circle,
+      ${({ $lit }) => ($lit ? 'rgba(46, 158, 143, 0.34)' : 'rgba(46, 158, 143, 0.22)')},
+      transparent ${({ $lit }) => ($lit ? '72%' : '70%')}
+    );
   }
 `;
 
-const BigText = styled(motion.h2)`
-  font-size: 64px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-  z-index: 2;
+const StartCircle = styled(Circle)`
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${GAME.color};
+  }
 `;
 
-const InstructionText = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
-  color: ${({ theme, $strong }) => ($strong ? theme.colors.primary : theme.colors.text.secondary)};
-  font-weight: ${({ theme, $strong }) => ($strong ? theme.typography.fontWeight.semibold : theme.typography.fontWeight.regular)};
-  margin-top: ${({ theme }) => theme.spacing(8)};
-  max-width: 280px;
-  line-height: 1.5;
+const StartLabel = styled.span`
+  position: relative;
+  font-size: 20px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: 0.1em;
+  color: ${({ theme }) => theme.colors.text.primary};
 `;
+
+const CountDigit = styled.span`
+  position: relative;
+  font-size: 84px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  animation: pv-pop 0.2s ease;
+`;
+
+const ResultWord = styled.span`
+  position: relative;
+  font-size: 40px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  letter-spacing: -0.02em;
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+const Note = styled.p`
+  margin: ${({ theme }) => theme.spacing(2.5)} 0 0;
+  font-size: ${({ $strong }) => ($strong ? '16px' : '15px')};
+  font-weight: ${({ theme, $strong }) =>
+        $strong ? theme.typography.fontWeight.medium : theme.typography.fontWeight.regular};
+  color: ${({ theme, $strong }) => ($strong ? GAME.kicker : theme.colors.text.muted)};
+  text-align: center;
+  max-width: 270px;
+`;
+
+const STATUS = {
+    idle: 'Todos con la cabeza baja',
+    counting: 'Preparados...',
+    result: 'Cruce de miradas',
+};
 
 export default function MedusaGame() {
-    const navigate = useNavigate();
-    const [gameState, setGameState] = useState('idle'); // idle, counting, result
+    const [phase, setPhase] = useState('idle');
     const [count, setCount] = useState(3);
-    const [showHelp, setShowHelp] = useState(false);
 
     useEffect(() => {
-        let timer;
-        if (gameState === 'counting') {
-            if (count > 0) {
-                timer = setTimeout(() => setCount(count - 1), 1000);
-            } else {
-                setGameState('result');
-            }
+        if (phase !== 'counting') return;
+        // 900ms por dígito, como el prototipo.
+        if (count > 1) {
+            const timer = setTimeout(() => setCount(count - 1), 900);
+            return () => clearTimeout(timer);
         }
+        const timer = setTimeout(() => setPhase('result'), 900);
         return () => clearTimeout(timer);
-    }, [gameState, count]);
+    }, [phase, count]);
 
-    const startGame = () => {
+    const start = () => {
         setCount(3);
-        setGameState('counting');
+        setPhase('counting');
     };
 
-    const resetGame = () => {
-        setGameState('idle');
+    const reset = () => {
+        setPhase('idle');
         setCount(3);
     };
 
     return (
-        <Container>
-            <PageHeader
-                title="Medusa"
-                onBack={() => navigate(-1)}
-                rightAction={
-                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                        <HelpCircle size={20} />
-                    </IconButton>
-                }
-            />
+        <GameShell
+            gameId="medusa"
+            status={STATUS[phase]}
+            showPlayers={false}
+            stageGap={0}
+            footer={
+                phase === 'result' ? (
+                    <Button size="lg" color={GAME.color} fullWidth onClick={reset}>
+                        Otra ronda
+                    </Button>
+                ) : null
+            }
+        >
+            {phase === 'idle' && (
+                <>
+                    <StartCircle as="button" $size={224} onClick={start}>
+                        <StartLabel>EMPEZAR</StartLabel>
+                    </StartCircle>
+                    <Note style={{ marginTop: 30 }}>
+                        Bajad todos la cabeza. Cuando estéis listos, pulsa.
+                    </Note>
+                </>
+            )}
 
-            <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Medusa">
-                <p>
-                    Todos bajáis la cabeza. Cuando alguien pulse «Empezar», la app cuenta 3, 2, 1 y
-                    muestra «¡Mirad!».
-                </p>
-                <p>
-                    En ese momento levantáis la vista a la vez y elegís a quién mirar. Si te cruzas
-                    con los ojos de otro jugador, los dos bebéis. Esto va de honor: la app no
-                    controla quién ha mirado a quién, así que nada de hacer trampas.
-                </p>
-            </HowToPlayModal>
+            {phase === 'counting' && (
+                <>
+                    <Circle $size={224}>
+                        <CountDigit key={count}>{count}</CountDigit>
+                    </Circle>
+                    <Note style={{ marginTop: 30 }}>Preparados...</Note>
+                </>
+            )}
 
-            <GameContent>
-                <AnimatePresence mode="wait">
-                    {gameState === 'idle' && (
-                        <motion.div
-                            key="idle"
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-                        >
-                            <MainCircle $clickable onClick={startGame} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                                <BigText style={{ fontSize: '22px' }}>EMPEZAR</BigText>
-                            </MainCircle>
-                            <InstructionText>
-                                Bajad la cabeza.
-                            </InstructionText>
-                        </motion.div>
-                    )}
-
-                    {gameState === 'counting' && (
-                        <motion.div
-                            key="counting"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                        >
-                            <MainCircle>
-                                <BigText
-                                    key={count}
-                                    initial={{ scale: 0.5, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    transition={{ type: 'spring', damping: 12 }}
-                                >
-                                    {count === 0 ? <Flame size={64} color="#F5A623" /> : count}
-                                </BigText>
-                            </MainCircle>
-                            <InstructionText>
-                                ¡Preparados...!
-                            </InstructionText>
-                        </motion.div>
-                    )}
-
-                    {gameState === 'result' && (
-                        <motion.div
-                            key="result"
-                            initial={{ opacity: 0, scale: 1.1 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-                        >
-                            <MainCircle
-                                $active
-                                animate={{ scale: [1, 1.05, 1] }}
-                                transition={{ repeat: Infinity, duration: 1.2 }}
-                            >
-                                <BigText style={{ fontSize: '36px' }}>¡MIRAD!</BigText>
-                            </MainCircle>
-                            <InstructionText $strong>
-                                ¡Si cruzas la mirada con alguien, BEBEIS!
-                            </InstructionText>
-                            <div style={{ marginTop: '32px' }}>
-                                <Button size="lg" onClick={resetGame}>
-                                    <IoRefresh size={18} />
-                                    Volver a jugar
-                                </Button>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </GameContent>
-        </Container>
+            {phase === 'result' && (
+                <>
+                    <Circle $size={236} $lit>
+                        <ResultWord>¡MIRAD!</ResultWord>
+                    </Circle>
+                    <Note $strong style={{ marginTop: 28 }}>
+                        Si cruzas la mirada con alguien, bebéis los dos.
+                    </Note>
+                </>
+            )}
+        </GameShell>
     );
 }

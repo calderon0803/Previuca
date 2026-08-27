@@ -7,6 +7,22 @@ export const GlobalStyles = createGlobalStyle`
     padding: 0;
   }
 
+  /* Movimiento del rediseño: entrada de pantalla, hoja inferior y resultado. */
+  @keyframes pv-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes pv-up {
+    from { transform: translateY(100%); }
+    to { transform: none; }
+  }
+
+  @keyframes pv-pop {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+
   html {
     overscroll-behavior: none;
     overflow: hidden;
@@ -15,12 +31,15 @@ export const GlobalStyles = createGlobalStyle`
     height: 100%;
     height: 100dvh;
     -webkit-tap-highlight-color: transparent;
+    background: ${({ theme }) => theme.colors.background};
   }
 
   body {
     background: ${({ theme }) => theme.colors.background};
     color: ${({ theme }) => theme.colors.text.primary};
     font-family: ${({ theme }) => theme.typography.fontFamily};
+    font-size: 15px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -42,24 +61,25 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+    font-family: ${({ theme }) => theme.typography.monoFamily};
   }
 
   h1, h2, h3, h4, h5, h6 {
-    margin-bottom: ${({ theme }) => theme.spacing(2)};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-    line-height: 1.25;
-    letter-spacing: -0.01em;
+    margin: 0;
+    font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+    line-height: 1.15;
+    letter-spacing: -0.02em;
   }
 
   p {
-    margin-bottom: ${({ theme }) => theme.spacing(2)};
+    margin: 0;
     line-height: 1.5;
   }
 
   a {
     color: inherit;
     text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   button {
@@ -71,35 +91,31 @@ export const GlobalStyles = createGlobalStyle`
     -webkit-tap-highlight-color: transparent;
   }
 
-  a {
-    -webkit-tap-highlight-color: transparent;
-  }
-
+  /* Sin anillo con el ratón; anillo de acento con teclado. */
   button:focus,
   a:focus,
   input:focus,
   textarea:focus,
-  select:focus,
+  select:focus {
+    outline: none;
+  }
+
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible {
-    outline: none;
+    outline: 2px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: 2px;
   }
 
   ::selection {
-    background: ${({ theme }) => theme.colors.primaryMuted};
+    background: ${({ theme }) => theme.colors.accentTint};
     color: ${({ theme }) => theme.colors.text.primary};
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: ${({ theme }) => theme.colors.neutral[700]};
-    border-radius: ${({ theme }) => theme.radii.pill};
+    width: 0;
+    height: 0;
   }
 `;

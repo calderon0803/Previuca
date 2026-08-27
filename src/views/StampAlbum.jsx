@@ -1,62 +1,55 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { IoScanOutline } from 'react-icons/io5';
+import { ScanLine } from 'lucide-react';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { getPenasByEvent } from '../services/penasService';
 import { getUnlockedStamps } from '../services/stampService';
+import { activityColors } from '../styles/theme';
 import PenaStamp from '../components/PenaStamp';
 import PageHeader from '../components/ui/PageHeader';
+import Screen, { Content, Footer } from '../components/ui/Screen';
+import Button from '../components/ui/Button';
+import BottomSheet, { SheetTitle } from '../components/ui/BottomSheet';
 import LoadingScreen from '../components/ui/LoadingScreen';
-import Modal from '../components/ui/Modal';
 
-const Container = styled.div`
-  min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
-  display: flex;
-  flex-direction: column;
+const ALBUM = activityColors.album;
+
+// Barra de progreso de 2px justo bajo la cabecera.
+const ProgressTrack = styled.div`
+  flex-shrink: 0;
+  height: 2px;
+  margin: 0 ${({ theme }) => theme.spacing(5)};
+  background: ${({ theme }) => theme.colors.border};
+  border-radius: 2px;
+  overflow: hidden;
 `;
 
-const Content = styled.div`
-  flex: 1;
-  padding: ${({ theme }) => theme.spacing(5)};
-  padding-bottom: ${({ theme }) => theme.spacing(12)};
-  max-width: 720px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-`;
-
-const ProgressText = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  text-align: center;
-  margin: 0 0 ${({ theme }) => theme.spacing(6)} 0;
+const ProgressFill = styled.div`
+  height: 2px;
+  background: ${ALBUM.color};
+  width: ${({ $pct }) => $pct}%;
+  transition: width 0.3s ease;
 `;
 
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: ${({ theme }) => theme.spacing(5)};
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  gap: ${({ theme }) => theme.spacing(4.5)};
 `;
 
-const StampTile = styled.button`
+const Tile = styled.button`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: ${({ theme }) => theme.spacing(2)};
   background: none;
-  border: none;
-  cursor: pointer;
   padding: 0;
 `;
 
-const StampName = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  color: ${({ theme, $locked }) => ($locked ? theme.colors.text.secondary : theme.colors.text.primary)};
+const TileName = styled.span`
+  font-size: 11.5px;
+  color: ${({ theme, $locked }) => ($locked ? theme.colors.text.faint : theme.colors.text.primary)};
   text-align: center;
   max-width: 100%;
   overflow: hidden;
@@ -64,56 +57,29 @@ const StampName = styled.span`
   white-space: nowrap;
 `;
 
-const ModalTitle = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
-  text-align: center;
-`;
-
-const ModalHint = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  text-align: center;
+const Empty = styled.p`
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.text.faint};
   margin: 0;
 `;
 
-const StampModalBody = styled.div`
+const SheetBody = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: ${({ theme }) => theme.spacing(4)};
 `;
 
-const EmptyText = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
+const SheetHint = styled.p`
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: ${({ theme }) => theme.colors.text.muted};
   text-align: center;
-  margin-top: ${({ theme }) => theme.spacing(8)};
 `;
 
-const ScanButtonWrap = styled.div`
-  position: fixed;
-  bottom: ${({ theme }) => theme.spacing(6)};
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-`;
-
-const ScanButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing(2)};
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.text.primary};
-  border: none;
-  border-radius: ${({ theme }) => theme.radii.pill};
-  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(5)};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  box-shadow: ${({ theme }) => theme.shadows.lg};
-  cursor: pointer;
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
-  }
+const AlbumContent = styled(Content)`
+  padding: ${({ theme }) => theme.spacing(5)};
 `;
 
 export default function StampAlbum() {
@@ -123,7 +89,7 @@ export default function StampAlbum() {
     const [penas, setPenas] = useState([]);
     const [unlockedIds, setUnlockedIds] = useState(new Set());
     const [loading, setLoading] = useState(true);
-    const [selectedPena, setSelectedPena] = useState(null);
+    const [selected, setSelected] = useState(null);
 
     useEffect(() => {
         if (flechazoLoading || !user?.id) return;
@@ -141,58 +107,82 @@ export default function StampAlbum() {
             setLoading(false);
         });
 
-        return () => { active = false; };
+        return () => {
+            active = false;
+        };
     }, [eventId, user?.id, flechazoLoading]);
 
     const unlockedCount = penas.filter((p) => unlockedIds.has(p.id)).length;
+    const pct = penas.length > 0 ? (unlockedCount / penas.length) * 100 : 0;
 
     if (loading) return <LoadingScreen />;
 
     return (
-        <Container>
-            <PageHeader title="Álbum de sellos" onBack={() => navigate(-1)} />
-            <Content>
-                {penas.length > 0 && (
-                    <ProgressText>{unlockedCount} de {penas.length} sellos coleccionados</ProgressText>
-                )}
+        <Screen>
+            <PageHeader
+                kicker="Álbum de sellos"
+                kickerColor={ALBUM.kicker}
+                status={
+                    penas.length > 0
+                        ? `${unlockedCount} de ${penas.length} sellos coleccionados`
+                        : 'Sin peñas todavía'
+                }
+                onBack={() => navigate(-1)}
+            />
+            <ProgressTrack>
+                <ProgressFill $pct={pct} />
+            </ProgressTrack>
 
+            <AlbumContent>
                 {penas.length === 0 ? (
-                    <EmptyText>Todavía no hay ninguna peña en este evento.</EmptyText>
+                    <Empty>Todavía no hay ninguna peña en este evento.</Empty>
                 ) : (
                     <Grid>
                         {penas.map((pena) => {
                             const isUnlocked = unlockedIds.has(pena.id);
                             return (
-                                <StampTile key={pena.id} onClick={() => setSelectedPena(pena)}>
-                                    <PenaStamp pena={pena} size={72} locked={!isUnlocked} />
-                                    <StampName $locked={!isUnlocked}>{pena.name}</StampName>
-                                </StampTile>
+                                <Tile key={pena.id} onClick={() => setSelected(pena)}>
+                                    <PenaStamp pena={pena} size={74} locked={!isUnlocked} />
+                                    <TileName $locked={!isUnlocked}>{pena.name}</TileName>
+                                </Tile>
                             );
                         })}
                     </Grid>
                 )}
-            </Content>
+            </AlbumContent>
 
-            <ScanButtonWrap>
-                <ScanButton onClick={() => navigate(`/eventos/${eventId}/album/escanear`)}>
-                    <IoScanOutline size={20} />
-                    Escanear sello
-                </ScanButton>
-            </ScanButtonWrap>
+            <Footer>
+                <Button
+                    size="lg"
+                    color={ALBUM.color}
+                    fullWidth
+                    onClick={() => navigate(`/eventos/${eventId}/album/escanear`)}
+                >
+                    <ScanLine size={19} />
+                    Escanear un sello
+                </Button>
+            </Footer>
 
-            <Modal visible={!!selectedPena} onClose={() => setSelectedPena(null)}>
-                {selectedPena && (
-                    <StampModalBody>
-                        <ModalTitle>{selectedPena.name}</ModalTitle>
-                        <PenaStamp pena={selectedPena} size={160} locked={!unlockedIds.has(selectedPena.id)} />
-                        <ModalHint>
-                            {unlockedIds.has(selectedPena.id)
-                                ? 'Sello coleccionado.'
-                                : 'Todavía no has desbloqueado este sello. Escanéalo desde el perfil de esa peña.'}
-                        </ModalHint>
-                    </StampModalBody>
+            <BottomSheet visible={!!selected} onClose={() => setSelected(null)}>
+                {selected && (
+                    <>
+                        <SheetTitle>{selected.name}</SheetTitle>
+                        <div style={{ height: 18 }} />
+                        <SheetBody>
+                            <PenaStamp
+                                pena={selected}
+                                size={132}
+                                locked={!unlockedIds.has(selected.id)}
+                            />
+                            <SheetHint>
+                                {unlockedIds.has(selected.id)
+                                    ? 'Sello coleccionado.'
+                                    : 'Todavía no lo tienes. Pídele a alguien de esa peña que te muestre su sello y escanéalo.'}
+                            </SheetHint>
+                        </SheetBody>
+                    </>
                 )}
-            </Modal>
-        </Container>
+            </BottomSheet>
+        </Screen>
     );
 }

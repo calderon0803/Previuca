@@ -2,68 +2,48 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { usePenas } from '../contexts/PenasContext';
+import { penaColors } from '../styles/theme';
+import PenaStamp from '../components/PenaStamp';
 import PageHeader from '../components/ui/PageHeader';
+import Screen, { Content, Footer } from '../components/ui/Screen';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
-const COLORS = [
-    '#E5484D', '#D9455B', '#B23A63', '#D9377E', '#C23FA0', '#8A5FD9',
-    '#6E56CF', '#3F8CD9', '#3FA0D9', '#3FA9A0', '#3FA772', '#5FA83F',
-    '#8FB93F', '#D9C23F', '#D9A54B', '#D97C3F', '#D95F5F', '#7C818C', '#000000',
-];
-
-const Container = styled.div`
-  min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
+const Preview = styled.div`
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  margin-bottom: ${({ theme }) => theme.spacing(5.5)};
 `;
 
-const Content = styled.div`
-  flex: 1;
-  padding: ${({ theme }) => theme.spacing(5)};
-  max-width: 480px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
+const Label = styled.p`
+  margin: 0 0 ${({ theme }) => theme.spacing(2)};
+  font-size: 12.5px;
+  color: ${({ theme }) => theme.colors.text.muted};
 `;
 
 const Field = styled.div`
-  margin-bottom: ${({ theme }) => theme.spacing(6)};
+  margin-bottom: ${({ theme }) => theme.spacing(5.5)};
 `;
 
-const Label = styled.label`
-  display: block;
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  margin-bottom: ${({ theme }) => theme.spacing(2)};
-`;
-
-const ColorRow = styled.div`
+const Swatches = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing(3)};
   flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
-const ColorSwatch = styled.button`
-  width: 36px;
-  height: 36px;
+const Swatch = styled.button`
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: ${({ $color }) => $color};
-  border: 2px solid ${({ theme, $active }) => ($active ? theme.colors.text.primary : theme.colors.borderStrong)};
-  cursor: pointer;
-  transition: transform ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    transform: scale(1.08);
-  }
+  border: 2px solid
+    ${({ theme, $active }) => ($active ? theme.colors.text.primary : 'transparent')};
 `;
 
 const ErrorText = styled.p`
+  margin: 0 0 ${({ theme }) => theme.spacing(4)};
+  font-size: 13.5px;
   color: ${({ theme }) => theme.colors.error};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  margin: 0 0 ${({ theme }) => theme.spacing(4)} 0;
-  text-align: center;
 `;
 
 export default function CreatePena() {
@@ -71,7 +51,7 @@ export default function CreatePena() {
     const { eventId } = useParams();
     const { createPena } = usePenas();
     const [name, setName] = useState('');
-    const [color, setColor] = useState(COLORS[0]);
+    const [color, setColor] = useState(penaColors[0]);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -91,9 +71,17 @@ export default function CreatePena() {
     };
 
     return (
-        <Container>
+        <Screen>
             <PageHeader title="Crear peña" onBack={() => navigate(-1)} />
             <Content>
+                {/* El sello se genera del nombre y el color: se ve al escribirlo. */}
+                <Preview>
+                    <PenaStamp
+                        pena={{ id: `preview-${color}`, name: name || '?', color }}
+                        size={84}
+                    />
+                </Preview>
+
                 <Field>
                     <Label>Nombre</Label>
                     <Input
@@ -105,27 +93,33 @@ export default function CreatePena() {
                 </Field>
 
                 <Field>
-                    <Label>Color</Label>
-                    <ColorRow>
-                        {COLORS.map((c) => (
-                            <ColorSwatch
-                                key={c}
+                    <Label>Color — define el sello de tu peña</Label>
+                    <Swatches>
+                        {penaColors.map((value) => (
+                            <Swatch
+                                key={value}
                                 type="button"
-                                $color={c}
-                                $active={color === c}
-                                onClick={() => setColor(c)}
-                                aria-label={c}
+                                $color={value}
+                                $active={color === value}
+                                onClick={() => setColor(value)}
+                                aria-label={`Color ${value}`}
                             />
                         ))}
-                    </ColorRow>
+                    </Swatches>
                 </Field>
 
                 {error && <ErrorText>{error}</ErrorText>}
-
-                <Button size="lg" fullWidth onClick={handleSubmit} disabled={!name.trim() || submitting}>
+            </Content>
+            <Footer>
+                <Button
+                    size="lg"
+                    fullWidth
+                    onClick={handleSubmit}
+                    disabled={!name.trim() || submitting}
+                >
                     {submitting ? 'Creando...' : 'Crear peña'}
                 </Button>
-            </Content>
-        </Container>
+            </Footer>
+        </Screen>
     );
 }

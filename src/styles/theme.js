@@ -1,110 +1,148 @@
 // Design tokens — single source of truth for the app's visual language.
 // Every styled-component should read from here instead of hardcoding values.
+//
+// Rediseño «Previuca, de noche»: fondo casi negro, una sola familia de acento
+// (blurple) para el chrome, y el color saturado reservado para identificar cada
+// juego o actividad (ver `src/data/games.js`).
 
-// Escala neutra clara, tono ciruela/gris muy desaturado — ni negro puro
-// (texto) ni blanco puro (fondo). 50 = más claro, 950 = más oscuro.
+// Escala neutra oscura: 50 = más claro (texto), 950 = más oscuro (fondo).
 const neutral = {
-    50: '#F8F5F6',
-    100: '#EFEAEC',
-    200: '#D2C5CB',
-    300: '#B5A6AE',
-    400: '#A79DA5',
-    500: '#847A83',
-    600: '#665D65',
-    700: '#4A424A',
-    800: '#332C33',
-    900: '#241F26',
-    950: '#171317',
+    50: '#e9e9ed',
+    100: '#cfd3e5',
+    200: '#b2b6ca',
+    300: '#9397ab',
+    400: '#75798c',
+    500: '#595d6c',
+    600: '#3f424d',
+    700: '#292b31',
+    800: '#232532',
+    900: '#1c1e2c',
+    950: '#161826',
 };
 
-// Fondo de página: pastel cálido (blush), distinto de la rampa gris de
-// arriba — así las tarjetas (blancas) resaltan sobre un fondo con color,
-// en vez de un blanco/gris plano.
-const pastelBackground = '#F7ECE7';
-
-const primary = {
-    base: '#B23A63',
-    hover: '#C4507A',
-    active: '#8F2C4E',
-    muted: 'rgba(178, 58, 99, 0.12)',
-};
-
+// Acento único del chrome — blurple.
 const accent = {
-    base: '#996022',
-    muted: 'rgba(153, 96, 34, 0.16)',
+    base: '#9184d9',
+    text: '#b5abfc',
+    tint: 'rgba(145, 132, 217, 0.14)',
+    tintStrong: 'rgba(145, 132, 217, 0.2)',
+    surface: '#2b2741',
+};
+
+// Paleta de peñas (18 valores) — la que ya usa CreatePena.
+export const penaColors = [
+    '#E5484D', '#D9455B', '#B23A63', '#D9377E', '#C23FA0', '#8A5FD9',
+    '#6E56CF', '#3F8CD9', '#3FA0D9', '#3FA9A0', '#3FA772', '#5FA83F',
+    '#8FB93F', '#D9C23F', '#D9A54B', '#D97C3F', '#D95F5F', '#7C818C',
+];
+
+// Colores de firma de las actividades del evento.
+export const activityColors = {
+    penas: { color: '#3FA772', glow: 'rgba(63, 167, 114, 0.2)', kicker: '#3FA772' },
+    album: { color: '#C9862E', glow: 'rgba(201, 134, 46, 0.2)', kicker: '#D8B45E' },
+    flechazo: { color: '#D9377E', glow: 'rgba(217, 55, 126, 0.2)', kicker: '#E67BA6' },
+    salseo: { color: '#3F8CD9', glow: 'rgba(63, 140, 217, 0.2)', kicker: '#7FB4EC' },
+    event: { color: accent.base, glow: 'rgba(145, 132, 217, 0.2)', kicker: accent.text },
 };
 
 export const theme = {
     colors: {
         neutral,
-        primary: primary.base,
-        primaryHover: primary.hover,
-        primaryActive: primary.active,
-        primaryMuted: primary.muted,
+        penaColors,
+        activityColors,
+
+        // El acento del chrome hace de «primary» para todo el interfaz.
+        primary: accent.base,
+        primaryHover: accent.text,
+        primaryActive: accent.base,
+        primaryMuted: accent.tint,
         accent: accent.base,
-        accentMuted: accent.muted,
+        accentText: accent.text,
+        accentTint: accent.tint,
+        accentTintStrong: accent.tintStrong,
+        accentSurface: accent.surface,
+        accentMuted: accent.tint,
 
-        background: pastelBackground,
-        surface: '#FFFFFF',
-        surfaceHover: neutral[50],
-        surfaceRaised: neutral[50],
+        background: '#161826',
+        backgroundDeep: '#12131c',
+        backgroundApp: '#0f1018',
+        surface: '#1c1e2c',
+        surfaceHover: '#232532',
+        surfaceRaised: '#232532',
+        surfaceInput: '#161826',
 
-        border: neutral[200],
-        borderStrong: neutral[300],
+        overlay: 'rgba(10, 11, 18, 0.72)',
+        overlayStrong: 'rgba(10, 11, 18, 0.86)',
+
+        border: '#292b31',
+        borderStrong: '#3f424d',
+        borderHover: '#595d6c',
 
         text: {
-            primary: neutral[900],
-            secondary: neutral[600],
-            disabled: neutral[400],
+            primary: '#e9e9ed',
+            secondary: '#b2b6ca',
+            muted: '#9397ab',
+            faint: '#75798c',
+            disabled: '#595d6c',
         },
 
-        success: '#297D50',
-        error: '#D2373D',
-        warning: accent.base,
+        success: '#7fc39a',
+        error: '#e08a8f',
+        errorBorder: '#7a3a40',
+        errorTint: 'rgba(160, 60, 66, 0.14)',
+        danger: '#e08a8f',
+        dangerBorder: '#7a3a40',
+        dangerTint: 'rgba(160, 60, 66, 0.14)',
+        warning: '#D8B45E',
     },
 
-    // sm: controls (buttons, inputs, tags). md: cards/tiles. lg: large sheets/modals only.
+    // Radio único de 8px en todo; lg reservado a hojas inferiores.
     radii: {
-        sm: '6px',
-        md: '10px',
+        sm: '8px',
+        md: '8px',
         lg: '14px',
         pill: '999px',
     },
 
+    // Elevación = borde + oscuridad ambiental, nunca sombras apiladas.
     shadows: {
-        sm: '0 1px 2px rgba(0, 0, 0, 0.28)',
-        md: '0 4px 14px rgba(0, 0, 0, 0.32)',
-        lg: '0 12px 28px rgba(0, 0, 0, 0.36)',
+        hairline: '0 0 0 1px #292b31',
+        sm: '0 0 0 1px #292b31',
+        md: '0 6px 18px rgba(0, 0, 0, 0.55)',
+        lg: '0 0 0 1px #3f424d, 0 16px 40px rgba(0, 0, 0, 0.65)',
+        sheet: '0 0 0 1px #3f424d, 0 16px 40px rgba(0, 0, 0, 0.65)',
     },
 
     transitions: {
         fast: '150ms ease',
-        base: '200ms ease',
+        base: '220ms ease',
     },
 
     typography: {
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif",
+        monoFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
         fontSize: {
-            xs: '0.75rem',
-            sm: '0.875rem',
-            md: '1rem',
-            lg: '1.125rem',
-            xl: '1.5rem',
-            xxl: '2rem',
-            display: '2.75rem',
+            xs: '11.5px',
+            sm: '12.5px',
+            md: '15px',
+            lg: '19px',
+            xl: '22px',
+            xxl: '30px',
+            display: '34px',
         },
+        // Nunca por encima de 600.
         fontWeight: {
             regular: 400,
             medium: 500,
             semibold: 600,
-            bold: 700,
+            bold: 600,
         },
         letterSpacing: {
             tight: '-0.03em',
-            snug: '-0.01em',
-            normal: '0',
-            wide: '0.06em',
-            wider: '0.1em',
+            snug: '-0.02em',
+            normal: '-0.01em',
+            wide: '0.1em',
+            wider: '0.14em',
         },
     },
 

@@ -1,244 +1,214 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled, { css } from 'styled-components';
-import { Gamepad2, PartyPopper, Settings, ShieldCheck, Download } from 'lucide-react';
+import styled from 'styled-components';
+import { Gamepad2, Settings, ShieldCheck, Download } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { useFlechazo } from '../contexts/FlechazoContext';
 import { getUnreadNotices, markNoticeRead } from '../services/adminService';
-import { isEventVisibleInMenu } from '../utils/eventStatus';
-import Modal from '../components/ui/Modal';
+import { isEventVisibleInMenu, hasEventStarted } from '../utils/eventStatus';
+import BottomSheet, { SheetTitle } from '../components/ui/BottomSheet';
 import Button from '../components/ui/Button';
 import IconButton from '../components/ui/IconButton';
+import { SignatureLine, SignatureHalo } from '../components/ui/Signature';
 import TermsAndConditions from '../components/TermsAndConditions';
 import InstallPwaModal from '../components/InstallPwaModal';
 
 const Container = styled.div`
   min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
+  background: ${({ theme }) => theme.colors.background};
   display: flex;
   flex-direction: column;
 `;
 
 const Content = styled.div`
   flex: 1;
-  padding: ${({ theme }) => theme.spacing(6)} ${({ theme }) => theme.spacing(5)};
-  max-width: 440px;
+  padding: calc(${({ theme }) => theme.spacing(3.5)} + env(safe-area-inset-top, 0px))
+    ${({ theme }) => theme.spacing(5)} ${({ theme }) => theme.spacing(7)};
+  max-width: 480px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    max-width: 560px;
-    padding-top: ${({ theme }) => theme.spacing(10)};
-  }
+  animation: pv-in 0.22s ease;
 `;
 
-const Kicker = styled.div`
+const Brand = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing(2.5)};
-  margin-bottom: ${({ theme }) => theme.spacing(7)};
+  margin-bottom: ${({ theme }) => theme.spacing(8.5)};
 `;
 
-const KickerBrand = styled.div`
+const BrandMark = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
 const Logo = styled.img`
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   object-fit: cover;
-  border-radius: ${({ theme }) => theme.radii.sm};
+  border-radius: 6px;
 `;
 
 const Wordmark = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-size: 12px;
   font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ theme }) => theme.colors.text.secondary};
+  color: ${({ theme }) => theme.colors.text.muted};
   text-transform: uppercase;
-  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.wide};
+  letter-spacing: 0.1em;
+`;
+
+const Greeting = styled.p`
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${({ theme }) => theme.colors.accent};
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 `;
 
 const Headline = styled.h1`
-  font-size: 2rem;
-  line-height: 1.15;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.tight};
+  margin: 0 0 ${({ theme }) => theme.spacing(7.5)};
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: -0.03em;
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 ${({ theme }) => theme.spacing(9)} 0;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    font-size: 2.5rem;
-  }
+  white-space: nowrap;
 `;
 
-// Un color -> borde sólido de ese color. Varios -> degradado.
-// No se usa border-image: ignora border-radius y deja las esquinas cuadradas.
-// En su lugar, dos fondos apilados (uno en el padding-box, otro en el
-// border-box) simulan el borde degradado respetando el radio de la tarjeta.
-const coloredBorder = ($colors, theme) => {
-  if (!$colors || $colors.length === 0) return '';
-  if ($colors.length === 1) {
-    return css`
-      border-color: ${$colors[0]};
-    `;
-  }
-  return css`
-    border-color: transparent;
-    background: linear-gradient(${theme.colors.surface}, ${theme.colors.surface}) padding-box,
-      linear-gradient(90deg, ${$colors.join(', ')}) border-box;
-  `;
-};
-
-const HeroCard = styled.div`
+// Tarjeta principal (Juegos): superficie elevada y halo blurple más marcado.
+const GamesCard = styled.button`
   position: relative;
   overflow: hidden;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 2px solid ${({ theme }) => theme.colors.border};
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  border: 1px solid #423a6a;
   border-radius: ${({ theme }) => theme.radii.md};
   padding: ${({ theme }) => theme.spacing(5)};
-  cursor: pointer;
-  transition: transform ${({ theme }) => theme.transitions.base};
   margin-bottom: ${({ theme }) => theme.spacing(3)};
-  opacity: ${({ $locked }) => ($locked ? 0.6 : 1)};
-  ${({ $colors, theme }) => coloredBorder($colors, theme)}
-
-  &:active {
-    transform: scale(0.99);
-  }
-`;
-
-const PrimaryHeroCard = styled(HeroCard)`
-  background: ${({ theme }) => theme.colors.primaryMuted};
-  border-color: ${({ theme }) => theme.colors.primary};
-  transition: transform ${({ theme }) => theme.transitions.base},
-    border-color ${({ theme }) => theme.transitions.base};
+  transition: border-color ${({ theme }) => theme.transitions.base},
+    transform ${({ theme }) => theme.transitions.base};
 
   &:hover {
-    border-color: ${({ theme }) => theme.colors.primaryHover};
+    border-color: #5d5294;
+  }
+
+  &:active {
+    transform: scale(0.995);
   }
 `;
 
-const HeroWatermark = styled.span`
+const Watermark = styled.span`
   position: absolute;
-  bottom: -16px;
-  right: -4px;
+  right: 14px;
+  bottom: 10px;
   display: flex;
-  opacity: 0.14;
-  transform: rotate(-8deg);
+  opacity: 0.5;
+  color: ${({ theme }) => theme.colors.accent};
   pointer-events: none;
 `;
 
-const HeroTop = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing(3)};
-  margin-bottom: 4px;
+const CardTitle = styled.span`
   position: relative;
-  z-index: 1;
-`;
-
-const LockPill = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing(1)};
-  padding: ${({ theme }) => theme.spacing(1)} ${({ theme }) => theme.spacing(2.5)};
-  border-radius: ${({ theme }) => theme.radii.pill};
-  background: ${({ theme }) => theme.colors.surfaceRaised};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  display: block;
+  font-size: ${({ $size }) => $size || '26px'};
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  flex-shrink: 0;
-`;
-
-const HeroTitle = styled.h2`
-  font-size: ${({ theme }) => theme.typography.fontSize.xxl};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  letter-spacing: ${({ theme }) => theme.typography.letterSpacing.tight};
+  letter-spacing: -0.02em;
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  position: relative;
-  z-index: 1;
 `;
 
-const HeroSubtitle = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  margin: 0;
+const CardSub = styled.span`
+  position: relative;
+  display: block;
+  font-size: 13px;
+  color: ${({ theme, $dim }) => ($dim ? theme.colors.text.muted : theme.colors.text.secondary)};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+`;
+
+const EventCard = styled.button`
   position: relative;
-  z-index: 1;
-`;
-
-const SecondaryRow = styled.div`
-  display: grid;
-  grid-template-columns: ${({ $columns }) => ($columns === 2 ? '1fr 1fr' : '1fr')};
-  gap: ${({ theme }) => theme.spacing(3)};
-  margin-top: ${({ theme }) => theme.spacing(3)};
-`;
-
-const SecondaryTile = styled.div`
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  text-align: left;
   background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid ${({ theme }) => theme.colors.borderStrong};
   border-radius: ${({ theme }) => theme.radii.md};
-  padding: ${({ theme }) => theme.spacing(4)};
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing(3)};
-  cursor: pointer;
-  transition: background ${({ theme }) => theme.transitions.fast},
-    border-color ${({ theme }) => theme.transitions.fast};
+  padding: ${({ theme }) => theme.spacing(4.5)} ${({ theme }) => theme.spacing(5)};
+  margin-bottom: ${({ theme }) => theme.spacing(3)};
+  opacity: ${({ $dim }) => ($dim ? 0.6 : 1)};
+  transition: border-color ${({ theme }) => theme.transitions.base},
+    transform ${({ theme }) => theme.transitions.base};
 
   &:hover {
-    background: ${({ theme }) => theme.colors.surfaceHover};
-    border-color: ${({ theme }) => theme.colors.borderStrong};
+    border-color: ${({ theme }) => theme.colors.borderHover};
   }
 
   &:active {
-    transform: scale(0.99);
+    transform: scale(0.995);
   }
 `;
 
-const SecondaryIcon = styled.span`
+const EventTop = styled.span`
+  position: relative;
   display: flex;
-  flex-shrink: 0;
-  color: ${({ theme }) => theme.colors.text.primary};
+  align-items: baseline;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing(3)};
+  margin-bottom: 3px;
 `;
 
-const SecondaryLabel = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+const EventState = styled.span`
+  font-size: 11px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${({ theme }) => theme.colors.accent};
+  white-space: nowrap;
+  flex-shrink: 0;
+`;
+
+const TileRow = styled.div`
+  display: grid;
+  grid-template-columns: ${({ $columns }) => ($columns === 2 ? '1fr 1fr' : '1fr')};
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  margin-top: ${({ theme }) => theme.spacing(4.5)};
+`;
+
+const Tile = styled.button`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  min-height: 48px;
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.colors.borderStrong};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.spacing(3.5)};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  transition: border-color ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.borderHover};
+  }
+`;
+
+const TileLabel = styled.span`
+  font-size: 14px;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   color: ${({ theme }) => theme.colors.text.primary};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-`;
-
-const NoticesTitle = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-top: 0;
-  margin-bottom: ${({ theme }) => theme.spacing(4)};
-  text-align: center;
-`;
-
-const NoticeItem = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  background: ${({ theme }) => theme.colors.surfaceRaised};
-  border-radius: ${({ theme }) => theme.radii.sm};
-  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(4)};
-  margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
 `;
 
 const LoginBanner = styled.button`
@@ -247,156 +217,192 @@ const LoginBanner = styled.button`
   justify-content: space-between;
   gap: ${({ theme }) => theme.spacing(3)};
   width: 100%;
-  background: ${({ theme }) => theme.colors.primaryMuted};
-  border: 1px solid ${({ theme }) => theme.colors.primary};
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.colors.accent};
   border-radius: ${({ theme }) => theme.radii.md};
-  padding: ${({ theme }) => theme.spacing(4)};
+  padding: ${({ theme }) => theme.spacing(3.5)};
   margin-bottom: ${({ theme }) => theme.spacing(5)};
-  cursor: pointer;
   text-align: left;
+  transition: background ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.accentTint};
+  }
 `;
 
 const LoginBannerText = styled.span`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-size: 14px;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
 `;
 
 const LoginBannerCta = styled.span`
-  color: ${({ theme }) => theme.colors.primary};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.accentText};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  font-size: 14px;
   flex-shrink: 0;
   white-space: nowrap;
 `;
 
+const NoticeItem = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 15px;
+  line-height: 1.5;
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  padding: ${({ theme }) => theme.spacing(3)} ${({ theme }) => theme.spacing(3.5)};
+  margin: 0 0 ${({ theme }) => theme.spacing(2.5)};
+`;
+
 const TermsFooter = styled.button`
-  background: none;
-  border: none;
-  margin: ${({ theme }) => theme.spacing(6)} 0 0 0;
+  margin: ${({ theme }) => theme.spacing(7)} 0 0;
   padding: 0;
   color: ${({ theme }) => theme.colors.text.disabled};
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  font-size: 11.5px;
   text-decoration: underline;
-  cursor: pointer;
   align-self: center;
 `;
 
+const WEEKDAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+// «Jueves noche», «Sábado tarde»: da contexto sin repetir el nombre del usuario.
+function greeting() {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = WEEKDAYS[now.getDay()];
+    if (hour < 6) return `${day} de madrugada`;
+    if (hour < 13) return `${day} por la mañana`;
+    if (hour < 20) return `${day} tarde`;
+    return `${day} noche`;
+}
+
 export default function MainMenu() {
-  const navigate = useNavigate();
-  const { events, loading: eventsLoading } = useEvent();
-  const { isAdmin } = useAdmin();
-  const { user, loading: userLoading } = useFlechazo();
-  const visibleEvents = events.filter(isEventVisibleInMenu);
-  const hasEvents = visibleEvents.length > 0;
-  const [showTerms, setShowTerms] = useState(false);
-  const [showInstall, setShowInstall] = useState(false);
-  const [pendingNotices, setPendingNotices] = useState([]);
+    const navigate = useNavigate();
+    const { events, loading: eventsLoading } = useEvent();
+    const { isAdmin } = useAdmin();
+    const { user, loading: userLoading } = useFlechazo();
+    const visibleEvents = events.filter(isEventVisibleInMenu);
+    const hasEvents = visibleEvents.length > 0;
+    const [showTerms, setShowTerms] = useState(false);
+    const [showInstall, setShowInstall] = useState(false);
+    const [pendingNotices, setPendingNotices] = useState([]);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    getUnreadNotices(user.id).then((result) => setPendingNotices(result.notices));
-  }, [user?.id]);
+    useEffect(() => {
+        if (!user?.id) return;
+        getUnreadNotices(user.id).then((result) => setPendingNotices(result.notices));
+    }, [user?.id]);
 
-  const handleDismissNotices = async () => {
-    await Promise.all(pendingNotices.map((notice) => markNoticeRead(notice.id)));
-    setPendingNotices([]);
-  };
+    const handleDismissNotices = async () => {
+        await Promise.all(pendingNotices.map((notice) => markNoticeRead(notice.id)));
+        setPendingNotices([]);
+    };
 
-  return (
-    <Container>
-      <Content>
-        <Kicker>
-          <KickerBrand>
-            <Logo src="/logo.png" alt="Previuca" />
-            <Wordmark>Previuca</Wordmark>
-          </KickerBrand>
-          <IconButton variant="ghost" size="sm" onClick={() => setShowInstall(true)} aria-label="Instalar app">
-            <Download size={18} />
-          </IconButton>
-        </Kicker>
+    return (
+        <Container>
+            <Content>
+                <Brand>
+                    <BrandMark>
+                        <Logo src="/logo.png" alt="Previuca" />
+                        <Wordmark>Previuca</Wordmark>
+                    </BrandMark>
+                    <IconButton onClick={() => setShowInstall(true)} aria-label="Instalar app">
+                        <Download size={20} />
+                    </IconButton>
+                </Brand>
 
-        {!userLoading && !user && (
-          <LoginBanner onClick={() => navigate('/flechazo', { state: { from: '/' } })}>
-            <LoginBannerText>Inicia sesión para participar en los eventos</LoginBannerText>
-            <LoginBannerCta>Entrar →</LoginBannerCta>
-          </LoginBanner>
-        )}
+                {!userLoading && !user && (
+                    <LoginBanner onClick={() => navigate('/flechazo', { state: { from: '/' } })}>
+                        <LoginBannerText>Inicia sesión para participar en los eventos</LoginBannerText>
+                        <LoginBannerCta>Entrar →</LoginBannerCta>
+                    </LoginBanner>
+                )}
 
-        <Headline>¿Qué hacemos hoy?</Headline>
+                <Greeting>{greeting()}</Greeting>
+                <Headline>¿Qué hacemos hoy?</Headline>
 
-        <PrimaryHeroCard onClick={() => navigate('/games')}>
-          <HeroWatermark aria-hidden="true"><Gamepad2 size={72} /></HeroWatermark>
-          <HeroTop>
-            <HeroTitle>Juegos</HeroTitle>
-          </HeroTop>
-          <HeroSubtitle>Diversión sin límites</HeroSubtitle>
-        </PrimaryHeroCard>
+                <GamesCard onClick={() => navigate('/games')}>
+                    <SignatureLine $color="#9184d9" aria-hidden="true" />
+                    <SignatureHalo
+                        $glow="rgba(145, 132, 217, 0.28)"
+                        $size="150px"
+                        $right="-30px"
+                        $bottom="-40px"
+                        aria-hidden="true"
+                    />
+                    <Watermark aria-hidden="true"><Gamepad2 size={64} /></Watermark>
+                    <CardTitle>Juegos</CardTitle>
+                    <CardSub>10 modos · sin conexión · con quien tengas al lado</CardSub>
+                </GamesCard>
 
-        {eventsLoading ? (
-          <HeroCard $locked>
-            <HeroWatermark aria-hidden="true"><PartyPopper size={72} /></HeroWatermark>
-            <HeroTop>
-              <HeroTitle>Eventos</HeroTitle>
-            </HeroTop>
-            <HeroSubtitle>Cargando...</HeroSubtitle>
-          </HeroCard>
-        ) : hasEvents ? (
-          visibleEvents.map((evento) => (
-            <HeroCard
-              key={evento.id}
-              onClick={() => navigate(`/eventos/${evento.id}`)}
-              $colors={evento.colors}
-            >
-              <HeroWatermark aria-hidden="true"><PartyPopper size={72} /></HeroWatermark>
-              <HeroTop>
-                <HeroTitle>{evento.name}</HeroTitle>
-              </HeroTop>
-              <HeroSubtitle>{evento.description || 'Peñas y Flechazo de este evento'}</HeroSubtitle>
-            </HeroCard>
-          ))
-        ) : (
-          <HeroCard onClick={() => navigate('/ajustes')} $locked>
-            <HeroWatermark aria-hidden="true"><PartyPopper size={72} /></HeroWatermark>
-            <HeroTop>
-              <HeroTitle>Eventos</HeroTitle>
-              <LockPill>Bloqueado</LockPill>
-            </HeroTop>
-            <HeroSubtitle>Introduce un código en Ajustes</HeroSubtitle>
-          </HeroCard>
-        )}
+                {eventsLoading ? (
+                    <EventCard $dim as="div">
+                        <SignatureLine $color="#a7a1db" aria-hidden="true" />
+                        <EventTop>
+                            <CardTitle $size="20px">Eventos</CardTitle>
+                        </EventTop>
+                        <CardSub $dim>Cargando...</CardSub>
+                    </EventCard>
+                ) : hasEvents ? (
+                    visibleEvents.map((evento) => (
+                        <EventCard key={evento.id} onClick={() => navigate(`/eventos/${evento.id}`)}>
+                            <SignatureLine $color={evento.colors?.[0] || '#a7a1db'} aria-hidden="true" />
+                            <EventTop>
+                                <CardTitle $size="20px">{evento.name}</CardTitle>
+                                <EventState>
+                                    {hasEventStarted(evento) ? 'en curso' : 'pronto'}
+                                </EventState>
+                            </EventTop>
+                            <CardSub $dim>
+                                {evento.description || 'Peñas · Álbum de sellos · Flechazo · Salseo'}
+                            </CardSub>
+                        </EventCard>
+                    ))
+                ) : (
+                    <EventCard $dim onClick={() => navigate('/ajustes')}>
+                        <SignatureLine $color="#a7a1db" aria-hidden="true" />
+                        <EventTop>
+                            <CardTitle $size="20px">Eventos</CardTitle>
+                            <EventState>bloqueado</EventState>
+                        </EventTop>
+                        <CardSub $dim>Introduce un código en Ajustes</CardSub>
+                    </EventCard>
+                )}
 
-        <SecondaryRow $columns={isAdmin ? 2 : 1}>
-          <SecondaryTile onClick={() => navigate('/ajustes')}>
-            <SecondaryIcon><Settings size={18} /></SecondaryIcon>
-            <SecondaryLabel>Ajustes</SecondaryLabel>
-          </SecondaryTile>
-          {isAdmin && (
-            <SecondaryTile onClick={() => navigate('/admin')}>
-              <SecondaryIcon><ShieldCheck size={18} /></SecondaryIcon>
-              <SecondaryLabel>Administración</SecondaryLabel>
-            </SecondaryTile>
-          )}
-        </SecondaryRow>
+                <TileRow $columns={isAdmin ? 2 : 1}>
+                    <Tile onClick={() => navigate('/ajustes')}>
+                        <Settings size={18} />
+                        <TileLabel>Ajustes</TileLabel>
+                    </Tile>
+                    {isAdmin && (
+                        <Tile onClick={() => navigate('/admin')}>
+                            <ShieldCheck size={18} />
+                            <TileLabel>Administración</TileLabel>
+                        </Tile>
+                    )}
+                </TileRow>
 
-        <TermsFooter type="button" onClick={() => setShowTerms(true)}>
-          Términos y condiciones
-        </TermsFooter>
-      </Content>
+                <TermsFooter type="button" onClick={() => setShowTerms(true)}>
+                    Términos y condiciones
+                </TermsFooter>
+            </Content>
 
-      <Modal visible={showTerms} onClose={() => setShowTerms(false)}>
-        <TermsAndConditions />
-      </Modal>
+            <BottomSheet visible={showTerms} onClose={() => setShowTerms(false)}>
+                <TermsAndConditions />
+            </BottomSheet>
 
-      <InstallPwaModal visible={showInstall} onClose={() => setShowInstall(false)} />
+            <InstallPwaModal visible={showInstall} onClose={() => setShowInstall(false)} />
 
-      <Modal visible={pendingNotices.length > 0} onClose={handleDismissNotices}>
-        <NoticesTitle>Avisos del equipo organizador</NoticesTitle>
-        {pendingNotices.map((notice) => (
-          <NoticeItem key={notice.id}>{notice.message}</NoticeItem>
-        ))}
-        <Button fullWidth onClick={handleDismissNotices}>Entendido</Button>
-      </Modal>
-    </Container>
-  );
+            <BottomSheet visible={pendingNotices.length > 0} onClose={handleDismissNotices}>
+                <SheetTitle>Avisos del equipo organizador</SheetTitle>
+                <div style={{ height: 16 }} />
+                {pendingNotices.map((notice) => (
+                    <NoticeItem key={notice.id}>{notice.message}</NoticeItem>
+                ))}
+                <div style={{ height: 8 }} />
+                <Button size="lg" fullWidth onClick={handleDismissNotices}>
+                    Entendido
+                </Button>
+            </BottomSheet>
+        </Container>
+    );
 }

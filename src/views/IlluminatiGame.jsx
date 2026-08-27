@@ -1,133 +1,85 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { ArrowUp, ArrowDown, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
-import HowToPlayModal from '../components/HowToPlayModal';
-import PageHeader from '../components/ui/PageHeader';
-import IconButton from '../components/ui/IconButton';
+import { gameById } from '../data/games';
+import GameShell from '../components/GameShell';
 import Button from '../components/ui/Button';
 
-const Container = styled.div`
-    min-height: 100dvh;
-    background: ${({ theme }) => theme.colors.background};
-    display: flex;
-    flex-direction: column;
+const GAME = gameById.illuminati;
+
+const ink = (suit) => (suit === '♥' || suit === '♦' ? '#b0343c' : '#22242e');
+
+const Message = styled.p`
+    margin: 0 0 ${({ theme }) => theme.spacing(4.5)};
+    font-size: 13.5px;
+    color: ${({ theme }) => theme.colors.text.muted};
+    text-align: center;
+    max-width: 290px;
 `;
 
-const Content = styled.div`
-    flex: 1;
+const Pyramid = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: ${({ theme }) => theme.spacing(4)} ${({ theme }) => theme.spacing(3)};
-    gap: ${({ theme }) => theme.spacing(3)};
-    overflow-y: auto;
+    gap: 7px;
 `;
 
-const PlayerIndicator = styled.div`
-    background: ${({ theme }) => theme.colors.surface};
-    border: 1px solid ${({ theme }) => theme.colors.border};
-    padding: ${({ theme }) => theme.spacing(2)} ${({ theme }) => theme.spacing(5)};
-    border-radius: ${({ theme }) => theme.radii.md};
-    text-align: center;
+const Row = styled.div`
+    display: flex;
+    gap: 7px;
+    justify-content: center;
 `;
 
-const PlayerLabel = styled.p`
-    font-size: ${({ theme }) => theme.typography.fontSize.xs};
-    color: ${({ theme }) => theme.colors.text.secondary};
-    margin: 0 0 4px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+const Card = styled.button`
+    width: 46px;
+    height: 62px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: ${({ theme, $face }) =>
+        $face ? theme.colors.text.primary : 'linear-gradient(160deg, #2b2741, #1c1e2c)'};
+    border: 1px solid
+        ${({ theme, $selected, $clickable }) =>
+        $selected ? GAME.color : $clickable ? '#5d5294' : theme.colors.borderStrong};
+    opacity: ${({ $face, $selected, $clickable }) => ($face || $selected || $clickable ? 1 : 0.55)};
+    cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
+    transition: border-color ${({ theme }) => theme.transitions.fast},
+        opacity ${({ theme }) => theme.transitions.fast};
 `;
 
-const PlayerName = styled.p`
-    font-size: ${({ theme }) => theme.typography.fontSize.xl};
+const CardValue = styled.span`
+    font-size: 15px;
+    line-height: 1;
     font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-    color: ${({ theme }) => theme.colors.text.primary};
-    margin: 0;
+    color: ${({ $suit }) => ink($suit)};
 `;
 
-const PyramidContainer = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: ${({ theme }) => theme.spacing(1.5)};
+const CardSuit = styled.span`
+    font-size: 13px;
+    color: ${({ $suit }) => ink($suit)};
 `;
 
-const PyramidRow = styled.div`
-    display: flex;
-    gap: ${({ theme }) => theme.spacing(1.5)};
-    justify-content: center;
-`;
-
-const Card = styled.div`
-    width: 42px;
-    height: 58px;
-    background: ${({ theme, $revealed }) => $revealed
-        ? '#fff'
-        : `repeating-linear-gradient(45deg, ${theme.colors.primary}, ${theme.colors.primary} 10px, ${theme.colors.primaryActive} 10px, ${theme.colors.primaryActive} 20px)`};
-    border-radius: ${({ theme }) => theme.radii.sm};
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-shadow: ${({ theme }) => theme.shadows.sm};
-    cursor: ${props => props.$clickable ? 'pointer' : 'default'};
-    transition: transform ${({ theme }) => theme.transitions.fast};
-    position: relative;
-    border: 2px solid ${({ theme, $current }) => ($current ? theme.colors.accent : 'transparent')};
-
-    ${props => props.$clickable && `
-        &:hover {
-            transform: scale(1.08);
-        }
-    `}
-
-    ${props => props.$used && `
-        opacity: 0.4;
-    `}
-`;
-
-const CardValue = styled.div`
-    font-size: ${({ theme }) => theme.typography.fontSize.md};
-    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-    color: ${props => (props.$suit === '♥' || props.$suit === '♦') ? '#C0392B' : '#262626'};
-`;
-
-const CardSuit = styled.div`
-    font-size: ${({ theme }) => theme.typography.fontSize.sm};
-    color: ${props => (props.$suit === '♥' || props.$suit === '♦') ? '#C0392B' : '#262626'};
-`;
-
-const ButtonContainer = styled.div`
-    display: flex;
-    gap: ${({ theme }) => theme.spacing(3)};
+const Feedback = styled.div`
+    margin-top: ${({ theme }) => theme.spacing(5)};
     width: 100%;
-    max-width: 400px;
-`;
-
-const Message = styled.div`
-    background: ${({ theme, $type }) =>
-        $type === 'success' ? 'rgba(63, 167, 114, 0.12)' :
-            $type === 'error' ? 'rgba(229, 72, 77, 0.12)' :
-                theme.colors.surface};
-    border: 1px solid ${({ theme, $type }) =>
-        $type === 'success' ? theme.colors.success :
-            $type === 'error' ? theme.colors.error :
-                theme.colors.border};
-    padding: ${({ theme }) => theme.spacing(4)} ${({ theme }) => theme.spacing(6)};
-    border-radius: ${({ theme }) => theme.radii.md};
-    color: ${({ theme }) => theme.colors.text.primary};
+    max-width: 320px;
+    border-radius: ${({ theme }) => theme.radii.sm};
+    padding: ${({ theme }) => theme.spacing(3.5)} ${({ theme }) => theme.spacing(4)};
+    border: 1px solid ${({ theme, $bad }) => ($bad ? theme.colors.dangerBorder : '#4d6b56')};
+    background: ${({ $bad }) => ($bad ? 'rgba(160, 60, 66, 0.14)' : 'rgba(70, 140, 100, 0.14)')};
     text-align: center;
-    max-width: 400px;
-    font-size: ${({ theme }) => theme.typography.fontSize.md};
+    font-size: 15px;
+    font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+    color: ${({ theme }) => theme.colors.text.primary};
 `;
 
-const MessageInline = styled.span`
-    display: inline-flex;
-    align-items: center;
-    gap: ${({ theme }) => theme.spacing(2)};
+const Options = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
 const SUITS = ['♠', '♥', '♦', '♣'];
@@ -148,7 +100,6 @@ const createDeck = () => {
 };
 
 export default function IlluminatiGame() {
-    const navigate = useNavigate();
     const { players } = usePlayers();
 
     const [deck, setDeck] = useState([]);
@@ -161,22 +112,6 @@ export default function IlluminatiGame() {
     const [gamePhase, setGamePhase] = useState('selectFirst'); // 'selectFirst', 'selectNext', 'guessing'
     const [completedPlayers, setCompletedPlayers] = useState([]);
     const [showHelp, setShowHelp] = useState(false);
-
-    const helpModal = (
-        <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Illuminati">
-            <p>
-                Hay una pirámide de cartas boca abajo: 5 en la fila de abajo, hasta 1 en la punta.
-                En tu turno, destapas una carta de la fila de abajo y luego vas subiendo: en cada
-                fila adivinas si la carta que destapas es mayor o menor que la de la fila anterior.
-            </p>
-            <p>
-                Si aciertas, subes una fila. Si fallas, bebes según lo lejos que hayas llegado y le
-                pasas el turno al siguiente. Si llegas a la punta, ganas esa ronda y la pirámide se
-                rehace para ti — la partida sigue hasta que todos han llegado arriba al menos una
-                vez.
-            </p>
-        </HowToPlayModal>
-    );
 
     useEffect(() => {
         initializeGame();
@@ -334,127 +269,87 @@ export default function IlluminatiGame() {
 
     if (players.length === 0) {
         return (
-            <Container>
-                <PageHeader
-                    title="Illuminati"
-                    onBack={() => navigate(-1)}
-                    rightAction={
-                        <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                            <HelpCircle size={20} />
-                        </IconButton>
-                    }
-                />
-                {helpModal}
-                <Content>
-                    <Message>
-                        Necesitas agregar jugadores para jugar Illuminati.
-                        <br />
-                        Ve al menú de juegos y agrega jugadores.
-                    </Message>
-                </Content>
-            </Container>
+            <GameShell gameId="illuminati" status="Sin jugadores">
+                <Message>
+                    Illuminati necesita al menos un jugador. Añádelos desde el chip de la cabecera.
+                </Message>
+            </GameShell>
         );
     }
 
+    const clickableRow =
+        gamePhase === 'selectFirst' ? 4 : gamePhase === 'selectNext' ? currentRow : -1;
+    const roundEnd = gamePhase === 'roundEnd' || gamePhase === 'finished';
+    const bad = messageType === 'error';
+
+    const status =
+        gamePhase === 'finished'
+            ? 'Partida completa'
+            : `${players[currentPlayerIndex]?.name} · fila ${5 - currentRow} de 5`;
+
+    const footer =
+        gamePhase === 'guessing' ? (
+            <Options>
+                <Button size="lg" color={GAME.color} onClick={() => makeGuess(true)}>
+                    <ArrowUp size={16} /> Mayor
+                </Button>
+                <Button variant="secondary" size="lg" onClick={() => makeGuess(false)}>
+                    <ArrowDown size={16} /> Menor
+                </Button>
+            </Options>
+        ) : roundEnd ? (
+            <Button
+                size="lg"
+                fullWidth
+                onClick={gamePhase === 'finished' ? initializeGame : nextPlayer}
+            >
+                {gamePhase === 'finished' ? 'Nueva partida' : 'Pásale el móvil al siguiente'}
+            </Button>
+        ) : null;
+
     return (
-        <Container>
-            <PageHeader
-                title="Illuminati"
-                onBack={() => navigate(-1)}
-                rightAction={
-                    <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-                        <HelpCircle size={20} />
-                    </IconButton>
-                }
-            />
-            {helpModal}
+        <GameShell
+            gameId="illuminati"
+            status={status}
+            footer={footer}
+            stageGap={0}
+            stageJustify="flex-start"
+        >
+            {!roundEnd && <Message>{message}</Message>}
 
-            <Content>
-
-                {gamePhase !== 'finished' && (
-                    <PlayerIndicator>
-                        <PlayerLabel>Turno de</PlayerLabel>
-                        <PlayerName>{players[currentPlayerIndex]?.name}</PlayerName>
-                    </PlayerIndicator>
-                )}
-
-                <PyramidContainer>
-                    {pyramid.map((row, rowIdx) => (
-                        <PyramidRow key={rowIdx}>
-                            {row.map((card, colIdx) => (
+            <Pyramid>
+                {pyramid.map((row, rowIdx) => (
+                    <Row key={rowIdx}>
+                        {row.map((card, colIdx) => {
+                            const clickable = rowIdx === clickableRow;
+                            const selected =
+                                gamePhase === 'guessing' &&
+                                rowIdx === currentRow &&
+                                colIdx === currentCardIndex;
+                            const face = card.revealed && !card.used;
+                            return (
                                 <Card
                                     key={`${rowIdx}-${colIdx}`}
-                                    $revealed={card.revealed}
-                                    $used={card.used}
-                                    $current={gamePhase === 'selectNext' && rowIdx === currentRow && colIdx === currentCardIndex}
-                                    $clickable={
-                                        (gamePhase === 'selectFirst' && rowIdx === 4) ||
-                                        (gamePhase === 'selectNext' && rowIdx === currentRow)
-                                    }
+                                    $face={face}
+                                    $selected={selected}
+                                    $clickable={clickable}
                                     onClick={() => handleCardClick(rowIdx, colIdx)}
+                                    aria-label={face ? `${card.value}${card.suit}` : 'Carta tapada'}
                                 >
-                                    {card.revealed && !card.used && (
+                                    {face && (
                                         <>
                                             <CardValue $suit={card.suit}>{card.value}</CardValue>
                                             <CardSuit $suit={card.suit}>{card.suit}</CardSuit>
                                         </>
                                     )}
                                 </Card>
-                            ))}
-                        </PyramidRow>
-                    ))}
-                </PyramidContainer>
+                            );
+                        })}
+                    </Row>
+                ))}
+            </Pyramid>
 
-                {gamePhase === 'guessing' && (
-                    <ButtonContainer>
-                        <Button fullWidth onClick={() => makeGuess(true)}>
-                            <ArrowUp size={16} /> Mayor
-                        </Button>
-                        <Button fullWidth variant="secondary" onClick={() => makeGuess(false)}>
-                            <ArrowDown size={16} /> Menor
-                        </Button>
-                    </ButtonContainer>
-                )}
-
-                {gamePhase === 'finished' && (
-                    <>
-                        <Message $type="success">
-                            <MessageInline>
-                                <CheckCircle2 size={18} />
-                                {message}
-                            </MessageInline>
-                        </Message>
-                        <Button onClick={initializeGame}>
-                            Nueva partida
-                        </Button>
-                    </>
-                )}
-
-                {gamePhase === 'roundEnd' && (
-                    <>
-                        <Message $type={messageType}>
-                            <MessageInline>
-                                {messageType === 'success' && <CheckCircle2 size={18} />}
-                                {messageType === 'error' && <XCircle size={18} />}
-                                {message}
-                            </MessageInline>
-                        </Message>
-                        <Button fullWidth onClick={nextPlayer}>
-                            Siguiente jugador
-                        </Button>
-                    </>
-                )}
-
-                {message && gamePhase !== 'finished' && gamePhase !== 'guessing' && gamePhase !== 'roundEnd' && (
-                    <Message $type={messageType}>
-                        <MessageInline>
-                            {messageType === 'success' && <CheckCircle2 size={18} />}
-                            {messageType === 'error' && <XCircle size={18} />}
-                            {message}
-                        </MessageInline>
-                    </Message>
-                )}
-            </Content>
-        </Container>
+            {roundEnd && <Feedback $bad={bad}>{message}</Feedback>}
+        </GameShell>
     );
 }

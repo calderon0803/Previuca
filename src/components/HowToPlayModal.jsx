@@ -1,45 +1,61 @@
 import React from 'react';
 import styled from 'styled-components';
-import Modal from './ui/Modal';
+import BottomSheet, { SheetTitle } from './ui/BottomSheet';
+import Button from './ui/Button';
+import { gameById } from '../data/games';
 
-const Title = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 ${({ theme }) => theme.spacing(4)} 0;
-  text-align: center;
+// Reglas del juego, en 2–3 párrafos. El botón `question` de cada partida la abre.
+
+const Title = styled(SheetTitle)`
+  margin-bottom: ${({ theme }) => theme.spacing(4)};
 `;
 
 const Body = styled.div`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(3.5)};
+  margin-bottom: ${({ theme }) => theme.spacing(5)};
 
   p {
-    margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
-  }
-
-  p:last-child {
-    margin-bottom: 0;
-  }
-
-  ul {
-    margin: 0 0 ${({ theme }) => theme.spacing(3)} 0;
-    padding-left: ${({ theme }) => theme.spacing(5)};
-  }
-
-  li {
-    margin-bottom: ${({ theme }) => theme.spacing(1.5)};
+    font-size: 15px;
+    line-height: 1.6;
+    color: ${({ theme }) => theme.colors.text.secondary};
+    margin: 0;
   }
 
   strong {
     color: ${({ theme }) => theme.colors.text.primary};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  }
+
+  ul {
+    margin: 0;
+    padding-left: ${({ theme }) => theme.spacing(5)};
+    font-size: 15px;
+    line-height: 1.6;
+    color: ${({ theme }) => theme.colors.text.secondary};
   }
 `;
 
-export default function HowToPlayModal({ visible, onClose, title, children }) {
+export default function HowToPlayModal({ visible, onClose, gameId, title, children }) {
+    const game = gameId ? gameById[gameId] : null;
+
     return (
-        <Modal visible={visible} onClose={onClose}>
-            <Title>{title}</Title>
-            <Body>{children}</Body>
-        </Modal>
+        <BottomSheet visible={visible} onClose={onClose}>
+            <Title>{game?.help ? title || game.name : title}</Title>
+            <Body>
+                {game?.help
+                    ? game.help.map((para, i) => <p key={i}>{para}</p>)
+                    : children}
+            </Body>
+            <Button
+                variant="secondary"
+                size="lg"
+                fullWidth
+                onClick={onClose}
+            >
+                Entendido
+            </Button>
+        </BottomSheet>
     );
 }

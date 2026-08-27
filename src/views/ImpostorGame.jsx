@@ -1,381 +1,350 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { HelpCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { VenetianMask } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
-import { wordBank } from '../data/impostorWords';
-import HowToPlayModal from '../components/HowToPlayModal';
-import PageHeader from '../components/ui/PageHeader';
-import IconButton from '../components/ui/IconButton';
+import { randomTopic } from '../data/impostorWords';
+import { gameById } from '../data/games';
+import GameShell from '../components/GameShell';
+import HoldToReveal from '../components/HoldToReveal';
 import Button from '../components/ui/Button';
+import ConfirmSheet from '../components/ui/ConfirmSheet';
+import { SignatureLine } from '../components/ui/Signature';
 
-const Container = styled.div`
-  min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.background};
-  display: flex;
-  flex-direction: column;
-`;
+const GAME = gameById.impostor;
 
-const Content = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: ${({ theme }) => theme.spacing(6)};
-  perspective: 1000px;
-`;
-
-const Card = styled(motion.div)`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.lg};
-  padding: ${({ theme }) => theme.spacing(8)};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  box-shadow: ${({ theme }) => theme.shadows.md};
-  margin: auto;
-  width: 100%;
-  max-width: 480px;
-  backface-visibility: hidden;
-  box-sizing: border-box;
-`;
-
-const PhaseLabel = styled.span`
-  color: ${({ theme }) => theme.colors.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+const HandKicker = styled.p`
+  align-self: flex-start;
+  margin: 0 0 2px;
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.text.muted};
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
+`;
+
+const HandName = styled.p`
+  align-self: flex-start;
+  margin: 0 0 ${({ theme }) => theme.spacing(5)};
+  font-size: 30px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: -0.02em;
+`;
+
+// Kicker siempre neutro: el contraste con la palabra/rol en grande es lo que
+// da jerarquía. Si el kicker también se tiñe de rojo, todo el bloque se ve
+// como una mancha monocroma sin foco.
+const RoleLabel = styled.span`
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${({ theme }) => theme.colors.text.muted};
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
   margin-bottom: ${({ theme }) => theme.spacing(3)};
+  text-align: center;
+  padding: 0 ${({ theme }) => theme.spacing(4)};
 `;
 
-const Title = styled.h2`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.fontSize.xxl};
+// Mismo dato, misma etiqueta en las dos caras: es el tema del que sale la
+// palabra, y le sirve de pista al impostor solo porque no tiene la palabra —
+// llamarlo "pista" únicamente en su cara sugeriría que es una información
+// distinta. Antes el impostor tenía además una frase de relleno ("Tira por
+// ahí...") que no aportaba nada — esa indicación ya está en las reglas.
+const ThemeNote = styled.span`
+  margin-top: ${({ theme }) => theme.spacing(3)};
+  padding: 0 ${({ theme }) => theme.spacing(5)};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.text.muted};
+  text-align: center;
+`;
+
+// Mismo tamaño en las dos caras: para el impostor esto ya no es la temática
+// (que puede ser larga y variar de longitud) sino la palabra fija "Impostor",
+// así que no necesita encogerse para no desbordar.
+const SecretWord = styled.span`
+  font-size: 34px;
+  line-height: 1.2;
   font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  margin: 0 0 ${({ theme }) => theme.spacing(5)} 0;
+  letter-spacing: -0.02em;
+  text-align: center;
+  padding: 0 ${({ theme }) => theme.spacing(5)};
+  color: ${({ theme, $impostor }) => ($impostor ? '#e0777c' : theme.colors.text.primary)};
 `;
 
-const Instruction = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: ${({ theme }) => theme.typography.fontSize.md};
-  line-height: 1.6;
-  margin-bottom: ${({ theme }) => theme.spacing(6)};
+const Hint = styled.p`
+  align-self: flex-start;
+  margin: ${({ theme }) => theme.spacing(4.5)} 2px 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: ${({ theme }) => theme.colors.text.muted};
 `;
 
-const SecretBox = styled(motion.div)`
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: ${({ theme }) => theme.radii.lg};
-  padding: ${({ theme }) => theme.spacing(9)};
+const DebateTitle = styled.h2`
+  align-self: flex-start;
+  margin: 0 0 ${({ theme }) => theme.spacing(2)};
+  font-size: 26px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: -0.02em;
+`;
+
+const DebateText = styled.p`
+  align-self: flex-start;
+  margin: 0 0 ${({ theme }) => theme.spacing(5)};
+  font-size: 14px;
+  line-height: 1.55;
+  color: ${({ theme }) => theme.colors.text.muted};
+`;
+
+const PlayerList = styled.div`
   width: 100%;
-  margin: ${({ theme }) => theme.spacing(4)} 0;
-  border: 1px dashed ${({ theme, $isRevealing }) => ($isRevealing ? theme.colors.primary : theme.colors.border)};
   display: flex;
   flex-direction: column;
+  gap: 9px;
+`;
+
+const PlayerRow = styled.button`
+  display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(3)};
-  user-select: none;
-  -webkit-touch-callout: none;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing(2.5)};
+  height: 52px;
+  padding: 0 ${({ theme }) => theme.spacing(4)};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  background: transparent;
+  border: 1px solid
+    ${({ theme, $out }) => ($out ? theme.colors.border : theme.colors.borderStrong)};
+  color: ${({ theme, $out }) => ($out ? theme.colors.text.disabled : theme.colors.text.primary)};
+  font-size: 16px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  text-align: left;
+  cursor: ${({ $out }) => ($out ? 'default' : 'pointer')};
   transition: border-color ${({ theme }) => theme.transitions.fast};
-  position: relative;
-  overflow: hidden;
-  touch-action: none;
-  box-sizing: border-box;
-`;
 
-const SecretText = styled.span`
-  font-size: ${({ $size }) => $size || '32px'};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  /* "swipe" vive sobre SwipeCover, un fondo oscuro fijo (no depende del
-     tema), así que usa un dorado fijo en vez del accent del tema. */
-  color: ${({ theme, $variant }) =>
-    $variant === 'impostor' ? theme.colors.error :
-    $variant === 'swipe' ? '#D9A54B' :
-    theme.colors.text.primary};
-`;
-
-const SwipeCover = styled(motion.div)`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(18, 19, 23, 0.94);
-  backdrop-filter: blur(8px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: ${({ theme }) => theme.spacing(3)};
-  cursor: grab;
-  z-index: 10;
-
-  &:active {
-    cursor: grabbing;
+  &:hover {
+    border-color: ${({ $out }) => ($out ? undefined : GAME.color)};
   }
 `;
 
-const WordContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing(3)};
-  width: 100%;
-  min-height: 140px;
-  justify-content: center;
+const RowNote = styled.span`
+  font-size: 12.5px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.regular};
+  color: ${({ theme }) => theme.colors.text.faint};
 `;
 
-const PlayerGrid = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(2.5)};
+const ResultCard = styled.div`
+  position: relative;
+  overflow: hidden;
   width: 100%;
-  margin-bottom: ${({ theme }) => theme.spacing(4)};
+  background: ${({ theme }) => theme.colors.surfaceRaised};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  padding: ${({ theme }) => theme.spacing(6.5)};
+  box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.borderStrong};
+  animation: pv-pop 0.22s ease;
+`;
+
+const ResultKicker = styled.p`
+  position: relative;
+  margin: 0 0 ${({ theme }) => theme.spacing(2.5)};
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${GAME.kicker};
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+`;
+
+const ResultTitle = styled.p`
+  position: relative;
+  margin: 0 0 ${({ theme }) => theme.spacing(3)};
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: -0.02em;
+`;
+
+const ResultText = styled.p`
+  position: relative;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: ${({ theme }) => theme.colors.text.secondary};
 `;
 
 export default function ImpostorGame() {
-  const navigate = useNavigate();
-  const { players } = usePlayers();
+    const navigate = useNavigate();
+    const { players } = usePlayers();
 
-  // Game Phases: 'start', 'reveal', 'describe', 'result'
-  const [phase, setPhase] = useState('start');
-  const [gameState, setGameState] = useState(null);
-  const [revealIndex, setRevealIndex] = useState(0);
-  const [isRevealing, setIsRevealing] = useState(false);
-  const [hasRevealed, setHasRevealed] = useState(false);
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [showHelp, setShowHelp] = useState(false);
-  const [eliminatedIndexes, setEliminatedIndexes] = useState([]);
-  const [caughtIndex, setCaughtIndex] = useState(null);
+    const [round, setRound] = useState(null);
+    const [phase, setPhase] = useState('reveal');
+    const [index, setIndex] = useState(0);
+    const [seen, setSeen] = useState(false);
+    const [eliminated, setEliminated] = useState([]);
+    const [caught, setCaught] = useState(null);
+    const [confirm, setConfirm] = useState(null);
 
-  const helpModal = (
-    <HowToPlayModal visible={showHelp} onClose={() => setShowHelp(false)} title="Impostor">
-      <p>
-        Todos recibís la misma palabra secreta... excepto uno, el impostor, que no recibe
-        ninguna.
-      </p>
-      <p>
-        El móvil va pasando de mano en mano: cada jugador desliza su tarjeta para ver su palabra
-        (o descubrir que es el impostor) y se la pasa al siguiente sin que nadie más mire. Cuando
-        todos la han visto, vais describiendo la palabra por turnos con pistas, sin decirla
-        directamente. El impostor tiene que improvisar e intentar no delatarse.
-      </p>
-      <p>
-        Cuando alguien quiera acusar a otro, toca su nombre en la pantalla y confirma. Si es el
-        impostor, ha caído y bebe. Si no lo es, esa persona queda eliminada y la partida sigue con
-        el resto.
-      </p>
-    </HowToPlayModal>
-  );
+    const deal = () => {
+        if (players.length < GAME.min) return;
+        setRound({
+            ...randomTopic(),
+            impostor: Math.floor(Math.random() * players.length),
+        });
+        setPhase('reveal');
+        setIndex(0);
+        setSeen(false);
+        setEliminated([]);
+        setCaught(null);
+    };
 
+    useEffect(() => {
+        if (players.length >= GAME.min && !round) deal();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [players.length]);
 
-  const initGame = () => {
-    if (players.length < 3) return;
-
-    const sourceWords = wordBank;
-    const innocentWord = sourceWords[Math.floor(Math.random() * sourceWords.length)];
-    const imposterIndex = Math.floor(Math.random() * players.length);
-
-    const assignments = players.map((p, i) => ({
-      playerName: p.name,
-      role: i === imposterIndex ? 'impostor' : 'inocente',
-      word: i === imposterIndex ? null : innocentWord
-    }));
-
-    setGameState({ assignments });
-    setPhase('reveal');
-    setRevealIndex(0);
-    setIsRevealing(false);
-    setHasRevealed(false);
-    setSwipeOffset(0);
-    setEliminatedIndexes([]);
-    setCaughtIndex(null);
-  };
-
-  const handleNextReveal = () => {
-    if (revealIndex < players.length - 1) {
-      setRevealIndex(prev => prev + 1);
-      setIsRevealing(false);
-      setHasRevealed(false);
-      setSwipeOffset(0);
-    } else {
-      setPhase('describe');
-    }
-  };
-
-  const handleAccuse = (index) => {
-    const player = players[index];
-    const confirmed = window.confirm(
-      `¿Seguro que queréis desvelar el rol de ${player.name}? Hacedlo solo si todos estáis de acuerdo en acusarlo.`
-    );
-    if (!confirmed) return;
-
-    if (gameState.assignments[index].role === 'impostor') {
-      setCaughtIndex(index);
-      setPhase('result');
-    } else {
-      setEliminatedIndexes((prev) => [...prev, index]);
-      alert(`${player.name} no era el impostor y queda eliminado. ¡Seguid jugando!`);
-    }
-  };
-
-  const resetGame = () => {
-    setPhase('start');
-    setGameState(null);
-    setEliminatedIndexes([]);
-    setCaughtIndex(null);
-  };
-
-  if (players.length < 3) {
-    return (
-      <Container>
-        <PageHeader
-          title="Impostor"
-          onBack={() => navigate(-1)}
-          rightAction={
-            <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-              <HelpCircle size={20} />
-            </IconButton>
-          }
-        />
-        {helpModal}
-        <Content>
-          <Card>
-            <Title>Faltan jugadores</Title>
-            <Instruction>Este juego requiere al menos 3 jugadores para ser divertido.</Instruction>
-            <Button size="lg" fullWidth onClick={() => navigate('/games')}>Volver</Button>
-          </Card>
-        </Content>
-      </Container>
-    );
-  }
-
-  return (
-    <Container>
-      <PageHeader
-        title="Impostor"
-        onBack={() => navigate(-1)}
-        rightAction={
-          <IconButton variant="ghost" onClick={() => setShowHelp(true)} aria-label="Cómo se juega">
-            <HelpCircle size={20} />
-          </IconButton>
-        }
-      />
-      {helpModal}
-
-      <Content>
-        <AnimatePresence mode="wait">
-          {phase === 'start' && (
-            <Card key="start" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-              <PhaseLabel>Preparación</PhaseLabel>
-              <Title>¿Quién es el impostor?</Title>
-              <Instruction>
-                Vais a repartir una palabra secreta entre todos... menos uno. Si no recuerdas cómo
-                va, tienes el icono de ayuda arriba.
-              </Instruction>
-              <Button size="lg" fullWidth onClick={initGame}>Empezar partida</Button>
-            </Card>
-          )}
-
-          {phase === 'reveal' && (
-            <Card key="reveal" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
-              <Title>{players[revealIndex].name}</Title>
-              <Instruction>Desliza para ver tu palabra en secreto y asegúrate de que nadie mire.</Instruction>
-
-              <SecretBox $isRevealing={swipeOffset > 150}>
-                <WordContainer>
-                  {gameState.assignments[revealIndex].role === 'impostor' ? (
-                    <SecretText $variant="impostor" $size="26px">
-                      ERES EL IMPOSTOR
-                    </SecretText>
-                  ) : (
-                    <SecretText>{gameState.assignments[revealIndex].word}</SecretText>
-                  )}
-                </WordContainer>
-
-                <SwipeCover
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 400 }}
-                  dragElastic={0}
-                  dragMomentum={false}
-                  onDrag={(event, info) => {
-                    const newOffset = Math.max(0, Math.min(400, info.offset.x));
-                    setSwipeOffset(newOffset);
-                    if (newOffset > 150 && !hasRevealed) {
-                      setHasRevealed(true);
-                      setIsRevealing(true);
-                    }
-                  }}
-                  onDragEnd={() => {
-                    setSwipeOffset(0);
-                  }}
-                  animate={{ x: swipeOffset }}
-                  transition={{ type: "spring", stiffness: 500, damping: 40 }}
-                >
-                  <SecretText $variant="swipe" $size="24px">DESLIZA →</SecretText>
-                  <Instruction style={{ marginBottom: 0, color: '#D9A54B', fontSize: '14px' }}>
-                    Arrastra para revelar
-                  </Instruction>
-                </SwipeCover>
-              </SecretBox>
-
-              <Button
-                size="lg"
-                fullWidth
-                onClick={handleNextReveal}
-                disabled={!isRevealing}
-              >
-                {revealIndex < players.length - 1 ? 'Siguiente jugador' : 'Listos'}
-              </Button>
-            </Card>
-          )}
-
-          {phase === 'describe' && (
-            <Card key="describe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <PhaseLabel>Debate</PhaseLabel>
-              <Title>¡A debatir!</Title>
-              <Instruction>
-                Describid vuestra palabra por turnos. Cuando alguien quiera acusar, tocad su
-                nombre aquí abajo.
-              </Instruction>
-
-              <PlayerGrid>
-                {players.map((player, index) => {
-                  const isEliminated = eliminatedIndexes.includes(index);
-                  return (
-                    <Button
-                      key={player.id ?? index}
-                      variant="secondary"
-                      fullWidth
-                      disabled={isEliminated}
-                      onClick={() => handleAccuse(index)}
-                    >
-                      {isEliminated ? `${player.name} (eliminado)` : player.name}
+    if (players.length < GAME.min) {
+        return (
+            <GameShell
+                gameId="impostor"
+                status={`Hacen falta ${GAME.min} jugadores`}
+                footer={
+                    <Button size="lg" fullWidth onClick={() => navigate('/games')}>
+                        Volver a los juegos
                     </Button>
-                  );
-                })}
-              </PlayerGrid>
+                }
+            >
+                <DebateTitle>Faltan jugadores</DebateTitle>
+                <DebateText>
+                    Impostor se juega con {GAME.min} o más. Añádelos desde el chip de la cabecera.
+                </DebateText>
+            </GameShell>
+        );
+    }
 
-              <Button variant="ghost" fullWidth onClick={resetGame}>Cancelar partida</Button>
-            </Card>
-          )}
+    if (!round) return null;
 
-          {phase === 'result' && (
-            <Card key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <PhaseLabel>Resultado</PhaseLabel>
-              <Title>¡{players[caughtIndex]?.name} era el impostor!</Title>
-              <Instruction>
-                Que beba. La palabra secreta era «
-                {gameState.assignments.find((a) => a.role !== 'impostor')?.word}».
-              </Instruction>
+    const isImpostor = index === round.impostor;
+    const alive = players.length - eliminated.length;
 
-              <Button size="lg" fullWidth onClick={resetGame}>Nueva partida</Button>
-            </Card>
-          )}
-        </AnimatePresence>
-      </Content>
-    </Container>
-  );
+    const askAccuse = (i) => {
+        setConfirm({
+            title: `¿Acusáis a ${players[i].name}?`,
+            text: 'Hacedlo solo si estáis de acuerdo. Si no es el impostor, queda eliminado y la partida sigue.',
+            cta: 'Acusar',
+            run: () => {
+                if (i === round.impostor) {
+                    setCaught(i);
+                    setPhase('result');
+                } else {
+                    // Sin duplicar: un doble toque en «Acusar» no debe restar
+                    // dos jugadores del recuento.
+                    setEliminated((prev) => (prev.includes(i) ? prev : [...prev, i]));
+                }
+            },
+        });
+    };
+
+    const nextReveal = () => {
+        if (index < players.length - 1) {
+            setIndex((prev) => prev + 1);
+            setSeen(false);
+        } else {
+            setPhase('debate');
+        }
+    };
+
+    const status =
+        phase === 'reveal'
+            ? `Reparto ${index + 1} de ${players.length}`
+            : phase === 'debate'
+                ? `Debate · ${alive} en juego`
+                : 'Resultado';
+
+    const footer =
+        phase === 'reveal' ? (
+            <Button size="lg" color={GAME.color} fullWidth disabled={!seen} onClick={nextReveal}>
+                {index < players.length - 1
+                    ? `Pásale el móvil a ${players[index + 1]?.name || ''}`
+                    : 'Ya lo hemos visto todos'}
+            </Button>
+        ) : phase === 'debate' ? (
+            <Button variant="secondary" size="md" fullWidth onClick={deal}>
+                Cancelar partida
+            </Button>
+        ) : (
+            <Button size="lg" color={GAME.color} fullWidth onClick={deal}>
+                Otra partida
+            </Button>
+        );
+
+    return (
+        <GameShell
+            gameId="impostor"
+            status={status}
+            footer={footer}
+            stageGap={0}
+            stageJustify={phase === 'debate' ? 'flex-start' : 'center'}
+        >
+            {phase === 'reveal' && (
+                <>
+                    <HandKicker>El móvil es de</HandKicker>
+                    <HandName>{players[index].name}</HandName>
+                    <HoldToReveal
+                        color={GAME.color}
+                        ring="#423a6a"
+                        glyph={<VenetianMask size={30} />}
+                        onSeen={() => setSeen(true)}
+                    >
+                        <RoleLabel>{isImpostor ? 'Tu rol' : 'Vuestra palabra'}</RoleLabel>
+                        <SecretWord $impostor={isImpostor}>
+                            {isImpostor ? 'Impostor' : round.word}
+                        </SecretWord>
+                        <ThemeNote>
+                            {`Tema: ${round.theme}`}
+                        </ThemeNote>
+                    </HoldToReveal>
+                    <Hint>
+                        {seen
+                            ? 'Suelta y pásale el móvil al siguiente.'
+                            : 'Mantén pulsado el tiempo que necesites: al soltar se vuelve a tapar.'}
+                    </Hint>
+                </>
+            )}
+
+            {phase === 'debate' && (
+                <>
+                    <DebateTitle>A debatir</DebateTitle>
+                    <DebateText>
+                        Describid vuestra palabra por turnos, sin decirla. Cuando os pongáis de
+                        acuerdo, acusad a alguien.
+                    </DebateText>
+                    <PlayerList>
+                        {players.map((player, i) => {
+                            const out = eliminated.includes(i);
+                            return (
+                                <PlayerRow
+                                    key={player.id ?? i}
+                                    $out={out}
+                                    disabled={out}
+                                    onClick={() => (out ? null : askAccuse(i))}
+                                >
+                                    <span>{player.name}</span>
+                                    <RowNote>{out ? 'eliminado' : 'acusar'}</RowNote>
+                                </PlayerRow>
+                            );
+                        })}
+                    </PlayerList>
+                </>
+            )}
+
+            {phase === 'result' && (
+                <ResultCard>
+                    <SignatureLine $color={GAME.color} aria-hidden="true" />
+                    <ResultKicker>Resultado</ResultKicker>
+                    <ResultTitle>{players[caught]?.name} era el impostor</ResultTitle>
+                    <ResultText>
+                        Que beba. La palabra era «{round.word}», del tema «{round.theme}».
+                    </ResultText>
+                </ResultCard>
+            )}
+
+            <ConfirmSheet confirm={confirm} onClose={() => setConfirm(null)} />
+        </GameShell>
+    );
 }
