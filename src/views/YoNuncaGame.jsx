@@ -8,6 +8,7 @@ import OptionsEditor from '../components/OptionsEditor';
 import GameShell from '../components/GameShell';
 import GameCard from '../components/ui/GameCard';
 import Button from '../components/ui/Button';
+import IconButton from '../components/ui/IconButton';
 import { SignatureLine, SignatureHalo } from '../components/ui/Signature';
 
 const QUESTIONS_KEY = 'yonunca_questions';
@@ -39,28 +40,6 @@ const Note = styled.p`
   margin: 0 2px;
   font-size: 14px;
   color: ${({ theme }) => theme.colors.text.muted};
-`;
-
-const FooterRow = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing(2.5)};
-`;
-
-const EditButton = styled.button`
-  width: 52px;
-  height: 50px;
-  flex-shrink: 0;
-  border-radius: ${({ theme }) => theme.radii.sm};
-  border: 1px solid ${({ theme }) => theme.colors.borderStrong};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.borderHover};
-  }
 `;
 
 export default function YoNuncaGame() {
@@ -102,15 +81,15 @@ export default function YoNuncaGame() {
             status={`${index + 1} de ${questions.length}`}
             progress={(index + 1) / questions.length}
             showPlayers={false}
+            extraActions={
+                <IconButton onClick={() => setShowEditor(true)} aria-label="Editar frases">
+                    <Pencil size={20} />
+                </IconButton>
+            }
             footer={
-                <FooterRow>
-                    <EditButton onClick={() => setShowEditor(true)} aria-label="Editar frases">
-                        <Pencil size={20} />
-                    </EditButton>
-                    <Button size="lg" color={GAME.color} fullWidth onClick={handleNext}>
-                        {isLast ? 'Finalizar' : 'Siguiente frase'}
-                    </Button>
-                </FooterRow>
+                <Button size="lg" color={GAME.color} fullWidth onClick={handleNext}>
+                    {isLast ? 'Finalizar' : 'Siguiente frase'}
+                </Button>
             }
         >
             <GameCard key={index}>

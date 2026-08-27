@@ -12,3 +12,4 @@ export { default as LoadingScreen } from './LoadingScreen';
 export { default as Kicker } from './Kicker';
 export { default as Signature, SignatureLine, SignatureHalo } from './Signature';
 export { default as Screen, Content, Stage, Footer, FooterRow } from './Screen';
+export { default as PlayingCard, CardValue, CardSuit, CardGlyph } from './PlayingCard';

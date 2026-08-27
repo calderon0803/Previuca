@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
+import { generateDeck, shuffleDeck, cardInk } from '../data/deck';
 import { gameById } from '../data/games';
 import GameShell from '../components/GameShell';
+import TurnLine from '../components/TurnLine';
 import Button from '../components/ui/Button';
+import { PlayingCard, CardValue, CardSuit } from '../components/ui/PlayingCard';
 
 const GAME = gameById.illuminati;
-
-const ink = (suit) => (suit === '♥' || suit === '♦' ? '#b0343c' : '#22242e');
 
 const Message = styled.p`
     margin: 0 0 ${({ theme }) => theme.spacing(4.5)};
@@ -31,37 +32,6 @@ const Row = styled.div`
     justify-content: center;
 `;
 
-const Card = styled.button`
-    width: 46px;
-    height: 62px;
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: ${({ theme, $face }) =>
-        $face ? theme.colors.text.primary : 'linear-gradient(160deg, #2b2741, #1c1e2c)'};
-    border: 1px solid
-        ${({ theme, $selected, $clickable }) =>
-        $selected ? GAME.color : $clickable ? '#5d5294' : theme.colors.borderStrong};
-    opacity: ${({ $face, $selected, $clickable }) => ($face || $selected || $clickable ? 1 : 0.55)};
-    cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
-    transition: border-color ${({ theme }) => theme.transitions.fast},
-        opacity ${({ theme }) => theme.transitions.fast};
-`;
-
-const CardValue = styled.span`
-    font-size: 15px;
-    line-height: 1;
-    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-    color: ${({ $suit }) => ink($suit)};
-`;
-
-const CardSuit = styled.span`
-    font-size: 13px;
-    color: ${({ $suit }) => ink($suit)};
-`;
-
 const Feedback = styled.div`
     margin-top: ${({ theme }) => theme.spacing(5)};
     width: 100%;
@@ -82,23 +52,6 @@ const Options = styled.div`
     gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
-const SUITS = ['♠', '♥', '♦', '♣'];
-const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-
-const createDeck = () => {
-    const deck = [];
-    for (let suit of SUITS) {
-        for (let i = 0; i < VALUES.length; i++) {
-            deck.push({
-                value: VALUES[i],
-                numericValue: i + 1,
-                suit: suit
-            });
-        }
-    }
-    return deck.sort(() => Math.random() - 0.5);
-};
-
 export default function IlluminatiGame() {
     const { players } = usePlayers();
 
@@ -118,7 +71,7 @@ export default function IlluminatiGame() {
     }, []);
 
     const initializeGame = () => {
-        const newDeck = createDeck();
+        const newDeck = shuffleDeck(generateDeck());
 
         // Crear la pirámide: [1, 2, 3, 4, 5] cartas por fila
         const pyramidCards = [];
@@ -186,8 +139,8 @@ export default function IlluminatiGame() {
         );
         setPyramid(newPyramid);
 
-        const isTie = card.numericValue === previousCard.numericValue;
-        const isHigher = card.numericValue > previousCard.numericValue;
+        const isTie = card.n === previousCard.n;
+        const isHigher = card.n > previousCard.n;
         const isCorrect = !isTie && (guessHigher ? isHigher : !isHigher);
 
         if (isCorrect) {
@@ -235,7 +188,7 @@ export default function IlluminatiGame() {
         const replacedPyramid = newPyramid.map(row =>
             row.map(card => {
                 if (card.used) {
-                    const newCard = deck[deckIndex] || createDeck()[0];
+                    const newCard = deck[deckIndex] || generateDeck()[0];
                     deckIndex++;
                     return {
                         ...newCard,
@@ -282,10 +235,16 @@ export default function IlluminatiGame() {
     const roundEnd = gamePhase === 'roundEnd' || gamePhase === 'finished';
     const bad = messageType === 'error';
 
-    const status =
-        gamePhase === 'finished'
-            ? 'Partida completa'
-            : `${players[currentPlayerIndex]?.name} · fila ${5 - currentRow} de 5`;
+    const status = gamePhase === 'finished' ? 'Partida completa' : `Fila ${5 - currentRow} de 5`;
+
+    const upcomingPlayerName = (() => {
+        let nextIndex = (currentPlayerIndex + 1) % players.length;
+        while (completedPlayers.includes(players[nextIndex].name)) {
+            nextIndex = (nextIndex + 1) % players.length;
+            if (nextIndex === currentPlayerIndex) break;
+        }
+        return players[nextIndex]?.name;
+    })();
 
     const footer =
         gamePhase === 'guessing' ? (
@@ -303,7 +262,7 @@ export default function IlluminatiGame() {
                 fullWidth
                 onClick={gamePhase === 'finished' ? initializeGame : nextPlayer}
             >
-                {gamePhase === 'finished' ? 'Nueva partida' : 'Pásale el móvil al siguiente'}
+                {gamePhase === 'finished' ? 'Nueva partida' : `Pásale el móvil a ${upcomingPlayerName}`}
             </Button>
         ) : null;
 
@@ -315,6 +274,7 @@ export default function IlluminatiGame() {
             stageGap={0}
             stageJustify="flex-start"
         >
+            {!roundEnd && <TurnLine name={players[currentPlayerIndex]?.name} />}
             {!roundEnd && <Message>{message}</Message>}
 
             <Pyramid>
@@ -328,21 +288,24 @@ export default function IlluminatiGame() {
                                 colIdx === currentCardIndex;
                             const face = card.revealed && !card.used;
                             return (
-                                <Card
+                                <PlayingCard
                                     key={`${rowIdx}-${colIdx}`}
+                                    as="button"
+                                    $size="sm"
                                     $face={face}
                                     $selected={selected}
                                     $clickable={clickable}
+                                    $dim={!face && !selected && !clickable}
                                     onClick={() => handleCardClick(rowIdx, colIdx)}
                                     aria-label={face ? `${card.value}${card.suit}` : 'Carta tapada'}
                                 >
                                     {face && (
                                         <>
-                                            <CardValue $suit={card.suit}>{card.value}</CardValue>
-                                            <CardSuit $suit={card.suit}>{card.suit}</CardSuit>
+                                            <CardValue $size="sm" $ink={cardInk(card.red)}>{card.value}</CardValue>
+                                            <CardSuit $size="sm" $ink={cardInk(card.red)}>{card.suit}</CardSuit>
                                         </>
                                     )}
-                                </Card>
+                                </PlayingCard>
                             );
                         })}
                     </Row>

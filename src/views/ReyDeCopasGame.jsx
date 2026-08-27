@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Crown } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
-import { cardRules, generateDeck, shuffleDeck, cardInk } from '../data/reyDeCopasRules';
+import { cardRules } from '../data/reyDeCopasRules';
+import { generateDeck, shuffleDeck, cardInk } from '../data/deck';
 import { gameById } from '../data/games';
 import GameShell from '../components/GameShell';
+import TurnLine from '../components/TurnLine';
 import Button from '../components/ui/Button';
+import { PlayingCard, CardValue, CardSuit } from '../components/ui/PlayingCard';
 import { SignatureLine } from '../components/ui/Signature';
 
 const GAME = gameById.reydecopas;
 
-const TurnKicker = styled.p`
+// Fin de la baraja: no es un turno, es un mensaje de estado — no usa TurnLine.
+const EndKicker = styled.p`
   margin: 0 0 4px;
   font-size: 12px;
   color: ${({ theme }) => theme.colors.text.muted};
@@ -18,7 +21,7 @@ const TurnKicker = styled.p`
   letter-spacing: 0.12em;
 `;
 
-const TurnName = styled.p`
+const EndTitle = styled.p`
   margin: 0 0 ${({ theme }) => theme.spacing(6.5)};
   font-size: 30px;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
@@ -33,74 +36,10 @@ const Choices = styled.div`
   max-width: 340px;
 `;
 
-const CardBack = styled.button`
-  position: relative;
-  width: 88px;
-  height: 124px;
-  border-radius: ${({ theme }) => theme.radii.sm};
-  border: 1px solid #423a6a;
-  background: linear-gradient(160deg, #2b2741, #1c1e2c);
-  color: ${GAME.color};
-  transition: transform ${({ theme }) => theme.transitions.fast},
-    border-color ${({ theme }) => theme.transitions.fast};
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 9px;
-    border: 1px solid rgba(201, 134, 46, 0.35);
-    border-radius: 4px;
-  }
-
-  &:hover {
-    transform: translateY(-4px);
-    border-color: ${GAME.color};
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
-const BackGlyph = styled.span`
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  opacity: 0.5;
-`;
-
 const Hint = styled.p`
   margin: ${({ theme }) => theme.spacing(6.5)} 0 0;
   font-size: 13.5px;
   color: ${({ theme }) => theme.colors.text.faint};
-`;
-
-const PlayingCard = styled.div`
-  width: 150px;
-  height: 210px;
-  flex-shrink: 0;
-  border-radius: ${({ theme }) => theme.radii.sm};
-  background: ${({ theme }) => theme.colors.text.primary};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
-`;
-
-const CardValue = styled.span`
-  font-size: 62px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  line-height: 1;
-  color: ${({ $ink }) => $ink};
-`;
-
-const CardSuit = styled.span`
-  font-size: 36px;
-  margin-top: 6px;
-  color: ${({ $ink }) => $ink};
 `;
 
 const RuleCard = styled.div`
@@ -215,9 +154,10 @@ export default function ReyDeCopasGame() {
         >
             {card ? (
                 <>
-                    <PlayingCard>
-                        <CardValue $ink={cardInk(card.red)}>{card.value}</CardValue>
-                        <CardSuit $ink={cardInk(card.red)}>{card.suit}</CardSuit>
+                    <TurnLine name={player ? player.name : 'Quien quiera'} />
+                    <PlayingCard $size="lg" $face>
+                        <CardValue $size="lg" $ink={cardInk(card.red)}>{card.value}</CardValue>
+                        <CardSuit $size="lg" $ink={cardInk(card.red)}>{card.suit}</CardSuit>
                     </PlayingCard>
                     <RuleCard style={{ marginTop: 22 }}>
                         <SignatureLine $color={GAME.color} aria-hidden="true" />
@@ -234,21 +174,25 @@ export default function ReyDeCopasGame() {
                 </>
             ) : deck.length > 0 ? (
                 <>
-                    <TurnKicker>Le toca a</TurnKicker>
-                    <TurnName>{player ? player.name : 'Quien quiera'}</TurnName>
+                    <TurnLine name={player ? player.name : 'Quien quiera'} />
                     <Choices>
                         {deck.slice(0, Math.min(5, deck.length)).map((_, index) => (
-                            <CardBack key={index} onClick={() => draw(index)} aria-label="Sacar carta">
-                                <BackGlyph aria-hidden="true"><Crown size={26} /></BackGlyph>
-                            </CardBack>
+                            <PlayingCard
+                                key={index}
+                                as="button"
+                                $size="deck"
+                                $clickable
+                                onClick={() => draw(index)}
+                                aria-label="Sacar carta"
+                            />
                         ))}
                     </Choices>
                     <Hint>Elige una carta del mazo</Hint>
                 </>
             ) : (
                 <>
-                    <TurnKicker>Se acabó la baraja</TurnKicker>
-                    <TurnName>52 cartas fuera</TurnName>
+                    <EndKicker>Se acabó la baraja</EndKicker>
+                    <EndTitle>52 cartas fuera</EndTitle>
                     <Hint style={{ marginTop: 0 }}>Baraja otra vez para seguir jugando.</Hint>
                 </>
             )}

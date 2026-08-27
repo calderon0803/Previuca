@@ -32,6 +32,10 @@ export const GlobalStyles = createGlobalStyle`
     height: 100dvh;
     -webkit-tap-highlight-color: transparent;
     background: ${({ theme }) => theme.colors.background};
+    /* Solo panorámica, nunca pellizcar para hacer zoom — el meta viewport ya
+       lo pide, pero algunos navegadores de Android lo ignoran salvo que
+       también se lo digamos por CSS. */
+    touch-action: pan-x pan-y;
   }
 
   body {
@@ -49,6 +53,7 @@ export const GlobalStyles = createGlobalStyle`
     height: 100%;
     height: 100dvh;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
   }
 
   #root {
@@ -100,13 +105,17 @@ export const GlobalStyles = createGlobalStyle`
     outline: none;
   }
 
+  /* box-shadow en vez de outline: el outline del navegador siempre dibuja un
+     rectángulo de esquinas cuadradas, sin importar el border-radius del
+     elemento — en botones, campos y filas redondeadas se veía un anillo que
+     no encajaba con la forma. box-shadow sí sigue el border-radius. */
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.accent};
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.accent};
   }
 
   ::selection {

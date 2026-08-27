@@ -120,7 +120,7 @@ export const games = [
         size: 'row',
         help: [
             'Gira la ruleta y bebe lo que te toque, tal cual pone en la casilla.',
-            'Puedes editar el texto de las 10 casillas a tu gusto — el número de casillas no se toca, solo lo que pone en cada una.',
+            'Puedes editar el texto de las casillas a tu gusto, y añadir o quitar — siempre en número par, entre 10 y 20.',
         ],
     },
     {

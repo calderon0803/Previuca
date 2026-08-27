@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { usePlayers } from '../contexts/PlayersContext';
 import { gameById } from '../data/games';
 import GameShell from '../components/GameShell';
+import TurnLine from '../components/TurnLine';
 import Button from '../components/ui/Button';
 import { SignatureLine } from '../components/ui/Signature';
 
@@ -51,6 +52,7 @@ const RuleCard = styled.div`
   position: relative;
   overflow: hidden;
   width: 100%;
+  margin-top: ${({ theme }) => theme.spacing(6.5)};
   background: ${({ theme }) => theme.colors.surfaceRaised};
   border-radius: ${({ theme }) => theme.radii.sm};
   padding: ${({ theme }) => theme.spacing(5)};
@@ -134,16 +136,13 @@ export default function DiceGame() {
         if (players.length > 0) setTurn((prev) => (prev + 1) % players.length);
     };
 
-    const status =
-        players.length > 0
-            ? `${players[turn % players.length]?.name} lanza`
-            : 'Lanza quien quiera';
+    const turnName = players.length > 0 ? players[turn % players.length]?.name : 'Quien quiera';
+    const nextTurnName = players.length > 0 ? players[(turn + 1) % players.length]?.name : 'Quien quiera';
 
     return (
         <GameShell
             gameId="dados"
-            status={status}
-            stageGap={6.5}
+            stageGap={0}
             footer={
                 <Button
                     size="lg"
@@ -152,10 +151,11 @@ export default function DiceGame() {
                     disabled={rolling}
                     onClick={rule ? nextTurn : roll}
                 >
-                    {rolling ? 'Lanzando...' : rule ? 'Siguiente jugador' : 'Lanzar dados'}
+                    {rolling ? 'Lanzando...' : rule ? `Le toca a ${nextTurnName}` : 'Lanzar dados'}
                 </Button>
             }
         >
+            <TurnLine name={turnName} />
             <Dice>
                 {dice.map((value, i) => (
                     <Face key={i} aria-label={`Dado ${value}`}>

@@ -5,6 +5,7 @@ import { Skull, Shield, User } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
 import { gameById } from '../data/games';
 import GameShell from '../components/GameShell';
+import TurnLine from '../components/TurnLine';
 import HoldToReveal from '../components/HoldToReveal';
 import Button from '../components/ui/Button';
 import { SignatureLine } from '../components/ui/Signature';
@@ -52,23 +53,6 @@ const RoleRowLabel = styled.span`
   font-size: 15px;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   color: ${({ theme }) => theme.colors.text.primary};
-`;
-
-const HandKicker = styled.p`
-  align-self: flex-start;
-  margin: 0 0 2px;
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.text.muted};
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-`;
-
-const HandName = styled.p`
-  align-self: flex-start;
-  margin: 0 0 ${({ theme }) => theme.spacing(5)};
-  font-size: 30px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  letter-spacing: -0.02em;
 `;
 
 const RoleName = styled.span`
@@ -254,8 +238,7 @@ export default function AsesinoGame() {
 
             {phase === 'reveal' && (
                 <>
-                    <HandKicker>El móvil es de</HandKicker>
-                    <HandName>{players[playerIndex]?.name}</HandName>
+                    <TurnLine name={players[playerIndex]?.name} />
                     <HoldToReveal
                         color={GAME.color}
                         glyph={<Skull size={30} />}

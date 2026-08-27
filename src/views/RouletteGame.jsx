@@ -5,6 +5,7 @@ import { usePlayers } from '../contexts/PlayersContext';
 import { gameById } from '../data/games';
 import OptionsEditor from '../components/OptionsEditor';
 import GameShell from '../components/GameShell';
+import TurnLine from '../components/TurnLine';
 import Button from '../components/ui/Button';
 import IconButton from '../components/ui/IconButton';
 import ConfirmSheet from '../components/ui/ConfirmSheet';
@@ -205,15 +206,13 @@ export default function RouletteGame() {
         if (players.length > 0) setTurn((prev) => (prev + 1) % players.length);
     };
 
-    const status =
-        players.length > 0
-            ? `${players[turn % players.length]?.name} · gira`
-            : 'Gira quien quiera';
+    const turnName = players.length > 0 ? players[turn % players.length]?.name : 'Quien quiera';
+    const nextTurnName = players.length > 0 ? players[(turn + 1) % players.length]?.name : 'Quien quiera';
 
     return (
         <GameShell
             gameId="ruleta"
-            status={status}
+            stageGap={0}
             extraActions={
                 <IconButton onClick={() => setShowEditor(true)} aria-label="Editar casillas">
                     <Pencil size={20} />
@@ -225,6 +224,7 @@ export default function RouletteGame() {
                 </Button>
             }
         >
+            <TurnLine name={turnName} />
             <Wheel>
                 <Needle aria-hidden="true" />
                 <Disc $rot={rotation}>
@@ -244,7 +244,7 @@ export default function RouletteGame() {
                         <ResultKicker>Resultado</ResultKicker>
                         <ResultValue>{result}</ResultValue>
                         <Button size="md" fullWidth onClick={nextTurn}>
-                            Siguiente jugador
+                            Le toca a {nextTurnName}
                         </Button>
                     </ResultCard>
                 </ResultOverlay>
@@ -263,8 +263,9 @@ export default function RouletteGame() {
                         run: () => saveOptions(defaultOptions),
                     })
                 }
-                allowAdd={false}
-                allowDelete={false}
+                minItems={10}
+                maxItems={20}
+                requireEven
                 title="Casillas de la ruleta"
                 placeholder="Ej: bebe doble..."
             />

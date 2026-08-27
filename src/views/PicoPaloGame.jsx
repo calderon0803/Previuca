@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Circle, ArrowDownToLine, ArrowUpFromLine, ArrowUp, ArrowDown, Hash, Spade } from 'lucide-react';
+import { Circle, ArrowDownToLine, ArrowUpFromLine, ArrowUp, ArrowDown, Hash } from 'lucide-react';
 import { usePlayers } from '../contexts/PlayersContext';
+import { generateDeck, cardInk } from '../data/deck';
 import { gameById } from '../data/games';
 import GameShell from '../components/GameShell';
+import TurnLine from '../components/TurnLine';
 import Button from '../components/ui/Button';
+import { PlayingCard, CardValue, CardSuit } from '../components/ui/PlayingCard';
 
 const GAME = gameById.picopalo;
 
@@ -18,10 +21,7 @@ const PHASE_NAMES = {
     'mayor-menor': 'Ronda final · mayor o menor',
 };
 
-// El palo llega como emoji desde la baraja; para pintarlo en rojo o negro
-// sobre el papel claro de la carta hace falta el glifo monocromo.
-const glyph = (suit) => String(suit || '').replace('️', '');
-const ink = (red) => (red ? '#b0343c' : '#22242e');
+const suitNames = { '♠': 'Pica', '♥': 'Corazón', '♦': 'Diamante', '♣': 'Trébol' };
 
 const PhaseKicker = styled.p`
     margin: 0 0 2px;
@@ -41,51 +41,6 @@ const Question = styled.p`
     max-width: 300px;
 `;
 
-const Card = styled.div`
-    position: relative;
-    width: 132px;
-    height: 188px;
-    flex-shrink: 0;
-    border-radius: ${({ theme }) => theme.radii.sm};
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: ${({ theme, $hidden }) => ($hidden ? theme.colors.surface : theme.colors.text.primary)};
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
-
-    ${({ $hidden }) =>
-        $hidden &&
-        `
-        &::after {
-            content: '';
-            position: absolute;
-            inset: 9px;
-            border: 1px solid rgba(63, 93, 158, 0.45);
-            border-radius: 4px;
-        }
-    `}
-`;
-
-const CardValue = styled.span`
-    font-size: 46px;
-    line-height: 1;
-    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-    color: ${({ $red }) => ink($red)};
-`;
-
-const CardSuit = styled.span`
-    font-size: 38px;
-    margin-top: 4px;
-    color: ${({ $red }) => ink($red)};
-`;
-
-const BackGlyph = styled.span`
-    display: flex;
-    opacity: 0.5;
-    color: ${GAME.color};
-`;
-
 const Message = styled.p`
     margin: ${({ theme }) => theme.spacing(4)} 0 0;
     min-height: 22px;
@@ -102,20 +57,6 @@ const MiniCards = styled.div`
     margin-top: ${({ theme }) => theme.spacing(3.5)};
     flex-wrap: wrap;
     justify-content: center;
-`;
-
-const MiniCard = styled.span`
-    width: 34px;
-    height: 46px;
-    border-radius: 4px;
-    background: ${({ theme }) => theme.colors.text.primary};
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-    color: ${({ $red }) => ink($red)};
 `;
 
 const Steps = styled.div`
@@ -138,47 +79,12 @@ const Options = styled.div`
     gap: ${({ theme }) => theme.spacing(2.5)};
 `;
 
-const suits = ['♠️', '♥️', '♦️', '♣️'];
-const suitNames = {
-    '♠️': 'Pica',
-    '♥️': 'Corazón',
-    '♦️': 'Diamante',
-    '♣️': 'Trébol'
-};
-const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-const valueNumbers = {
-    'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
-    '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13
-};
-
-// El icono depende solo de si se acertó o no — nunca cambia para un mismo resultado.
-const MessageIcon = ({ tone }) => {
-    if (tone === 'success') return <CheckCircle2 size={20} />;
-    if (tone === 'error') return <XCircle size={20} />;
-    return null;
-};
-
 const PicoPaloGame = () => {
     const { players } = usePlayers();
 
-    // Crear baraja completa al inicio
-    const createFullDeck = () => {
-        const deck = [];
-        suits.forEach(suit => {
-            values.forEach(value => {
-                const isRed = suit === '♥️' || suit === '♦️';
-                deck.push({ suit, value, isRed });
-            });
-        });
-        return deck;
-    };
-
-    const [deck, setDeck] = useState(() => {
-        const fullDeck = createFullDeck();
-        return fullDeck;
-    });
+    const [deck, setDeck] = useState(() => generateDeck());
     const [currentCard, setCurrentCard] = useState(() => {
-        const fullDeck = createFullDeck();
+        const fullDeck = generateDeck();
         const randomIndex = Math.floor(Math.random() * fullDeck.length);
         const card = fullDeck[randomIndex];
         // Actualizar el deck removiendo la carta inicial
@@ -209,7 +115,7 @@ const PicoPaloGame = () => {
     };
 
     const drawCardFromDeck = (currentDeck) => {
-        const deckToUse = currentDeck.length === 0 ? createFullDeck() : currentDeck;
+        const deckToUse = currentDeck.length === 0 ? generateDeck() : currentDeck;
         const randomIndex = Math.floor(Math.random() * deckToUse.length);
         const drawnCard = deckToUse[randomIndex];
         const remainingDeck = deckToUse.filter((_, index) => index !== randomIndex);
@@ -326,7 +232,7 @@ const PicoPaloGame = () => {
 
         if (gameState === 'pico') {
             // Adivinar si es rojo (corazón/diamante) o negro (pica/trébol)
-            const isRed = currentCard.suit === '♥️' || currentCard.suit === '♦️';
+            const isRed = currentCard.red;
             correct = (choice === 'rojo' && isRed) || (choice === 'negro' && !isRed);
 
             if (correct) {
@@ -336,7 +242,7 @@ const PicoPaloGame = () => {
             }
         } else if (gameState === 'par-impar') {
             // Adivinar si el valor de la carta es par o impar
-            const cardNumber = valueNumbers[currentCard.value];
+            const cardNumber = currentCard.n;
             const isEven = cardNumber % 2 === 0;
             correct = (choice === 'par' && isEven) || (choice === 'impar' && !isEven);
 
@@ -351,9 +257,9 @@ const PicoPaloGame = () => {
             // Necesitamos al menos 2 cartas previas
             if (currentPlayerCardsList.length < 2) return;
 
-            const cardNumber = valueNumbers[currentCard.value];
-            const card1Number = valueNumbers[currentPlayerCardsList[0].value];
-            const card2Number = valueNumbers[currentPlayerCardsList[1].value];
+            const cardNumber = currentCard.n;
+            const card1Number = currentPlayerCardsList[0].n;
+            const card2Number = currentPlayerCardsList[1].n;
 
             const minRange = Math.min(card1Number, card2Number);
             const maxRange = Math.max(card1Number, card2Number);
@@ -393,8 +299,8 @@ const PicoPaloGame = () => {
 
             if (!referenceCard) return;
 
-            const newCardNumber = valueNumbers[currentCard.value];
-            const referenceNumber = valueNumbers[referenceCard.value];
+            const newCardNumber = currentCard.n;
+            const referenceNumber = referenceCard.n;
 
             const isMayor = newCardNumber > referenceNumber;
             const isMenor = newCardNumber < referenceNumber;
@@ -522,8 +428,8 @@ const PicoPaloGame = () => {
             if (currentPlayerCardsList.length >= 2) {
                 const c1 = currentPlayerCardsList[0];
                 const c2 = currentPlayerCardsList[1];
-                const v1 = valueNumbers[c1.value];
-                const v2 = valueNumbers[c2.value];
+                const v1 = c1.n;
+                const v2 = c2.n;
 
                 // Mostrar siempre ordenado: Menor - Mayor
                 if (v1 <= v2) {
@@ -558,9 +464,10 @@ const PicoPaloGame = () => {
 
     const options = currentOptions();
     const phaseIndex = PHASES.indexOf(gameState);
+    const nextPlayerName = players.length > 0 ? players[(currentPlayerIndex + 1) % totalPlayers]?.name : null;
 
     const status = currentPlayer
-        ? `Turno de ${currentPlayer.name} · ${Math.min(playersWhoAnswered + 1, totalPlayers)} de ${totalPlayers}`
+        ? `${Math.min(playersWhoAnswered + 1, totalPlayers)} de ${totalPlayers}`
         : `${PHASE_NAMES[gameState]}`;
 
     const footer = options.length > 0 ? (
@@ -579,11 +486,11 @@ const PicoPaloGame = () => {
         </Options>
     ) : canAdvancePlayer && players.length > 0 ? (
         <Button size="lg" fullWidth onClick={advanceToNextPlayer}>
-            {playersWhoAnswered + 1 < totalPlayers ? 'Siguiente jugador' : 'Siguiente fase'}
+            {playersWhoAnswered + 1 < totalPlayers ? `Le toca a ${nextPlayerName}` : 'Siguiente fase'}
         </Button>
     ) : completedMayorMenorSequence ? (
         <Button size="lg" fullWidth onClick={handleNextPlayerInMayorMenor}>
-            Siguiente jugador
+            {nextPlayerName ? `Le toca a ${nextPlayerName}` : 'Siguiente jugador'}
         </Button>
     ) : isLastPhaseFinished ? (
         <Button size="lg" fullWidth onClick={handleNext}>
@@ -606,20 +513,19 @@ const PicoPaloGame = () => {
                 </Steps>
             }
         >
+            {currentPlayer && <TurnLine name={currentPlayer.name} />}
             <PhaseKicker>{PHASE_NAMES[gameState]}</PhaseKicker>
             <Question>{getInstructions()}</Question>
 
             {currentCard && (
-                <Card $hidden={!revealed}>
-                    {revealed ? (
+                <PlayingCard $size="md" $face={revealed}>
+                    {revealed && (
                         <>
-                            <CardValue $red={currentCard.isRed}>{currentCard.value}</CardValue>
-                            <CardSuit $red={currentCard.isRed}>{glyph(currentCard.suit)}</CardSuit>
+                            <CardValue $size="md" $ink={cardInk(currentCard.red)}>{currentCard.value}</CardValue>
+                            <CardSuit $size="md" $ink={cardInk(currentCard.red)}>{currentCard.suit}</CardSuit>
                         </>
-                    ) : (
-                        <BackGlyph aria-hidden="true"><Spade size={26} /></BackGlyph>
                     )}
-                </Card>
+                </PlayingCard>
             )}
 
             <Message $tone={messageTone}>{message}</Message>
@@ -627,10 +533,10 @@ const PicoPaloGame = () => {
             {currentPlayerCardsList.length > 0 && (
                 <MiniCards>
                     {currentPlayerCardsList.map((card, index) => (
-                        <MiniCard key={index} $red={card.isRed}>
-                            {card.value}
-                            <span style={{ fontSize: 13 }}>{glyph(card.suit)}</span>
-                        </MiniCard>
+                        <PlayingCard key={index} $size="xs" $face>
+                            <CardValue $size="xs" $ink={cardInk(card.red)}>{card.value}</CardValue>
+                            <CardSuit $size="xs" $ink={cardInk(card.red)}>{card.suit}</CardSuit>
+                        </PlayingCard>
                     ))}
                 </MiniCards>
             )}

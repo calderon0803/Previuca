@@ -4,6 +4,11 @@ import {
     Handshake, Music, Crown, ThumbsUp, MessageCircleQuestion, Beer,
 } from 'lucide-react';
 
+// La baraja en sí (palos, valores, generación, color) vive en `data/deck.js`
+// — la usan también Pico Palo e Illuminati. Se reexporta aquí para no romper
+// el `import ... from '../data/reyDeCopasRules'` que ya existía.
+export { suits, values, cardInk, generateDeck, shuffleDeck } from './deck';
+
 export const cardRules = {
     'A': {
         name: 'As',
@@ -85,36 +90,3 @@ export const cardRules = {
     },
 };
 
-// Glifos monocromos (no emoji) para poder pintarlos en rojo o negro sobre
-// el papel claro de la carta, como el resto del rediseno.
-export const suits = [
-    { symbol: '♠', red: false },
-    { symbol: '♥', red: true },
-    { symbol: '♦', red: true },
-    { symbol: '♣', red: false },
-];
-export const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-
-// Rojo y negro de las cartas sobre papel claro.
-export const cardInk = (red) => (red ? '#b0343c' : '#22242e');
-
-// Generar baraja completa
-export const generateDeck = () => {
-    const deck = [];
-    suits.forEach(({ symbol, red }) => {
-        values.forEach((value, index) => {
-            deck.push({ value, suit: symbol, red, n: index + 1 });
-        });
-    });
-    return deck;
-};
-
-// Mezclar baraja
-export const shuffleDeck = (deck) => {
-    const shuffled = [...deck];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-};

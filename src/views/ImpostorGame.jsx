@@ -6,29 +6,13 @@ import { usePlayers } from '../contexts/PlayersContext';
 import { randomTopic } from '../data/impostorWords';
 import { gameById } from '../data/games';
 import GameShell from '../components/GameShell';
+import TurnLine from '../components/TurnLine';
 import HoldToReveal from '../components/HoldToReveal';
 import Button from '../components/ui/Button';
 import ConfirmSheet from '../components/ui/ConfirmSheet';
 import { SignatureLine } from '../components/ui/Signature';
 
 const GAME = gameById.impostor;
-
-const HandKicker = styled.p`
-  align-self: flex-start;
-  margin: 0 0 2px;
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.text.muted};
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-`;
-
-const HandName = styled.p`
-  align-self: flex-start;
-  margin: 0 0 ${({ theme }) => theme.spacing(5)};
-  font-size: 30px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  letter-spacing: -0.02em;
-`;
 
 // Kicker siempre neutro: el contraste con la palabra/rol en grande es lo que
 // da jerarquía. Si el kicker también se tiñe de rojo, todo el bloque se ve
@@ -68,14 +52,6 @@ const SecretWord = styled.span`
   text-align: center;
   padding: 0 ${({ theme }) => theme.spacing(5)};
   color: ${({ theme, $impostor }) => ($impostor ? '#e0777c' : theme.colors.text.primary)};
-`;
-
-const Hint = styled.p`
-  align-self: flex-start;
-  margin: ${({ theme }) => theme.spacing(4.5)} 2px 0;
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: ${({ theme }) => theme.colors.text.muted};
 `;
 
 const DebateTitle = styled.h2`
@@ -283,8 +259,7 @@ export default function ImpostorGame() {
         >
             {phase === 'reveal' && (
                 <>
-                    <HandKicker>El móvil es de</HandKicker>
-                    <HandName>{players[index].name}</HandName>
+                    <TurnLine name={players[index].name} />
                     <HoldToReveal
                         color={GAME.color}
                         ring="#423a6a"
@@ -299,11 +274,6 @@ export default function ImpostorGame() {
                             {`Tema: ${round.theme}`}
                         </ThemeNote>
                     </HoldToReveal>
-                    <Hint>
-                        {seen
-                            ? 'Suelta y pásale el móvil al siguiente.'
-                            : 'Mantén pulsado el tiempo que necesites: al soltar se vuelve a tapar.'}
-                    </Hint>
                 </>
             )}
 

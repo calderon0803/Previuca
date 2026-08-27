@@ -331,7 +331,7 @@ export default function MainMenu() {
                     />
                     <Watermark aria-hidden="true"><Gamepad2 size={64} /></Watermark>
                     <CardTitle>Juegos</CardTitle>
-                    <CardSub>10 modos · sin conexión · con quien tengas al lado</CardSub>
+                    <CardSub>Con quien tengas al lado</CardSub>
                 </GamesCard>
 
                 {eventsLoading ? (
