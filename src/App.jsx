@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import styled from 'styled-components';
@@ -7,18 +7,23 @@ import { GlobalStyles } from './styles/GlobalStyles';
 import { PlayersProvider } from './contexts/PlayersContext';
 
 // Views
+// MainMenu es la primera pantalla, así que entra en el bundle inicial. El
+// resto se carga bajo demanda: sin esto el arranque arrastraba los diez
+// juegos, el panel de administración y el lector de QR aunque nadie los
+// abriera, y la app se instala desde el móvil en sitios con mala cobertura.
 import MainMenu from './views/MainMenu';
-import GameModesList from './views/GameModesList';
-import YoNuncaGame from './views/YoNuncaGame';
-import ReyDeCopasGame from './views/ReyDeCopasGame';
-import PicoPaloGame from './views/PicoPaloGame';
-import MedusaGame from './views/MedusaGame';
-import RouletteGame from './views/RouletteGame';
-import DiceGame from './views/DiceGame';
-import ImpostorGame from './views/ImpostorGame';
-import IlluminatiGame from './views/IlluminatiGame';
-import AsesinoGame from './views/AsesinoGame';
-import TrazoTragoGame from './views/TrazoTragoGame';
+
+const GameModesList = lazy(() => import('./views/GameModesList'));
+const YoNuncaGame = lazy(() => import('./views/YoNuncaGame'));
+const ReyDeCopasGame = lazy(() => import('./views/ReyDeCopasGame'));
+const PicoPaloGame = lazy(() => import('./views/PicoPaloGame'));
+const MedusaGame = lazy(() => import('./views/MedusaGame'));
+const RouletteGame = lazy(() => import('./views/RouletteGame'));
+const DiceGame = lazy(() => import('./views/DiceGame'));
+const ImpostorGame = lazy(() => import('./views/ImpostorGame'));
+const IlluminatiGame = lazy(() => import('./views/IlluminatiGame'));
+const AsesinoGame = lazy(() => import('./views/AsesinoGame'));
+const TrazoTragoGame = lazy(() => import('./views/TrazoTragoGame'));
 
 // Placeholder for missing views if any
 const Placeholder = ({ title }) => (
@@ -36,27 +41,30 @@ import { EventProvider } from './contexts/EventContext';
 import { AdminProvider, useAdmin } from './contexts/AdminContext';
 import { PenasProvider } from './contexts/PenasContext';
 import { SalseosProvider } from './contexts/SalseosContext';
-import FlechazoLogin from './views/FlechazoLogin';
-import FlechazoList from './views/FlechazoList';
-import FlechazoAdmirers from './views/FlechazoAdmirers';
-import InstagramVerification from './views/InstagramVerification';
-import Settings from './views/Settings';
-import EventsHub from './views/EventsHub';
-import PenasList from './views/PenasList';
-import CreatePena from './views/CreatePena';
-import PenaDetail from './views/PenaDetail';
-import CreateEvent from './views/CreateEvent';
-import StampAlbum from './views/StampAlbum';
-import ScanStamp from './views/ScanStamp';
-import SalseosWall from './views/SalseosWall';
-import SalseoDetail from './views/SalseoDetail';
-import AdminHub from './views/AdminHub';
-import AdminUsers from './views/AdminUsers';
-import AdminEvents from './views/AdminEvents';
-import AdminPenas from './views/AdminPenas';
-import AdminReports from './views/AdminReports';
-import AdminFeedback from './views/AdminFeedback';
+// LoadingScreen se importa de forma estática porque es el fallback de Suspense:
+// cargarlo bajo demanda dejaría la transición sin nada que mostrar.
 import LoadingScreen from './components/ui/LoadingScreen';
+
+const FlechazoLogin = lazy(() => import('./views/FlechazoLogin'));
+const FlechazoList = lazy(() => import('./views/FlechazoList'));
+const FlechazoAdmirers = lazy(() => import('./views/FlechazoAdmirers'));
+const InstagramVerification = lazy(() => import('./views/InstagramVerification'));
+const Settings = lazy(() => import('./views/Settings'));
+const EventsHub = lazy(() => import('./views/EventsHub'));
+const PenasList = lazy(() => import('./views/PenasList'));
+const CreatePena = lazy(() => import('./views/CreatePena'));
+const PenaDetail = lazy(() => import('./views/PenaDetail'));
+const CreateEvent = lazy(() => import('./views/CreateEvent'));
+const StampAlbum = lazy(() => import('./views/StampAlbum'));
+const ScanStamp = lazy(() => import('./views/ScanStamp'));
+const SalseosWall = lazy(() => import('./views/SalseosWall'));
+const SalseoDetail = lazy(() => import('./views/SalseoDetail'));
+const AdminHub = lazy(() => import('./views/AdminHub'));
+const AdminUsers = lazy(() => import('./views/AdminUsers'));
+const AdminEvents = lazy(() => import('./views/AdminEvents'));
+const AdminPenas = lazy(() => import('./views/AdminPenas'));
+const AdminReports = lazy(() => import('./views/AdminReports'));
+const AdminFeedback = lazy(() => import('./views/AdminFeedback'));
 
 const BlockedScreenWrap = styled.div`
     display: flex;
@@ -164,6 +172,7 @@ function AppRoutes() {
         <SalseosProvider>
         <PlayersProvider>
             <BrowserRouter>
+                <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                     <Route path="/" element={<MainMenu />} />
 
@@ -285,6 +294,7 @@ function AppRoutes() {
 
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+                </Suspense>
             </BrowserRouter>
         </PlayersProvider>
         </SalseosProvider>
